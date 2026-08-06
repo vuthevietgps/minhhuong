@@ -1,0 +1,153 @@
+{
+  "prompt": "Promt_quanly_minhhuong_10",
+  "date": "2026-06-14",
+  "mode": "blocker-hardening-data-quality-deploy-safety",
+  "verdict": "PASS",
+  "fk": {
+    "name": "ChannelParticipant_parentParticipantId_fkey",
+    "table": "ChannelParticipant",
+    "column": "parentParticipantId",
+    "referenced_table": "ChannelParticipant",
+    "referenced_column": "id",
+    "exists": true,
+    "validated": true,
+    "validation_applied": true,
+    "validation_deferred": false,
+    "validation_migration": "apps/api/prisma/migrations/20260614173000_validate_channel_participant_parent_fk/migration.sql"
+  },
+  "local_configured_db_audit": {
+    "table_exists": true,
+    "invalid_parent_count": 0,
+    "self_parent_count": 0,
+    "cycle_check": {
+      "implemented": true,
+      "status": "passed",
+      "cycle_count": 0,
+      "max_walk_depth": 50
+    },
+    "constraint_status_before_prompt10_migration": {
+      "exists": true,
+      "convalidated": false,
+      "definition": "FOREIGN KEY (\"parentParticipantId\") REFERENCES \"ChannelParticipant\"(id) ON UPDATE CASCADE ON DELETE SET NULL NOT VALID"
+    }
+  },
+  "migration_created_temp_db_proof": {
+    "implemented": true,
+    "test_file": "apps/api/src/channel-admin/channel-participant-fk.integration.spec.ts",
+    "uses_prisma_migrate_deploy": true,
+    "uses_prisma_db_push": false,
+    "asserts_temp_database_connection": true,
+    "constraint_exists": true,
+    "constraint_validated": true,
+    "valid_tree_seeded": true,
+    "invalid_parent_count": 0,
+    "self_parent_count": 0,
+    "cycle_count": 0,
+    "invalid_insert_blocked": true
+  },
+  "commands_run": [
+    {
+      "command": "npm --prefix apps/api run prisma:generate",
+      "status": "passed",
+      "summary": "Prisma Client generated successfully."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-participant-fk.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 1 test. Direct temp-DB migration proof for the parent FK."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-scope.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 3 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-admin-scope.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 3 tests. Uses prisma migrate deploy against a temp PostgreSQL database."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts channel-finance.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 22 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand entitlement.service.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 7 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand learning.service.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 13 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand",
+      "status": "passed",
+      "summary": "18 suites, 100 tests."
+    },
+    {
+      "command": "npm --prefix apps/api run test:e2e -- --runInBand",
+      "status": "passed",
+      "summary": "3 suites, 7 tests."
+    },
+    {
+      "command": "npm --prefix apps/api run build",
+      "status": "passed",
+      "summary": "Nest build completed."
+    },
+    {
+      "command": "git status --short",
+      "status": "failed_environment",
+      "summary": "fatal: not a git repository (or any of the parent directories): .git"
+    }
+  ],
+  "interim_failures": [],
+  "hard_bans_check": {
+    "affiliate_qr_not_implemented": true,
+    "payment_gateway_not_implemented": true,
+    "frontend_rewrite_not_done": true,
+    "package_entitlement_not_implemented": true,
+    "entitlement_enforcement_not_changed": true,
+    "commission_policy_engine_not_implemented": true,
+    "lead_crm_not_implemented": true,
+    "renewal_opportunity_not_implemented": true,
+    "agency_member_cleanup_not_done": true,
+    "broad_channel_hierarchy_redesign_not_done": true,
+    "broad_model_rename_not_done": true,
+    "unrelated_order_subscription_commission_behavior_not_changed": true
+  },
+  "files_changed": [
+    "apps/api/prisma/migrations/20260614173000_validate_channel_participant_parent_fk/migration.sql",
+    "apps/api/src/channel-admin/channel-participant-fk.integration.spec.ts",
+    "docs/minh-huong-sales-distribution/promt10/ketqua_promt_quanly_minhhuong_10.md",
+    "docs/minh-huong-sales-distribution/promt10/ketqua_promt_quanly_minhhuong_10.json",
+    "docs/minh-huong-sales-distribution/promt10/00_chain_ledger.md",
+    "docs/minh-huong-sales-distribution/promt10/01_scope_and_baseline.md",
+    "docs/minh-huong-sales-distribution/promt10/02_constraint_inventory.md",
+    "docs/minh-huong-sales-distribution/promt10/03_data_quality_audit_evidence.md",
+    "docs/minh-huong-sales-distribution/promt10/04_validation_or_remediation_evidence.md",
+    "docs/minh-huong-sales-distribution/promt10/05_migrate_deploy_constraint_evidence.md",
+    "docs/minh-huong-sales-distribution/promt10/06_scope_regression_evidence.md",
+    "docs/minh-huong-sales-distribution/promt10/07_tests_run.md",
+    "docs/minh-huong-sales-distribution/promt10/08_files_changed.md",
+    "docs/minh-huong-sales-distribution/promt10/09_bugs_found_and_fixes.md",
+    "docs/minh-huong-sales-distribution/promt10/10_remaining_gaps_and_risks.md",
+    "docs/minh-huong-sales-distribution/promt10/11_next_prompt_recommendation.md"
+  ],
+  "remaining_gaps": [
+    "The parent FK prevents missing-parent references but does not by itself prevent future cyclic parent chains; service-level or DB-level cycle prevention can be considered later if hierarchy mutation becomes user-facing.",
+    "Production or external legacy databases must run the same audit before deploying this validation migration if they are not identical to the audited local database.",
+    "Prompt 6 sourceOrderId uniqueness remains deferred pending legacy duplicate audit.",
+    "OrderStatusHistory lifecycle expansion beyond approval remains deferred.",
+    "Package entitlement/snapshot remains deferred.",
+    "Commission policy version/snapshot remains deferred.",
+    "Affiliate/QR remains blocked until canonical BA docs are synced."
+  ],
+  "recommended_next_prompt": {
+    "name": "Promt_quanly_minhhuong_11.md",
+    "type": "commercial-correctness-package-entitlement-snapshot",
+    "scope": "Define and implement package entitlement/snapshot behavior without affiliate/QR or payment gateway scope.",
+    "reason": "The channel parent FK deploy-safety blocker is closed. Package entitlement/snapshot is the next high-impact commercial correctness gap still explicitly deferred."
+  }
+}

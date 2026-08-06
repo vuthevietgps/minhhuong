@@ -1,0 +1,85 @@
+{
+  "date": "2026-06-14",
+  "prompt": "Promt_quanly_minhhuong_15_fix_sync_affiliate_ba",
+  "mode": "no-code / BA-sync / affiliate-QR readiness spec",
+  "verdict": "CONDITIONAL",
+  "conditionalReason": "Canonical BA files were copied and verified, and readiness/spec work is complete. git status --short cannot run because the workspace is not a git repository.",
+  "canonicalBaSync": {
+    "sourceBundle": "C:\\Users\\PC\\Downloads\\minhhuong_prompt15_fix_affiliate_ba_bundle.zip",
+    "targetDirectory": "C:\\Users\\PC\\Documents\\code\\minhhuong\\docs\\minh-huong-sales-distribution\\ba",
+    "files": [
+      {
+        "name": "ba-phan-quan-ly-ban-hang-phan-phoi-minh-huong-learning-platform-20260614-v1.1-affiliate-qr.md",
+        "target": "C:\\Users\\PC\\Documents\\code\\minhhuong\\docs\\minh-huong-sales-distribution\\ba\\ba-phan-quan-ly-ban-hang-phan-phoi-minh-huong-learning-platform-20260614-v1.1-affiliate-qr.md",
+        "bytes": 57462,
+        "lines": 1035,
+        "sha256": "158989748b2e9c1a706807693bac070d7bce957b46daea8c0176094ffffaf9cb",
+        "sourceTargetMatch": true
+      },
+      {
+        "name": "ba-bo-sung-affiliate-link-qr-minh-huong-learning-platform-20260614.md",
+        "target": "C:\\Users\\PC\\Documents\\code\\minhhuong\\docs\\minh-huong-sales-distribution\\ba\\ba-bo-sung-affiliate-link-qr-minh-huong-learning-platform-20260614.md",
+        "bytes": 20111,
+        "lines": 303,
+        "sha256": "38cd980c128b1129a594f7e93a921f5fef033d3e978d399bea608d2a0a617d29",
+        "sourceTargetMatch": true
+      }
+    ]
+  },
+  "repoReadiness": {
+    "present": [
+      "AgencyMember.referralCode unique field",
+      "ChannelParticipant hierarchy and scoped visibility foundation",
+      "ActivationOrder channelParticipantId / agencyId / referrerMemberId attribution fields",
+      "Self-service activation order referralCode input",
+      "Approval-driven commission foundation",
+      "Activation order status history and scoped read foundations from Prompts 12-14"
+    ],
+    "missing": [
+      "AffiliateLink",
+      "AffiliateQrAsset",
+      "AffiliateClickEvent",
+      "AppInstallAttribution",
+      "CustomerAttribution",
+      "SalesAttributionSnapshot fields for affiliate link, QR, click, install, campaign, channel, placement, and attribution model",
+      "Public /r/:linkCode redirect and click tracking",
+      "Mobile first-open/register attribution APIs",
+      "Affiliate funnel reports",
+      "Manual attribution override/dispute workflow"
+    ]
+  },
+  "recommendedPrompt16": {
+    "slice": "AffiliateLink + AffiliateQrAsset schema/API foundation only",
+    "include": [
+      "Prisma models and migration",
+      "Scoped link list/create/update endpoints",
+      "Scoped QR asset create endpoint",
+      "Canonical encodedUrl generation",
+      "RBAC/scope tests using existing channel scope patterns"
+    ],
+    "exclude": [
+      "Click tracking",
+      "Public redirect",
+      "Mobile install attribution",
+      "CustomerAttribution",
+      "ActivationOrder attribution snapshot changes",
+      "Commission behavior changes",
+      "Frontend rewrite"
+    ]
+  },
+  "commands": [
+    {
+      "command": "git status --short",
+      "status": "failed",
+      "note": "fatal: not a git repository (or any of the parent directories): .git"
+    },
+    {
+      "command": "rg affiliate/referral/attribution inventory, excluding node_modules/dist/.next",
+      "status": "passed",
+      "note": "Confirmed current repo has referral/order attribution foundations but no affiliate-link/QR implementation models or endpoints."
+    }
+  ],
+  "productCodeChanged": false,
+  "productTestsRun": false,
+  "productTestsRunReason": "No product source/schema/frontend/runtime files were changed."
+}

@@ -1,0 +1,42 @@
+{
+  "schema_version": "minhhuong_architecture_decision.v1",
+  "decision_id": "MH-RC-V4-OBJECT-STORAGE-20260711-01",
+  "issued_at": "2026-07-11T13:12:54+07:00",
+  "authority_source": {
+    "type": "user_directive",
+    "channel": "Codex task",
+    "principal": "Minh Huong workspace/project owner",
+    "directive": "Chốt theo logic kinh doanh thông thường và tiếp tục",
+    "authenticity_note": "This records the actual user directive. It does not authorize a production deployment, paid cloud mutation, or use of live provider credentials."
+  },
+  "business_decision": {
+    "hosted_staging_api_replicas": 1,
+    "database": "managed_postgresql",
+    "cache": "managed_redis",
+    "upload_storage": "s3_compatible_object_storage",
+    "local_upload_fallback": "filesystem",
+    "hosted_filesystem_policy": "denied_except_explicit_single_instance_emergency_override",
+    "production_ready": false
+  },
+  "rationale": [
+    "Object storage prevents videos and invoices from being tied to one API container or ephemeral disk.",
+    "An S3-compatible contract remains provider-neutral and supports low-cost MVP hosting as well as later multi-instance scaling.",
+    "A single API replica is the initial staging and controlled-pilot default to minimize cost and operational complexity.",
+    "Managed PostgreSQL and Redis reduce backup, patching, and availability burden for a small business team.",
+    "Local filesystem remains available only for development and isolated tests."
+  ],
+  "approved_scope": [
+    "repo_local_only",
+    "code_and_tests_only",
+    "minio_or_mock_object_storage_smoke",
+    "upload_migration_and_rollback_plan"
+  ],
+  "conditions": [
+    "Do not call a real S3 or cloud provider account.",
+    "Do not use or print real access keys, bucket names, customer data, learner media, or invoices.",
+    "Use synthetic uploads and disposable local MinIO or mocked adapters only.",
+    "Preserve authorization, MIME/size validation, path traversal denial, redaction, audit, and cleanup behavior.",
+    "Keep live providers and production disabled.",
+    "Require a separate hosted-staging account/domain/secret authorization before external deployment."
+  ]
+}

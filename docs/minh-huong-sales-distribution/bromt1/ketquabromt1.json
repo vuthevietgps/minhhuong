@@ -1,0 +1,393 @@
+{
+  "prompt": "bromt1",
+  "date": "2026-06-14",
+  "mode": "no-code-audit",
+  "project": "Minh Huong Learning Platform",
+  "branch": "commercial_distribution_branch",
+  "verdict": "CONDITIONAL",
+  "canonical_ba_files": [
+    {
+      "path": "C:\\Users\\PC\\Downloads\\ba-phan-quan-ly-ban-hang-phan-phoi-minh-huong-learning-platform-20260614-v1.1-affiliate-qr.md",
+      "found": false,
+      "version": "v1.1-affiliate-qr"
+    },
+    {
+      "path": "C:\\Users\\PC\\Downloads\\ba-bo-sung-affiliate-link-qr-minh-huong-learning-platform-20260614.md",
+      "found": false,
+      "version": "affiliate-qr-addendum"
+    },
+    {
+      "path": "C:\\Users\\PC\\Downloads\\ba-phan-quan-ly-ban-hang-phan-phoi-minh-huong-learning-platform-20260614.md",
+      "found": true,
+      "version": "v1.0"
+    }
+  ],
+  "repo": {
+    "root": "C:\\Users\\PC\\Documents\\code\\minhhuong",
+    "stack": [
+      "NestJS 11",
+      "Next.js 16",
+      "React 19",
+      "Prisma 7",
+      "PostgreSQL",
+      "Jest",
+      "Tailwind CSS"
+    ],
+    "package_managers": [
+      "npm"
+    ],
+    "apps_detected": [
+      "apps/api",
+      "apps/web",
+      "packages/shared"
+    ],
+    "git_status_before": "failed: fatal: not a git repository (or any of the parent directories): .git",
+    "git_status_after": "failed: fatal: not a git repository (or any of the parent directories): .git"
+  },
+  "capability_matrix": [
+    {
+      "area": "product_pricing",
+      "requirement": "Admin manages commercial package with price and duration",
+      "status": "partial",
+      "priority": "P0",
+      "evidence": [
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/prisma/schema.prisma:785-798",
+          "summary": "ActivationPackage has code, name, amountVnd, durationDays, isActive, sortOrder."
+        },
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/src/channel-admin/channel-admin.service.ts:747-789",
+          "summary": "ChannelAdmin service creates and updates activation packages."
+        }
+      ],
+      "gap": "No PackageEntitlement, no price book, no explicit package entitlement snapshot.",
+      "recommended_next_action": "Specify package entitlement and snapshot contract."
+    },
+    {
+      "area": "customer_lead",
+      "requirement": "Customer/parent/child and lead ownership/follow-up",
+      "status": "partial",
+      "priority": "P1",
+      "evidence": [
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/src/parent/parent.controller.ts:12-65",
+          "summary": "Parent child profile APIs exist."
+        },
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/src/activation-orders/activation-orders.service.ts:215-232",
+          "summary": "Duplicate pending sale-assisted order guard by creator/email/window exists."
+        },
+        {
+          "type": "MISSING",
+          "ref": "search: model Lead|sales/leads|Lead",
+          "summary": "No Lead CRM implementation found."
+        }
+      ],
+      "gap": "No Lead model/status/follow-up/lost reason; phone duplicate guard missing.",
+      "recommended_next_action": "Add Lead CRM after P0 tests."
+    },
+    {
+      "area": "order_payment",
+      "requirement": "Self-service and sale-assisted orders with manual bank transfer, proof and operations review",
+      "status": "partial",
+      "priority": "P0",
+      "evidence": [
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/src/activation-orders/activation-orders.service.ts:390-524",
+          "summary": "Self-service order and payment proof flow exists."
+        },
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/src/activation-orders/activation-orders.service.ts:208-297",
+          "summary": "Sale-assisted order creation exists."
+        },
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/src/activation-orders/activation-orders.service.ts:527-677",
+          "summary": "Approve requires operation invoice and runs transaction."
+        }
+      ],
+      "gap": "No OrderStatusHistory, no explicit idempotency key/event, no payment gateway/webhook/reconciliation.",
+      "recommended_next_action": "Add commercial P0 tests and idempotency/status-history spec."
+    },
+    {
+      "area": "subscription_entitlement",
+      "requirement": "Approve order creates/extends child subscription and learning branch reads subscription",
+      "status": "partial",
+      "priority": "P0",
+      "evidence": [
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/prisma/schema.prisma:516-532",
+          "summary": "Subscription is childProfile-based."
+        },
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/src/activation-orders/activation-orders.service.ts:601-644",
+          "summary": "Approval creates subscription from latest currentPeriodEnd or now."
+        },
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/src/learning/learning.service.ts:1091-1135",
+          "summary": "Learning access guard checks active child subscription."
+        }
+      ],
+      "gap": "No sourceOrderId/packageId fields, no entitlement model or quota/course enforcement.",
+      "recommended_next_action": "Test current access and define entitlement contract."
+    },
+    {
+      "area": "channel_attribution",
+      "requirement": "Multi-level channel participant tree, scope and referral attribution",
+      "status": "partial",
+      "priority": "P0",
+      "evidence": [
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/prisma/schema.prisma:587-619",
+          "summary": "ChannelParticipant has parent/root/lineage/depth."
+        },
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/src/channel-admin/channel-admin.service.ts:1031-1183",
+          "summary": "Recruitment rules and lineage generation exist."
+        },
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/src/channel-finance/channel-finance.service.ts:980-1011",
+          "summary": "Finance queries are scoped by subtree lineage."
+        }
+      ],
+      "gap": "No scope tests; AgencyMember legacy remains; no SalesAttributionSnapshot.",
+      "recommended_next_action": "Add subtree RBAC tests and attribution snapshot spec."
+    },
+    {
+      "area": "affiliate_qr",
+      "requirement": "Affiliate links, QR assets, click/install/customer attribution and /r/:linkCode tracking",
+      "status": "missing",
+      "priority": "P2",
+      "evidence": [
+        {
+          "type": "MISSING",
+          "ref": "search: AffiliateLink|AffiliateQrAsset|AffiliateClickEvent|AppInstallAttribution|CustomerAttribution|SalesAttributionSnapshot|linkCode|installReferrer",
+          "summary": "No affiliate/QR implementation found."
+        },
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/src/activation-orders/activation-orders.service.ts:1105-1158",
+          "summary": "Only referral/channel/agency code attribution exists."
+        }
+      ],
+      "gap": "Referral code is not full affiliate funnel tracking.",
+      "recommended_next_action": "Defer until P0 commercial tests pass and BA v1.1/addendum is present."
+    },
+    {
+      "area": "commission_wallet",
+      "requirement": "Order approval creates pending commission; cron releases to ledger; wallet uses ledger",
+      "status": "partial",
+      "priority": "P0",
+      "evidence": [
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/src/activation-orders/activation-orders.service.ts:1182-1304",
+          "summary": "Commission chain is created pending with depth and availableAt."
+        },
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/src/activation-orders/activation-orders.service.ts:1381-1434",
+          "summary": "Release due commissions uses conditional update then ledger credit."
+        },
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/src/channel-finance/channel-finance.service.ts:789-824",
+          "summary": "Wallet summary is computed from commission ledger entries."
+        }
+      ],
+      "gap": "No policy version/snapshot; commission formula hardcoded; idempotency tests missing.",
+      "recommended_next_action": "Add commission release and policy tests/spec."
+    },
+    {
+      "area": "payout",
+      "requirement": "Payout request holds balance; finance marks paid/rejects with ledger",
+      "status": "partial",
+      "priority": "P0",
+      "evidence": [
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/src/channel-finance/channel-finance.service.ts:631-675",
+          "summary": "Payout request creates HOLD ledger."
+        },
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/src/channel-finance/channel-finance.service.ts:678-742",
+          "summary": "Pay creates RELEASE and DEBIT and stores payout invoice."
+        },
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/src/channel-finance/channel-finance.service.ts:745-784",
+          "summary": "Reject creates RELEASE and sets status REJECTED."
+        }
+      ],
+      "gap": "No status history; no separate approve endpoint; double-paid concurrency untested.",
+      "recommended_next_action": "Add payout ledger/idempotency tests."
+    },
+    {
+      "area": "reporting_audit",
+      "requirement": "Reports and audit for order/revenue/commission/payout/channel",
+      "status": "partial",
+      "priority": "P1",
+      "evidence": [
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/src/channel-finance/channel-finance.controller.ts:75-107",
+          "summary": "Overview/report/CSV/wallet endpoints exist."
+        },
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/prisma/schema.prisma:835-847",
+          "summary": "Generic AuditLog table exists."
+        },
+        {
+          "type": "DIRECT",
+          "ref": "apps/web/src/app/admin/audit/page.tsx:64-75",
+          "summary": "Admin audit page loads audit logs."
+        }
+      ],
+      "gap": "No affiliate funnel, renewal/churn, order/payout status history reports.",
+      "recommended_next_action": "Expand after data models."
+    },
+    {
+      "area": "notification_cron",
+      "requirement": "Order lifecycle emails, expiry reminders, renewal and commission/payout automation",
+      "status": "partial",
+      "priority": "P1",
+      "evidence": [
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/src/notifications/renewal-reminder.job.ts:35-88",
+          "summary": "Expiry reminders at 7 and 3 days and weekly digest cron exist."
+        },
+        {
+          "type": "DIRECT",
+          "ref": "apps/api/src/activation-orders/commission-release.job.ts:13",
+          "summary": "Hourly commission release job exists."
+        }
+      ],
+      "gap": "No renewal opportunity cron, no day-of reminder, no payout notification evidence.",
+      "recommended_next_action": "Add after renewal/payout policy is locked."
+    },
+    {
+      "area": "test_coverage",
+      "requirement": "Commercial P0 smoke/idempotency/scope tests",
+      "status": "partial",
+      "priority": "P0",
+      "evidence": [
+        {
+          "type": "DIRECT",
+          "ref": "command: npm --prefix apps/api test -- --runInBand",
+          "summary": "Passed 6 suites, 20 tests."
+        },
+        {
+          "type": "DIRECT",
+          "ref": "command: npm --prefix apps/api run test:e2e -- --runInBand",
+          "summary": "Passed 1 suite, 1 test."
+        },
+        {
+          "type": "MISSING",
+          "ref": "search: activation-orders/channel-finance specs",
+          "summary": "No direct commercial P0 specs found."
+        }
+      ],
+      "gap": "Commercial finance/order behavior is not proven by tests.",
+      "recommended_next_action": "Make bromt2 a test-hardening prompt."
+    }
+  ],
+  "p0_gaps": [
+    "Missing commercial smoke tests for order -> approve -> subscription and sale order -> commission -> payout",
+    "Missing OrderStatusHistory",
+    "Missing explicit idempotency key/event for order create, payment proof, approve and payout pay",
+    "Missing package entitlement and entitlement snapshot",
+    "Subscription lacks explicit sourceOrderId/packageId contract",
+    "Payout double-debit race is untested",
+    "Subtree scope/RBAC is untested"
+  ],
+  "p1_gaps": [
+    "Lead CRM missing",
+    "Commission policy version and snapshot missing",
+    "Renewal opportunity missing",
+    "AgencyMember legacy cleanup unresolved",
+    "Payout approval/status history missing"
+  ],
+  "p2_gaps": [
+    "Affiliate link/QR module missing",
+    "Payment gateway/webhook/reconciliation missing",
+    "Affiliate funnel report missing"
+  ],
+  "p3_gaps": [
+    "Advanced churn and renewal analytics missing",
+    "Payout batch/accounting export missing",
+    "Advanced anti-fraud duplicate detection missing"
+  ],
+  "tests_run": [
+    {
+      "command": "git status --short",
+      "status": "failed",
+      "summary": "fatal: not a git repository (or any of the parent directories): .git"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand",
+      "status": "passed",
+      "summary": "6 test suites passed, 20 tests passed"
+    },
+    {
+      "command": "npm --prefix apps/api run test:e2e -- --runInBand",
+      "status": "passed",
+      "summary": "1 test suite passed, 1 test passed"
+    }
+  ],
+  "risks": [
+    "Canonical BA v1.1 and affiliate addendum are missing.",
+    "Commercial P0 flows are not covered by direct tests.",
+    "Order approval and payout idempotency are not proven.",
+    "Package entitlement and attribution snapshot are absent.",
+    "Affiliate/QR implementation is absent.",
+    "AgencyMember and ChannelParticipant coexist and can confuse attribution/scope."
+  ],
+  "business_decisions_needed": [
+    "ActivationPackage vs ProductPackage canonical naming",
+    "Package entitlement keys and enforcement rules",
+    "Subscription sourceOrderId/packageId contract",
+    "Commission policy versioning vs fixed formula",
+    "Payout approve/pay workflow",
+    "Revoke after paid commission policy",
+    "Channel parent mutation policy",
+    "Affiliate attribution model and attribution window"
+  ],
+  "recommended_next_prompt": {
+    "name": "bromt2.md",
+    "type": "test-hardening",
+    "scope": "Add focused tests for self-service order -> proof -> approve -> subscription, sale order -> approve -> commission, commission release idempotency, payout hold/pay/reject ledger, and channel subtree scope.",
+    "reason": "The repo has functional commercial implementation, but P0 finance/order correctness is not proven by tests. Affiliate/QR should wait."
+  },
+  "files_created_or_changed": [
+    "docs/minh-huong-sales-distribution/bromt1/ketquabromt1.md",
+    "docs/minh-huong-sales-distribution/bromt1/ketquabromt1.json",
+    "docs/minh-huong-sales-distribution/bromt1/00_chain_ledger.md",
+    "docs/minh-huong-sales-distribution/bromt1/01_repo_map.md",
+    "docs/minh-huong-sales-distribution/bromt1/02_ba_target_map.md",
+    "docs/minh-huong-sales-distribution/bromt1/03_current_capability_matrix.md",
+    "docs/minh-huong-sales-distribution/bromt1/04_gap_matrix_p0_p1_p2_p3.md",
+    "docs/minh-huong-sales-distribution/bromt1/05_api_route_inventory.md",
+    "docs/minh-huong-sales-distribution/bromt1/06_db_entity_schema_inventory.md",
+    "docs/minh-huong-sales-distribution/bromt1/07_order_subscription_commission_flow_audit.md",
+    "docs/minh-huong-sales-distribution/bromt1/08_channel_scope_rbac_audit.md",
+    "docs/minh-huong-sales-distribution/bromt1/09_affiliate_qr_attribution_gap.md",
+    "docs/minh-huong-sales-distribution/bromt1/10_tests_run.md",
+    "docs/minh-huong-sales-distribution/bromt1/11_risks_decisions_questions.md",
+    "docs/minh-huong-sales-distribution/bromt1/12_next_bromt_recommendation.md"
+  ]
+}

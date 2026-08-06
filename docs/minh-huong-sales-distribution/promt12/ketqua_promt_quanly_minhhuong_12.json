@@ -1,0 +1,113 @@
+{
+  "prompt": "Promt_quanly_minhhuong_12",
+  "date": "2026-06-14",
+  "mode": "implementation-narrow-slice-commercial-audit-history-hardening",
+  "verdict": "PASS",
+  "scope": "Expand ActivationOrder OrderStatusHistory lifecycle coverage beyond approval.",
+  "schema_changes": false,
+  "migration_files": [],
+  "actions_covered": [
+    "CREATE_SELF_SERVICE",
+    "CREATE_SALE_ASSISTED",
+    "UPLOAD_PAYMENT_PROOF",
+    "RESUBMIT",
+    "APPROVE",
+    "REJECT",
+    "CANCEL",
+    "REVOKE"
+  ],
+  "source_changes": [
+    "apps/api/src/activation-orders/activation-orders.service.ts"
+  ],
+  "tests_added_or_changed": [
+    "apps/api/src/activation-orders/activation-orders.service.spec.ts"
+  ],
+  "documentation_added": [
+    "docs/minh-huong-sales-distribution/promt12/ketqua_promt_quanly_minhhuong_12.md",
+    "docs/minh-huong-sales-distribution/promt12/ketqua_promt_quanly_minhhuong_12.json",
+    "docs/minh-huong-sales-distribution/promt12/00_chain_ledger.md",
+    "docs/minh-huong-sales-distribution/promt12/01_scope_and_baseline.md",
+    "docs/minh-huong-sales-distribution/promt12/02_current_history_contract_inventory.md",
+    "docs/minh-huong-sales-distribution/promt12/03_history_write_implementation_evidence.md",
+    "docs/minh-huong-sales-distribution/promt12/04_create_proof_resubmit_history_evidence.md",
+    "docs/minh-huong-sales-distribution/promt12/05_reject_cancel_revoke_history_evidence.md",
+    "docs/minh-huong-sales-distribution/promt12/06_idempotency_and_duplicate_history_evidence.md",
+    "docs/minh-huong-sales-distribution/promt12/07_tests_run.md",
+    "docs/minh-huong-sales-distribution/promt12/08_files_changed.md",
+    "docs/minh-huong-sales-distribution/promt12/09_bugs_found_and_fixes.md",
+    "docs/minh-huong-sales-distribution/promt12/10_remaining_gaps_and_risks.md",
+    "docs/minh-huong-sales-distribution/promt12/11_next_prompt_recommendation.md"
+  ],
+  "transaction_contract": {
+    "create_events_nested_in_order_create": true,
+    "mutable_events_claim_status_with_updateMany": true,
+    "history_written_after_successful_claim_only": true,
+    "approval_idempotency_preserved": true,
+    "broad_idempotency_expansion": false
+  },
+  "legacy_backfill": {
+    "added": false,
+    "reason": "Prompt 12 did not require legacy backfill; existing historical orders remain readable."
+  },
+  "commands_run": [
+    {
+      "command": "npm --prefix apps/api run prisma:generate",
+      "status": "passed"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 15 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand package-entitlement",
+      "status": "passed",
+      "summary": "3 suites, 12 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts channel-finance.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 27 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand entitlement.service.spec.ts learning.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 21 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-participant-fk.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 1 test"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-scope.integration.spec.ts channel-admin-scope.integration.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 6 tests; existing non-failing pg deprecation warning emitted"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand",
+      "status": "passed",
+      "summary": "21 suites, 121 tests; existing non-failing pg deprecation warning emitted"
+    },
+    {
+      "command": "npm --prefix apps/api run test:e2e -- --runInBand",
+      "status": "passed",
+      "summary": "3 suites, 7 tests"
+    },
+    {
+      "command": "npm --prefix apps/api run build",
+      "status": "passed"
+    },
+    {
+      "command": "git status --short",
+      "status": "failed",
+      "summary": "fatal: not a git repository (or any of the parent directories): .git"
+    }
+  ],
+  "hard_bans_respected": true,
+  "remaining_gaps": [
+    "No legacy OrderStatusHistory backfill for already-existing historical orders.",
+    "Lifecycle action names remain string values, matching the existing model."
+  ]
+}
+

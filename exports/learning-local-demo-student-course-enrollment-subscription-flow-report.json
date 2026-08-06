@@ -1,0 +1,230 @@
+{
+  "reportName": "Learning local demo Student -> Course -> Enrollment -> Subscription/Payment fixture -> Refund/Commission fixture Flow Report",
+  "generatedFor": "local-demo-student-course-enrollment-subscription-flow-report",
+  "generatedAt": "2026-06-30T12:00:00.000Z",
+  "currency": "VND",
+  "productionReady": false,
+  "fixtureOnly": true,
+  "endpointPath": "/v1/learning-local-demo/student-course-enrollment-subscription-flow-report",
+  "dashboardEvidencePath": "/admin/learning-local-demo#student-course-enrollment-subscription-flow",
+  "jsonExportPath": "exports/learning-local-demo-student-course-enrollment-subscription-flow-report.json",
+  "markdownExportPath": "exports/learning-local-demo-student-course-enrollment-subscription-flow-report.md",
+  "safety": {
+    "productionReady": false,
+    "fixtureOnly": true,
+    "productionDbUsed": false,
+    "noProductionDbRead": true,
+    "providerApiUsed": false,
+    "paymentProviderUsed": false,
+    "aiProviderExecutionUsed": false,
+    "notificationProviderUsed": false,
+    "liveAdsExecuted": false,
+    "realStudentMutationUsed": false,
+    "realCourseMutationUsed": false,
+    "realEnrollmentMutationUsed": false,
+    "realSubscriptionMutationUsed": false,
+    "realPaymentMutationUsed": false,
+    "realRefundMutationUsed": false,
+    "realCommissionMutationUsed": false,
+    "realLearningMutationUsed": false,
+    "realErpMutationUsed": false,
+    "secretsRequired": false
+  },
+  "currentStatus": {
+    "status": "LOCAL_DEMO_READY_WITH_NOTES",
+    "summary": "The local-demo spine connects fixture students, courses, enrollments, subscriptions, payment statuses, refund evidence, and commission evidence without production or provider access.",
+    "remainingLocalDemoNotes": [
+      "Production enrollment, subscription lifecycle, payment provider capture, refund mutation, and commission payout are out of scope.",
+      "Provider refs are fixture_manual_bank_transfer identifiers only; no provider API read or mutation is executed.",
+      "Dashboard and exports are read-only evidence for local-demo review."
+    ]
+  },
+  "totals": {
+    "studentCount": 4,
+    "courseCount": 2,
+    "enrollmentCount": 4,
+    "subscriptionCount": 4,
+    "fixturePaymentEvidenceCount": 4,
+    "refundEvidenceCount": 1,
+    "commissionEvidenceCount": 4,
+    "relationshipTraceCount": 4,
+    "evidenceRowCount": 6,
+    "localDemoNoteCount": 3,
+    "productionReadyClaimCount": 0,
+    "safetyGateCount": 19,
+    "closedSafetyGateCount": 19,
+    "openSafetyGateCount": 0
+  },
+  "relationshipRows": [
+    {
+      "relationshipKey": "student-ava->course-a1-starter->enroll-ava-a1-active->sub-ava-a1-active",
+      "studentId": "student-ava",
+      "childProfileId": "child-ava-demo",
+      "studentName": "Ava Nguyen",
+      "courseId": "course-a1-starter",
+      "courseCode": "MH-A1-STARTER",
+      "courseTitle": "English Starter A1",
+      "enrollmentId": "enroll-ava-a1-active",
+      "enrollmentStatus": "ACTIVE",
+      "subscriptionId": "sub-ava-a1-active",
+      "subscriptionStatus": "ACTIVE",
+      "paymentId": "pay-ava-a1-succeeded",
+      "paymentStatus": "SUCCEEDED",
+      "refundIds": [],
+      "commissionIds": [
+        "commission-ava-sale-pending"
+      ],
+      "fixtureOnly": true,
+      "mutationUsed": false,
+      "evidenceSummary": "Ava Nguyen links MH-A1-STARTER through enroll-ava-a1-active, sub-ava-a1-active, pay-ava-a1-succeeded, 0 refund fixture, and 1 commission fixture rows."
+    },
+    {
+      "relationshipKey": "student-khoa->course-a1-starter->enroll-khoa-a1-canceled->sub-khoa-a1-canceled",
+      "studentId": "student-khoa",
+      "childProfileId": "child-khoa-demo",
+      "studentName": "Khoa Le",
+      "courseId": "course-a1-starter",
+      "courseCode": "MH-A1-STARTER",
+      "courseTitle": "English Starter A1",
+      "enrollmentId": "enroll-khoa-a1-canceled",
+      "enrollmentStatus": "CANCELED",
+      "subscriptionId": "sub-khoa-a1-canceled",
+      "subscriptionStatus": "CANCELED",
+      "paymentId": "pay-khoa-a1-refunded",
+      "paymentStatus": "REFUNDED",
+      "refundIds": [
+        "refund-khoa-a1-succeeded"
+      ],
+      "commissionIds": [
+        "commission-khoa-sale-canceled"
+      ],
+      "fixtureOnly": true,
+      "mutationUsed": false,
+      "evidenceSummary": "Khoa Le links MH-A1-STARTER through enroll-khoa-a1-canceled, sub-khoa-a1-canceled, pay-khoa-a1-refunded, 1 refund fixture, and 1 commission fixture rows."
+    },
+    {
+      "relationshipKey": "student-minh->course-a1-starter->enroll-minh-a1-pending->sub-minh-a1-trialing",
+      "studentId": "student-minh",
+      "childProfileId": "child-minh-demo",
+      "studentName": "Minh Tran",
+      "courseId": "course-a1-starter",
+      "courseCode": "MH-A1-STARTER",
+      "courseTitle": "English Starter A1",
+      "enrollmentId": "enroll-minh-a1-pending",
+      "enrollmentStatus": "PENDING",
+      "subscriptionId": "sub-minh-a1-trialing",
+      "subscriptionStatus": "TRIALING",
+      "paymentId": "pay-minh-a1-pending",
+      "paymentStatus": "PENDING",
+      "refundIds": [],
+      "commissionIds": [],
+      "fixtureOnly": true,
+      "mutationUsed": false,
+      "evidenceSummary": "Minh Tran links MH-A1-STARTER through enroll-minh-a1-pending, sub-minh-a1-trialing, pay-minh-a1-pending, 0 refund fixture, and 0 commission fixture rows."
+    },
+    {
+      "relationshipKey": "student-linh->course-phonics-booster->enroll-linh-phonics-active->sub-linh-phonics-active",
+      "studentId": "student-linh",
+      "childProfileId": "child-linh-demo",
+      "studentName": "Linh Pham",
+      "courseId": "course-phonics-booster",
+      "courseCode": "MH-PHONICS-BOOSTER",
+      "courseTitle": "Phonics Booster",
+      "enrollmentId": "enroll-linh-phonics-active",
+      "enrollmentStatus": "ACTIVE",
+      "subscriptionId": "sub-linh-phonics-active",
+      "subscriptionStatus": "ACTIVE",
+      "paymentId": "pay-linh-phonics-succeeded",
+      "paymentStatus": "SUCCEEDED",
+      "refundIds": [],
+      "commissionIds": [
+        "commission-linh-sale-approved",
+        "commission-linh-agency-payable"
+      ],
+      "fixtureOnly": true,
+      "mutationUsed": false,
+      "evidenceSummary": "Linh Pham links MH-PHONICS-BOOSTER through enroll-linh-phonics-active, sub-linh-phonics-active, pay-linh-phonics-succeeded, 0 refund fixture, and 2 commission fixture rows."
+    }
+  ],
+  "evidenceRows": [
+    {
+      "evidenceKind": "STUDENT_PROFILE",
+      "evidenceCount": 4,
+      "stableFixtureIds": [
+        "student-ava",
+        "student-minh",
+        "student-linh",
+        "student-khoa"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Fixture student profiles use stable child profile and parent email IDs only."
+    },
+    {
+      "evidenceKind": "COURSE_PACKAGE",
+      "evidenceCount": 2,
+      "stableFixtureIds": [
+        "course-a1-starter",
+        "course-phonics-booster"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Fixture courses expose course code, level, package code, and package name."
+    },
+    {
+      "evidenceKind": "ENROLLMENT_SUBSCRIPTION",
+      "evidenceCount": 4,
+      "stableFixtureIds": [
+        "student-ava->course-a1-starter->enroll-ava-a1-active->sub-ava-a1-active",
+        "student-khoa->course-a1-starter->enroll-khoa-a1-canceled->sub-khoa-a1-canceled",
+        "student-minh->course-a1-starter->enroll-minh-a1-pending->sub-minh-a1-trialing",
+        "student-linh->course-phonics-booster->enroll-linh-phonics-active->sub-linh-phonics-active"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Each enrollment row has one traceable fixture subscription and payment row."
+    },
+    {
+      "evidenceKind": "PAYMENT_FIXTURE",
+      "evidenceCount": 4,
+      "stableFixtureIds": [
+        "pay-ava-a1-succeeded",
+        "pay-minh-a1-pending",
+        "pay-linh-phonics-succeeded",
+        "pay-khoa-a1-refunded"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Payment evidence is fixture_manual_bank_transfer status data only."
+    },
+    {
+      "evidenceKind": "REFUND_FIXTURE",
+      "evidenceCount": 1,
+      "stableFixtureIds": [
+        "refund-khoa-a1-succeeded"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Refund evidence is a deliberate synthetic cancellation example with no real refund mutation."
+    },
+    {
+      "evidenceKind": "COMMISSION_FIXTURE",
+      "evidenceCount": 4,
+      "stableFixtureIds": [
+        "commission-ava-sale-pending",
+        "commission-linh-sale-approved",
+        "commission-linh-agency-payable",
+        "commission-khoa-sale-canceled"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Commission evidence includes pending, payable, approved, and canceled fixture rows with no payout mutation."
+    }
+  ]
+}

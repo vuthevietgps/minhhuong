@@ -1,0 +1,50 @@
+{
+  "phase": "PR-DEMO-1F-A",
+  "status": "weak_evidence_hardening_spec_completed",
+  "output_root": "docs/ai-data-pack/runs/promt36-pr-demo-1f-weak-evidence-hardening-spec",
+  "single_folder_mode": true,
+  "legacy_paths_created": false,
+  "prompt35_source_status": "acceptance_packet_completed",
+  "prompt35_packet_present_in_repo": false,
+  "source_limitations": [
+    "Requested Prompt 35 folderized packet was not present at docs/ai-data-pack/runs/promt35-pr-demo-1e-acceptance-packet/.",
+    "Prompt 35 accepted status is based on the v38 control pack, not local Prompt 35 packet files.",
+    "Evidence mirror files disclose the missing source instead of inventing missing Prompt 35 contents."
+  ],
+  "spec": {
+    "created": true,
+    "weak_findings_total": 5,
+    "weak_findings_covered": [
+      "supplier_cost_up",
+      "overdue_dealer_receivables",
+      "low_inventory_best_seller",
+      "labor_overtime_high",
+      "slow_supplier_good_cost"
+    ],
+    "canonical_evidence_model_created": true,
+    "director_json_surface_proposal_created": true,
+    "data_quality_gates_created": true,
+    "future_acceptance_criteria_created": true,
+    "future_test_plan_created": true
+  },
+  "safety": {
+    "openai_api_used": false,
+    "action_draft_schema_opened": false,
+    "action_import_added": false,
+    "approval_workflow_added": false,
+    "dry_run_live_added": false,
+    "provider_mutation_added": false,
+    "provider_validate_only_added": false,
+    "new_provider_adapter_added": false,
+    "ads_platform_mutation_added": false,
+    "phase_3_started": false,
+    "production_db_used": false,
+    "code_changed": false,
+    "db_migration_added": false,
+    "new_seed_generation_added": false,
+    "new_export_download_behavior_added": false,
+    "fake_evidence_added": false
+  },
+  "next_recommendation": "PR-DEMO-1G select the first read-only implementation slice for weak-evidence hardening, still no Action Draft Schema."
+}
+

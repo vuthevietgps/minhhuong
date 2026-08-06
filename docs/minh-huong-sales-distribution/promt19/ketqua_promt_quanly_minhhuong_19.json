@@ -1,0 +1,168 @@
+{
+  "date": "2026-06-14",
+  "prompt": "Promt_quanly_minhhuong_19",
+  "mode": "implementation-narrow-slice / read-only affiliate order attribution report",
+  "verdict": "CONDITIONAL",
+  "conditionalReasons": [
+    "git status --short cannot run because the workspace is not a git repository.",
+    "DB-backed suites still emit the known non-failing pg deprecation warning."
+  ],
+  "implemented": {
+    "endpoint": "GET /v1/channel-affiliate/order-attributions",
+    "sourceOfTruth": "ActivationOrder.affiliateAttributionSnapshotJson",
+    "filters": [
+      "participantId",
+      "agencyId",
+      "agencyMemberId",
+      "affiliateLinkId",
+      "affiliateQrAssetId",
+      "clickId",
+      "campaign",
+      "channel",
+      "placement",
+      "packageCode",
+      "orderStatus",
+      "createdFrom",
+      "createdTo",
+      "clickFrom",
+      "clickTo",
+      "page",
+      "pageSize"
+    ],
+    "responseFields": [
+      "orderId",
+      "orderStatus",
+      "orderCreatedAt",
+      "orderAmountCents",
+      "currency",
+      "packageCode",
+      "packageName",
+      "customerEmail",
+      "customerDisplayName",
+      "affiliateAttribution",
+      "summary.totalOrders",
+      "summary.countByStatus",
+      "summary.approvedOrders",
+      "summary.approvedAmountCents"
+    ],
+    "scopeSafety": [
+      "uses channelAffiliateViewRoles",
+      "uses existing participantScopeWhere lineage scoping",
+      "admin and operations have global scope",
+      "scoped channel users see only subtree orders",
+      "filters are ANDed with scope and cannot bypass it",
+      "unscoped non-admin users receive empty results"
+    ],
+    "privacySafety": [
+      "response whitelist excludes raw IP",
+      "response whitelist excludes raw User-Agent",
+      "response whitelist excludes ipHash and userAgentHash",
+      "response whitelist excludes deviceHint",
+      "response whitelist excludes cookie and Authorization",
+      "response whitelist excludes raw headers",
+      "response whitelist excludes payment proof fields"
+    ],
+    "readOnlyFinancialSafety": "The endpoint uses count, groupBy, aggregate, and findMany only. It does not create, update, or delete ActivationOrder, Payment, Subscription, WalletLedgerEntry, CommissionEarning, CommissionLedgerEntry, PayoutRequest, or AffiliateClickEvent."
+  },
+  "hardBansNotImplemented": [
+    "mobile first-open/deferred attribution",
+    "AppInstallAttribution",
+    "CustomerAttribution",
+    "customer/register attribution API",
+    "first-click/last-click attribution engine",
+    "attribution dispute/manual override workflow",
+    "commission policy changes",
+    "commission calculation redesign",
+    "payout/payment gateway/webhook/reconciliation",
+    "finance report redesign",
+    "frontend/UI",
+    "QR image rendering",
+    "coupon/discount",
+    "renewal ownership logic",
+    "fraud/risk scoring",
+    "broad channel hierarchy redesign"
+  ],
+  "tests": [
+    {
+      "command": "npm --prefix apps/api run prisma:generate",
+      "status": "passed"
+    },
+    {
+      "command": "npm --prefix apps/api run build",
+      "status": "passed",
+      "summary": "early and final"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 21 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-affiliate",
+      "status": "passed",
+      "summary": "2 suites, 17 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-affiliate-migration.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 11 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts channel-finance.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 33 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand package-entitlement",
+      "status": "passed",
+      "summary": "3 suites, 12 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand entitlement.service.spec.ts learning.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 21 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-participant-fk.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 1 test"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-scope.integration.spec.ts channel-admin-scope.integration.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 7 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand",
+      "status": "passed",
+      "summary": "23 suites, 149 tests"
+    },
+    {
+      "command": "npm --prefix apps/api run test:e2e -- --runInBand",
+      "status": "passed",
+      "summary": "5 suites, 12 tests"
+    },
+    {
+      "command": "git status --short",
+      "status": "failed",
+      "summary": "fatal: not a git repository (or any of the parent directories): .git"
+    }
+  ],
+  "filesChanged": [
+    "apps/api/src/channel-affiliate/channel-affiliate.controller.ts",
+    "apps/api/src/channel-affiliate/channel-affiliate.service.ts",
+    "apps/api/src/channel-affiliate/dto/channel-affiliate.dto.ts",
+    "apps/api/src/channel-affiliate/channel-affiliate-migration.integration.spec.ts",
+    "docs/minh-huong-sales-distribution/promt19/*"
+  ],
+  "remainingGaps": [
+    "No aggregate report grouped by link, participant, campaign, or QR asset yet.",
+    "No CSV/export UI.",
+    "No mobile install/deferred attribution.",
+    "No CustomerAttribution.",
+    "No first-click/last-click engine.",
+    "No manual override or dispute workflow.",
+    "No commission policy changes."
+  ],
+  "nextPrompt": "Prompt 20 should add narrow affiliate attribution aggregate reports by snapshot fields while preserving read-only behavior and excluding mobile/customer attribution, frontend, payment gateway, commission policy changes, and override/dispute workflows."
+}

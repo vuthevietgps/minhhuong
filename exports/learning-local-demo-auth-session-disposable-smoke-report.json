@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "minh_huong.auth_session_disposable_smoke.v1",
+  "generatedAt": "2026-07-11T14:22:36.146Z",
+  "scope": "disposable_localhost_only",
+  "status": "PASS",
+  "productionReady": false,
+  "productionEnabled": false,
+  "databases": {
+    "source": "auth_session_smoke_source_93504865_1fad_45a1_9b75_3d11f979debf",
+    "restore": "auth_session_smoke_restore_93504865_1fad_45a1_9b75_3d11f979debf",
+    "host": "localhost",
+    "sourceDropped": true,
+    "restoreDropped": true
+  },
+  "twoProcessApi": {
+    "processCount": 2,
+    "preRevocationAccessStatus": 200,
+    "replayDenialStatus": 401,
+    "postRevocationAccessStatus": 401,
+    "sharedRevocationVerified": true
+  },
+  "repositoryOutage": {
+    "protectedRequestStatus": 503,
+    "failClosedVerified": true
+  },
+  "backupRestore": {
+    "backupFormat": "pg_dump_custom",
+    "backupWindowMs": 811,
+    "observedLocalRpoMs": 929,
+    "restoreAndValidationRtoMs": 1908,
+    "sourceDigest": "7b9c94f7ea9482099190720c8deb717fc2fad1b320a579208778e057ebe22a0e",
+    "restoredDigest": "7b9c94f7ea9482099190720c8deb717fc2fad1b320a579208778e057ebe22a0e",
+    "rowCounts": {
+      "sessions": 1,
+      "refreshTokens": 2,
+      "auditEvents": 6
+    },
+    "hashOnlyRefreshPersistenceVerified": true,
+    "auditRowsRestored": true,
+    "integrityVerified": true,
+    "temporaryBackupRemoved": true
+  },
+  "cleanup": {
+    "exactRandomDatabaseCleanupVerified": true,
+    "temporaryDirectoryRemoved": true
+  },
+  "safety": {
+    "productionDatabaseUsed": false,
+    "stagingDatabaseUsed": false,
+    "realAccountUsed": false,
+    "rawTokenExported": false,
+    "providerApiUsed": false,
+    "paymentRefundPayoutMutationUsed": false
+  }
+}

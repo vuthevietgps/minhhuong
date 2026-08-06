@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "minh_huong.auth_operational_alert_state_disposable_smoke.v3",
+  "generatedAt": "2026-07-11T14:23:19.223Z",
+  "scope": "disposable_localhost_only",
+  "status": "PASS",
+  "productionReady": false,
+  "productionEnabled": false,
+  "database": {
+    "name": "auth_operational_alert_state_smoke_8cb4a221_d25c_4e01_bf60_19dc383d1bc7",
+    "host": "localhost",
+    "randomDatabaseCount": 1,
+    "randomDatabaseCreated": true,
+    "randomDatabaseDropped": true
+  },
+  "twoProcessEvaluation": {
+    "processCount": 2,
+    "responseCount": 8,
+    "openCandidateSetCount": 1,
+    "cooldownSuppressedSetCount": 7,
+    "openCandidateCount": 4,
+    "cooldownSuppressedCandidateCount": 28,
+    "exactlyOneOpenAndRemainingSuppressedSets": true
+  },
+  "rollingWindow": {
+    "requestedWindowMs": 3600000,
+    "responseWindowCount": 8,
+    "explicitWindowVerified": true,
+    "retainedSnapshotTotalsOnly": false
+  },
+  "inspection": {
+    "adminReadOnlyStatus": 200,
+    "adminRoleReturned": true,
+    "actorIdentityExposed": false,
+    "redactionVerified": true
+  },
+  "sharedState": {
+    "persistedCurrentRows": 4,
+    "fingerprintsRedacted": true,
+    "sharedPrismaScopeVerified": true
+  },
+  "appendOnlyAudit": {
+    "persistedResponseAuditRows": 8,
+    "uniqueResponseCorrelationIds": 8,
+    "redactionVerified": true,
+    "databaseUpdateRejected": true,
+    "idempotentCorrelationRowCount": 1,
+    "idempotentReplayVerified": true,
+    "correlationConflictFailedClosed": true
+  },
+  "auditReadModel": {
+    "correlationLookupStatus": 200,
+    "correlationLookupVerified": true,
+    "incidentExportPageSize": 3,
+    "incidentExportPageCount": 3,
+    "incidentExportRowCount": 9,
+    "uniqueCorrelationCount": 9,
+    "deterministicPaginationVerified": true,
+    "boundedWindowRejectionStatus": 400,
+    "boundedWindowVerified": true,
+    "adminReadOnlyVerified": true,
+    "redactionVerified": true
+  },
+  "capacity": {
+    "sampleCount": 8,
+    "forcedContentionHoldMs": 500,
+    "localTechnicalThresholdMs": 5000,
+    "maxLockWaitMs": 548.4834000000001,
+    "p95LockWaitMs": 548.4834000000001,
+    "maxEvaluationDurationMs": 565.3370000000004,
+    "maxClientDurationMs": 727.1460999999999,
+    "contentionObserved": true,
+    "withinLocalTechnicalThreshold": true
+  },
+  "retention": {
+    "expiredFixtureRowsCreated": 2,
+    "expiredAuditFixtureRowsCreated": 2,
+    "expiredAlertStatesRemoved": 2,
+    "expiredEvaluationAuditsRemoved": 2,
+    "currentAlertStatesPreserved": 4,
+    "currentEvaluationAuditsPreserved": 9,
+    "exactCleanupVerified": true
+  },
+  "outage": {
+    "stateProviderFailedClosed": true,
+    "auditProviderFailedClosed": true,
+    "snapshotProviderFailedClosed": true,
+    "inspectionHttpStatus": 503,
+    "inspectionFailedClosed": true,
+    "auditCorrelationLookupHttpStatus": 503,
+    "auditIncidentExportHttpStatus": 503,
+    "auditReadModelFailedClosed": true
+  },
+  "cleanup": {
+    "apiProcessesStopped": true,
+    "temporaryDirectoryRemoved": true,
+    "exactRandomDatabaseCleanupVerified": true
+  },
+  "safety": {
+    "productionDatabaseUsed": false,
+    "stagingDatabaseUsed": false,
+    "realIdentityOrSessionUsed": false,
+    "externalAlertProviderUsed": false,
+    "liveNotificationUsed": false,
+    "rawRateLimitKeysExported": false,
+    "rawCredentialsOrTokensExported": false,
+    "paymentRefundCommissionPayoutMutationUsed": false,
+    "liveAiProviderUsed": false
+  }
+}

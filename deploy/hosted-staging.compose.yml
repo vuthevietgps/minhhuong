@@ -1,0 +1,150 @@
+name: minhhuong-hosted-staging
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - data
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+    command:
+      [
+        "sh",
+        "-c",
+        'exec redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"',
+      ]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'REDISCLI_AUTH="$$REDIS_PASSWORD" redis-cli ping | grep -q PONG',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - data
+
+  migrate:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+      target: api-migrate
+    restart: "no"
+    environment: &api-environment
+      NODE_ENV: production
+      DEPLOYMENT_ENVIRONMENT: hosted-staging
+      PRODUCTION_READY: "false"
+      PRODUCTION_ENABLED: "false"
+      LOCAL_DEMO_ROUTES_ENABLED: "false"
+      API_PORT: "4000"
+      API_PUBLIC_URL: ${API_PUBLIC_URL:?API_PUBLIC_URL is required}
+      WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:?WEB_PUBLIC_URL is required}
+      CORS_ORIGIN: ${CORS_ORIGIN:?CORS_ORIGIN is required}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?NEXT_PUBLIC_API_URL is required}
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      REDIS_URL: ${REDIS_URL:?REDIS_URL is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      AUTH_SESSION_STORE_PROVIDER: prisma
+      AUTH_OPERATIONAL_CONTROL_PROVIDER: prisma
+      AUTH_OPERATIONAL_CONTROL_KEY_SECRET: ${AUTH_OPERATIONAL_CONTROL_KEY_SECRET:?AUTH_OPERATIONAL_CONTROL_KEY_SECRET is required}
+      AUTH_OPERATIONAL_ALERT_STATE_PROVIDER: prisma
+      NOTIFICATION_PROVIDER: disabled
+      PAYMENT_PROVIDER: disabled
+      AI_PROVIDER: disabled
+      VIDEO_PROVIDER: disabled
+      UPLOAD_STORAGE_PROVIDER: s3
+      UPLOAD_STORAGE_TOPOLOGY: shared-object
+      UPLOAD_HOSTED_FILESYSTEM_EMERGENCY_OVERRIDE: "false"
+      UPLOAD_S3_BUCKET: ${UPLOAD_S3_BUCKET:?UPLOAD_S3_BUCKET is required}
+      UPLOAD_S3_REGION: ${UPLOAD_S3_REGION:?UPLOAD_S3_REGION is required}
+      UPLOAD_S3_ENDPOINT: ${UPLOAD_S3_ENDPOINT:-}
+      UPLOAD_S3_FORCE_PATH_STYLE: ${UPLOAD_S3_FORCE_PATH_STYLE:-false}
+      UPLOAD_S3_CREDENTIALS_REFERENCE: ${UPLOAD_S3_CREDENTIALS_REFERENCE:?UPLOAD_S3_CREDENTIALS_REFERENCE is required}
+      UPLOAD_S3_ACCESS_KEY_ID: ${UPLOAD_S3_ACCESS_KEY_ID:-}
+      UPLOAD_S3_SECRET_ACCESS_KEY: ${UPLOAD_S3_SECRET_ACCESS_KEY:-}
+      UPLOAD_S3_KEY_PREFIX: ${UPLOAD_S3_KEY_PREFIX:-minhhuong-staging}
+      UPLOAD_S3_TIMEOUT_MS: ${UPLOAD_S3_TIMEOUT_MS:-5000}
+      UPLOAD_S3_MAX_ATTEMPTS: ${UPLOAD_S3_MAX_ATTEMPTS:-3}
+      API_REPLICA_COUNT: "1"
+      MIGRATION_BACKUP_PATH: /backups/pre-migration.dump
+      MIGRATION_BACKUP_HOOK: /app/deploy/hooks/backup-postgres.sh
+      MIGRATION_ROLLBACK_HOOK: /app/deploy/hooks/rollback-postgres.sh
+      MIGRATION_AUTO_RESTORE_ON_FAILURE: "false"
+    volumes:
+      - migration-backups:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - data
+
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+      target: api-runtime
+    restart: unless-stopped
+    init: true
+    environment: *api-environment
+    ports:
+      - "${API_BIND_ADDRESS:-127.0.0.1}:${API_PUBLISHED_PORT:-4000}:4000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app
+      - data
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+      target: web-runtime
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?NEXT_PUBLIC_API_URL is required}
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+    ports:
+      - "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PUBLISHED_PORT:-3000}:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - app
+
+networks:
+  app:
+  data:
+    internal: true
+
+volumes:
+  postgres-data:
+  redis-data:
+  migration-backups:

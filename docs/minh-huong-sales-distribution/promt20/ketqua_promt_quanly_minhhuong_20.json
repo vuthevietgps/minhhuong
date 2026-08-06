@@ -1,0 +1,169 @@
+{
+  "date": "2026-06-14",
+  "prompt": "Promt_quanly_minhhuong_20",
+  "mode": "implementation-narrow-slice / read-only affiliate attribution aggregate report",
+  "verdict": "CONDITIONAL",
+  "conditionalReasons": [
+    "git status --short cannot run because the workspace is not a git repository.",
+    "DB-backed suites still emit the known non-failing pg deprecation warning."
+  ],
+  "implemented": {
+    "endpoint": "GET /v1/channel-affiliate/order-attributions/aggregates",
+    "sourceOfTruth": "ActivationOrder.affiliateAttributionSnapshotJson",
+    "groupBy": [
+      "participant",
+      "agency",
+      "agencyMember",
+      "affiliateLink",
+      "affiliateQrAsset",
+      "campaign",
+      "channel",
+      "placement",
+      "package"
+    ],
+    "filters": [
+      "participantId",
+      "agencyId",
+      "agencyMemberId",
+      "affiliateLinkId",
+      "affiliateQrAssetId",
+      "clickId",
+      "campaign",
+      "channel",
+      "placement",
+      "packageCode",
+      "orderStatus",
+      "createdFrom",
+      "createdTo",
+      "clickFrom",
+      "clickTo"
+    ],
+    "metrics": [
+      "totalAttributedOrders",
+      "approvedOrders",
+      "countByStatus",
+      "approvedAmountCentsByCurrency",
+      "approvedAmountCents when single-currency",
+      "firstOrderCreatedAt",
+      "lastOrderCreatedAt"
+    ],
+    "scopeSafety": [
+      "uses channelAffiliateViewRoles",
+      "uses existing participantScopeWhere lineage scoping",
+      "admin and operations have global scope",
+      "scoped channel users see only subtree orders",
+      "filters are ANDed with scope and cannot bypass it",
+      "unscoped non-admin users receive empty results"
+    ],
+    "privacySafety": [
+      "aggregate response excludes customer email",
+      "aggregate response excludes raw IP",
+      "aggregate response excludes raw User-Agent",
+      "aggregate response excludes ipHash and userAgentHash",
+      "aggregate response excludes deviceHint",
+      "aggregate response excludes cookie and Authorization",
+      "aggregate response excludes raw headers",
+      "aggregate response excludes payment proof fields"
+    ],
+    "readOnlyFinancialSafety": "The endpoint uses activationOrder.findMany and in-memory aggregation only. It does not create, update, or delete ActivationOrder, Payment, Subscription, WalletLedgerEntry, CommissionEarning, CommissionLedgerEntry, PayoutRequest, or AffiliateClickEvent."
+  },
+  "hardBansNotImplemented": [
+    "mobile first-open/deferred attribution",
+    "AppInstallAttribution",
+    "CustomerAttribution",
+    "customer/register attribution API",
+    "first-click/last-click attribution engine",
+    "attribution dispute/manual override workflow",
+    "commission policy changes",
+    "commission calculation redesign",
+    "payout/payment gateway/webhook/reconciliation",
+    "finance report redesign",
+    "frontend/UI",
+    "QR image rendering",
+    "coupon/discount",
+    "renewal ownership logic",
+    "fraud/risk scoring",
+    "broad channel hierarchy redesign"
+  ],
+  "tests": [
+    {
+      "command": "npm --prefix apps/api run prisma:generate",
+      "status": "passed"
+    },
+    {
+      "command": "npm --prefix apps/api run build",
+      "status": "passed",
+      "summary": "before focused tests and final; one transient EPERM rmdir attempt after e2e passed on immediate retry without source changes"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 21 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-affiliate",
+      "status": "passed",
+      "summary": "2 suites, 20 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-affiliate-migration.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 14 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts channel-finance.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 33 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand package-entitlement",
+      "status": "passed",
+      "summary": "3 suites, 12 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand entitlement.service.spec.ts learning.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 21 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-participant-fk.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 1 test"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-scope.integration.spec.ts channel-admin-scope.integration.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 7 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand",
+      "status": "passed",
+      "summary": "23 suites, 152 tests"
+    },
+    {
+      "command": "npm --prefix apps/api run test:e2e -- --runInBand",
+      "status": "passed",
+      "summary": "5 suites, 12 tests"
+    },
+    {
+      "command": "git status --short",
+      "status": "failed",
+      "summary": "fatal: not a git repository (or any of the parent directories): .git"
+    }
+  ],
+  "filesChanged": [
+    "apps/api/src/channel-affiliate/channel-affiliate.controller.ts",
+    "apps/api/src/channel-affiliate/channel-affiliate.service.ts",
+    "apps/api/src/channel-affiliate/dto/channel-affiliate.dto.ts",
+    "apps/api/src/channel-affiliate/channel-affiliate-migration.integration.spec.ts",
+    "docs/minh-huong-sales-distribution/promt20/*"
+  ],
+  "remainingGaps": [
+    "No CSV/export endpoint.",
+    "No frontend report UI.",
+    "No dedicated database aggregate table or materialized view.",
+    "No currency-specific sort parameter.",
+    "Large datasets are aggregated in service memory after scoped filtering."
+  ],
+  "nextPrompt": "Prompt 21 should add an optional export/read model layer for the existing attribution list and aggregate reports while preserving immutable snapshots, scope safety, privacy whitelist, and read-only financial safety."
+}

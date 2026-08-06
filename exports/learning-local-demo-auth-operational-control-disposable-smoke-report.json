@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "minh_huong.auth_operational_control_disposable_smoke.v1",
+  "generatedAt": "2026-07-11T14:23:01.706Z",
+  "scope": "disposable_localhost_only",
+  "status": "PASS",
+  "productionReady": false,
+  "productionEnabled": false,
+  "database": {
+    "name": "auth_operational_control_smoke_c3ca8e34_0a36_41dc_8670_673b55c964a8",
+    "host": "localhost",
+    "randomDatabaseCreated": true,
+    "randomDatabaseDropped": true
+  },
+  "twoProcessAtomicRateLimit": {
+    "processCount": 2,
+    "loginConcurrentRequests": 12,
+    "loginDeniedStatuses": 5,
+    "loginThrottledStatuses": 7,
+    "loginAdmissionLimit": 5,
+    "refreshConcurrentRequests": 16,
+    "refreshDeniedStatuses": 10,
+    "refreshThrottledStatuses": 6,
+    "refreshAdmissionLimit": 10,
+    "atomicLimitVerified": true
+  },
+  "sharedCounters": {
+    "expected": {
+      "LOGIN_ATTEMPT": 5,
+      "LOGIN_DENIED": 5,
+      "LOGIN_THROTTLED": 7,
+      "REFRESH_ATTEMPT": 10,
+      "REFRESH_DENIED": 10,
+      "REFRESH_THROTTLED": 6
+    },
+    "observed": {
+      "LOGIN_ATTEMPT": 5,
+      "LOGIN_DENIED": 5,
+      "LOGIN_THROTTLED": 7,
+      "REFRESH_ATTEMPT": 10,
+      "REFRESH_DENIED": 10,
+      "REFRESH_THROTTLED": 6
+    },
+    "crossProcessAggregationVerified": true
+  },
+  "retention": {
+    "metricRetentionMsUnderTest": 60000,
+    "expiredRateLimitAttemptsRemoved": 1,
+    "expiredMetricBucketsRemoved": 2,
+    "currentRowsPreserved": true,
+    "cleanupVerified": true
+  },
+  "outage": {
+    "loginStatus": 503,
+    "failClosedVerified": true
+  },
+  "keyProtection": {
+    "algorithm": "HMAC_SHA256",
+    "persistedKeysAreOpaqueHex": true,
+    "rawRateKeysExported": false,
+    "rawTokensExported": false
+  },
+  "cleanup": {
+    "apiProcessesStopped": true,
+    "temporaryDirectoryRemoved": true,
+    "exactRandomDatabaseCleanupVerified": true
+  },
+  "safety": {
+    "productionDatabaseUsed": false,
+    "stagingDatabaseUsed": false,
+    "realIdentityUsed": false,
+    "externalProviderUsed": false,
+    "paymentRefundPayoutMutationUsed": false,
+    "liveNotificationUsed": false,
+    "liveAiProviderUsed": false
+  }
+}

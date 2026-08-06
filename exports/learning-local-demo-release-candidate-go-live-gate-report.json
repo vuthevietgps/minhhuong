@@ -1,0 +1,1602 @@
+{
+  "schemaVersion": "learning-release-candidate-go-live-gate.v4",
+  "generatedAt": "2026-07-10T10:00:00.000Z",
+  "fixtureKind": "learning-local-demo-only",
+  "releaseCandidateStatus": "ISOLATED_STAGING_REHEARSAL_EVIDENCE_READY",
+  "goLiveDecision": "GO_LIVE_BLOCKED",
+  "approvalGateDecision": "STAGING_REHEARSAL_APPROVED_WITH_CONDITIONS",
+  "autoLoopDecision": "STOP_FOR_SEPARATE_FINAL_RELEASE_DECISION",
+  "stagingExecutionAuthorized": true,
+  "productionExecutionAuthorized": false,
+  "productionReady": false,
+  "productionEnabled": false,
+  "manualGoLiveApprovalRequired": true,
+  "approvalScope": {
+    "approvalCode": "MH_RC_V3_USER_DELEGATED_STAGING_CONDITIONAL_20260710_01",
+    "decisionId": "MH-RC-V3-STAGING-CONDITIONAL-20260710-01",
+    "target": "minhhuong-staging-rc-v3-local",
+    "classification": "isolated_nonproduction_local_staging",
+    "scope": "staging_dry_run",
+    "productionApproved": false,
+    "evidencePath": "docs/hoctap_minhhuong/approvals/2026-07-10_staging_conditional_approval.json"
+  },
+  "stagingRehearsal": {
+    "evidenceStatus": "PASS",
+    "evidenceAccepted": true,
+    "evidencePath": "exports/minhhuong-staging-rc-v3-local-rehearsal.json",
+    "failedCheckCount": 0,
+    "productionReady": false,
+    "productionEnabled": false
+  },
+  "roleScenarioFixtureRows": [
+    {
+      "scenarioFixtureId": "rc-fixture-student-happy-path",
+      "sourceActorFixtureId": "student-ava",
+      "role": "STUDENT",
+      "scenario": "HAPPY_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "AUTHORIZED",
+      "expectedDecision": "ALLOWED_FIXTURE_ONLY",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-student-denied-path",
+      "sourceActorFixtureId": "student-ava",
+      "role": "STUDENT",
+      "scenario": "DENIED_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "ACTION_DENIED",
+      "expectedDecision": "DENIED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-student-inactive-or-expired-path",
+      "sourceActorFixtureId": "student-ava",
+      "role": "STUDENT",
+      "scenario": "INACTIVE_OR_EXPIRED_PATH",
+      "lifecycleStatus": "EXPIRED_OR_INACTIVE",
+      "scopeStatus": "ACTION_DENIED",
+      "expectedDecision": "BLOCKED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-student-permission-negative-path",
+      "sourceActorFixtureId": "student-ava",
+      "role": "STUDENT",
+      "scenario": "PERMISSION_NEGATIVE_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "OUT_OF_SCOPE",
+      "expectedDecision": "DENIED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-parent-happy-path",
+      "sourceActorFixtureId": "guardian-ava-parent",
+      "role": "PARENT",
+      "scenario": "HAPPY_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "AUTHORIZED",
+      "expectedDecision": "ALLOWED_FIXTURE_ONLY",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-parent-denied-path",
+      "sourceActorFixtureId": "guardian-ava-parent",
+      "role": "PARENT",
+      "scenario": "DENIED_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "ACTION_DENIED",
+      "expectedDecision": "DENIED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-parent-inactive-or-expired-path",
+      "sourceActorFixtureId": "guardian-ava-parent",
+      "role": "PARENT",
+      "scenario": "INACTIVE_OR_EXPIRED_PATH",
+      "lifecycleStatus": "EXPIRED_OR_INACTIVE",
+      "scopeStatus": "ACTION_DENIED",
+      "expectedDecision": "BLOCKED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-parent-permission-negative-path",
+      "sourceActorFixtureId": "guardian-ava-parent",
+      "role": "PARENT",
+      "scenario": "PERMISSION_NEGATIVE_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "OUT_OF_SCOPE",
+      "expectedDecision": "DENIED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-teacher-happy-path",
+      "sourceActorFixtureId": "content-owner-teacher-mai",
+      "role": "TEACHER",
+      "scenario": "HAPPY_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "AUTHORIZED",
+      "expectedDecision": "ALLOWED_FIXTURE_ONLY",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-teacher-denied-path",
+      "sourceActorFixtureId": "content-owner-teacher-mai",
+      "role": "TEACHER",
+      "scenario": "DENIED_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "ACTION_DENIED",
+      "expectedDecision": "DENIED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-teacher-inactive-or-expired-path",
+      "sourceActorFixtureId": "content-owner-teacher-mai",
+      "role": "TEACHER",
+      "scenario": "INACTIVE_OR_EXPIRED_PATH",
+      "lifecycleStatus": "EXPIRED_OR_INACTIVE",
+      "scopeStatus": "ACTION_DENIED",
+      "expectedDecision": "BLOCKED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-teacher-permission-negative-path",
+      "sourceActorFixtureId": "content-owner-teacher-mai",
+      "role": "TEACHER",
+      "scenario": "PERMISSION_NEGATIVE_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "OUT_OF_SCOPE",
+      "expectedDecision": "DENIED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-admin-happy-path",
+      "sourceActorFixtureId": "content-owner-admin-hoa",
+      "role": "ADMIN",
+      "scenario": "HAPPY_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "AUTHORIZED",
+      "expectedDecision": "ALLOWED_FIXTURE_ONLY",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-admin-denied-path",
+      "sourceActorFixtureId": "content-owner-admin-hoa",
+      "role": "ADMIN",
+      "scenario": "DENIED_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "ACTION_DENIED",
+      "expectedDecision": "DENIED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-admin-inactive-or-expired-path",
+      "sourceActorFixtureId": "content-owner-admin-hoa",
+      "role": "ADMIN",
+      "scenario": "INACTIVE_OR_EXPIRED_PATH",
+      "lifecycleStatus": "EXPIRED_OR_INACTIVE",
+      "scopeStatus": "ACTION_DENIED",
+      "expectedDecision": "BLOCKED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-admin-permission-negative-path",
+      "sourceActorFixtureId": "content-owner-admin-hoa",
+      "role": "ADMIN",
+      "scenario": "PERMISSION_NEGATIVE_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "OUT_OF_SCOPE",
+      "expectedDecision": "DENIED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-support-happy-path",
+      "sourceActorFixtureId": "support-ops-auditor-lan",
+      "role": "SUPPORT",
+      "scenario": "HAPPY_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "AUTHORIZED",
+      "expectedDecision": "ALLOWED_FIXTURE_ONLY",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-support-denied-path",
+      "sourceActorFixtureId": "support-ops-auditor-lan",
+      "role": "SUPPORT",
+      "scenario": "DENIED_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "ACTION_DENIED",
+      "expectedDecision": "DENIED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-support-inactive-or-expired-path",
+      "sourceActorFixtureId": "support-ops-auditor-lan",
+      "role": "SUPPORT",
+      "scenario": "INACTIVE_OR_EXPIRED_PATH",
+      "lifecycleStatus": "EXPIRED_OR_INACTIVE",
+      "scopeStatus": "ACTION_DENIED",
+      "expectedDecision": "BLOCKED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-support-permission-negative-path",
+      "sourceActorFixtureId": "support-ops-auditor-lan",
+      "role": "SUPPORT",
+      "scenario": "PERMISSION_NEGATIVE_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "OUT_OF_SCOPE",
+      "expectedDecision": "DENIED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-sales-happy-path",
+      "sourceActorFixtureId": "demo-sale-lan",
+      "role": "SALES",
+      "scenario": "HAPPY_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "AUTHORIZED",
+      "expectedDecision": "ALLOWED_FIXTURE_ONLY",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-sales-denied-path",
+      "sourceActorFixtureId": "demo-sale-lan",
+      "role": "SALES",
+      "scenario": "DENIED_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "ACTION_DENIED",
+      "expectedDecision": "DENIED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-sales-inactive-or-expired-path",
+      "sourceActorFixtureId": "demo-sale-lan",
+      "role": "SALES",
+      "scenario": "INACTIVE_OR_EXPIRED_PATH",
+      "lifecycleStatus": "EXPIRED_OR_INACTIVE",
+      "scopeStatus": "ACTION_DENIED",
+      "expectedDecision": "BLOCKED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-sales-permission-negative-path",
+      "sourceActorFixtureId": "demo-sale-lan",
+      "role": "SALES",
+      "scenario": "PERMISSION_NEGATIVE_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "OUT_OF_SCOPE",
+      "expectedDecision": "DENIED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-channel-happy-path",
+      "sourceActorFixtureId": "demo-agency-hcm",
+      "role": "CHANNEL",
+      "scenario": "HAPPY_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "AUTHORIZED",
+      "expectedDecision": "ALLOWED_FIXTURE_ONLY",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-channel-denied-path",
+      "sourceActorFixtureId": "demo-agency-hcm",
+      "role": "CHANNEL",
+      "scenario": "DENIED_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "ACTION_DENIED",
+      "expectedDecision": "DENIED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-channel-inactive-or-expired-path",
+      "sourceActorFixtureId": "demo-agency-hcm",
+      "role": "CHANNEL",
+      "scenario": "INACTIVE_OR_EXPIRED_PATH",
+      "lifecycleStatus": "EXPIRED_OR_INACTIVE",
+      "scopeStatus": "ACTION_DENIED",
+      "expectedDecision": "BLOCKED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-channel-permission-negative-path",
+      "sourceActorFixtureId": "demo-agency-hcm",
+      "role": "CHANNEL",
+      "scenario": "PERMISSION_NEGATIVE_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "OUT_OF_SCOPE",
+      "expectedDecision": "DENIED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-finance-happy-path",
+      "sourceActorFixtureId": "demo-finance-manager",
+      "role": "FINANCE",
+      "scenario": "HAPPY_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "AUTHORIZED",
+      "expectedDecision": "ALLOWED_FIXTURE_ONLY",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-finance-denied-path",
+      "sourceActorFixtureId": "demo-finance-manager",
+      "role": "FINANCE",
+      "scenario": "DENIED_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "ACTION_DENIED",
+      "expectedDecision": "DENIED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-finance-inactive-or-expired-path",
+      "sourceActorFixtureId": "demo-finance-manager",
+      "role": "FINANCE",
+      "scenario": "INACTIVE_OR_EXPIRED_PATH",
+      "lifecycleStatus": "EXPIRED_OR_INACTIVE",
+      "scopeStatus": "ACTION_DENIED",
+      "expectedDecision": "BLOCKED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    },
+    {
+      "scenarioFixtureId": "rc-fixture-finance-permission-negative-path",
+      "sourceActorFixtureId": "demo-finance-manager",
+      "role": "FINANCE",
+      "scenario": "PERMISSION_NEGATIVE_PATH",
+      "lifecycleStatus": "ACTIVE",
+      "scopeStatus": "OUT_OF_SCOPE",
+      "expectedDecision": "DENIED",
+      "syntheticFixtureOnly": true,
+      "credentialsIncluded": false,
+      "realPersonDataUsed": false
+    }
+  ],
+  "roleJourneyRows": [
+    {
+      "journeyId": "rc-student-happy-path",
+      "scenarioFixtureId": "rc-fixture-student-happy-path",
+      "role": "STUDENT",
+      "scenario": "HAPPY_PATH",
+      "actorFixtureId": "student-ava",
+      "targetSurface": "/v1/learning/children/child-ava-demo/today-plan",
+      "decision": "ALLOWED_FIXTURE_ONLY",
+      "permissionReasonCode": "MATCHED_ACTIVE_ROLE_FIXTURE",
+      "fixtureRefs": [
+        "rc-fixture-student-happy-path",
+        "enroll-ava-a1-active",
+        "sub-ava-a1-active",
+        "plan-ava-a1-day-02",
+        "student-khoa",
+        "sub-khoa-a1-canceled"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-learning-path-daily-plan-video-practice-evidence-report.json",
+        "exports/learning-local-demo-subscription-entitlement-daily-plan-access-report.json"
+      ],
+      "expectedEvidence": "The active student follows the published daily plan through video, practice, progress, and report evidence.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-student-denied-path",
+      "scenarioFixtureId": "rc-fixture-student-denied-path",
+      "role": "STUDENT",
+      "scenario": "DENIED_PATH",
+      "actorFixtureId": "student-ava",
+      "targetSurface": "/v1/learning/children/child-ava-demo/today-plan",
+      "decision": "DENIED",
+      "permissionReasonCode": "ACTION_DENIED_BY_FIXTURE_POLICY",
+      "fixtureRefs": [
+        "rc-fixture-student-denied-path",
+        "enroll-ava-a1-active",
+        "sub-ava-a1-active",
+        "plan-ava-a1-day-02",
+        "student-khoa",
+        "sub-khoa-a1-canceled"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-learning-path-daily-plan-video-practice-evidence-report.json",
+        "exports/learning-local-demo-subscription-entitlement-daily-plan-access-report.json"
+      ],
+      "expectedEvidence": "A stale, unpublished, or screen-time-blocked plan cannot be started.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-student-inactive-or-expired-path",
+      "scenarioFixtureId": "rc-fixture-student-inactive-or-expired-path",
+      "role": "STUDENT",
+      "scenario": "INACTIVE_OR_EXPIRED_PATH",
+      "actorFixtureId": "student-ava",
+      "targetSurface": "/v1/learning/children/child-ava-demo/today-plan",
+      "decision": "BLOCKED",
+      "permissionReasonCode": "EXPIRED_OR_INACTIVE_FIXTURE",
+      "fixtureRefs": [
+        "rc-fixture-student-inactive-or-expired-path",
+        "enroll-ava-a1-active",
+        "sub-ava-a1-active",
+        "plan-ava-a1-day-02",
+        "student-khoa",
+        "sub-khoa-a1-canceled"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-learning-path-daily-plan-video-practice-evidence-report.json",
+        "exports/learning-local-demo-subscription-entitlement-daily-plan-access-report.json"
+      ],
+      "expectedEvidence": "Expired and revoked entitlement snapshots block learning access with explicit reasons.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-student-permission-negative-path",
+      "scenarioFixtureId": "rc-fixture-student-permission-negative-path",
+      "role": "STUDENT",
+      "scenario": "PERMISSION_NEGATIVE_PATH",
+      "actorFixtureId": "student-ava",
+      "targetSurface": "/v1/learning/children/child-ava-demo/today-plan",
+      "decision": "DENIED",
+      "permissionReasonCode": "ROLE_SCOPE_MISMATCH",
+      "fixtureRefs": [
+        "rc-fixture-student-permission-negative-path",
+        "enroll-ava-a1-active",
+        "sub-ava-a1-active",
+        "plan-ava-a1-day-02",
+        "student-khoa",
+        "sub-khoa-a1-canceled"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-learning-path-daily-plan-video-practice-evidence-report.json",
+        "exports/learning-local-demo-subscription-entitlement-daily-plan-access-report.json"
+      ],
+      "expectedEvidence": "A student cannot select another child profile or enter teacher/admin surfaces.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-parent-happy-path",
+      "scenarioFixtureId": "rc-fixture-parent-happy-path",
+      "role": "PARENT",
+      "scenario": "HAPPY_PATH",
+      "actorFixtureId": "guardian-ava-parent",
+      "targetSurface": "/v1/parent/children/child-ava-demo/learning-summary",
+      "decision": "ALLOWED_FIXTURE_ONLY",
+      "permissionReasonCode": "MATCHED_ACTIVE_ROLE_FIXTURE",
+      "fixtureRefs": [
+        "rc-fixture-parent-happy-path",
+        "guardian-ava-parent",
+        "guardian-minh-parent",
+        "student-ava",
+        "student-khoa",
+        "permission-case-parent-minh-non-owning-ava"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-parent-teacher-report-permission-privacy-redaction-report.json",
+        "exports/learning-local-demo-parent-portal-approved-report-inbox-read-receipt-report.json"
+      ],
+      "expectedEvidence": "The owning parent sees an approved report, reads the inbox, and grants fixture screen time.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-parent-denied-path",
+      "scenarioFixtureId": "rc-fixture-parent-denied-path",
+      "role": "PARENT",
+      "scenario": "DENIED_PATH",
+      "actorFixtureId": "guardian-ava-parent",
+      "targetSurface": "/v1/parent/children/child-ava-demo/learning-summary",
+      "decision": "DENIED",
+      "permissionReasonCode": "ACTION_DENIED_BY_FIXTURE_POLICY",
+      "fixtureRefs": [
+        "rc-fixture-parent-denied-path",
+        "guardian-ava-parent",
+        "guardian-minh-parent",
+        "student-ava",
+        "student-khoa",
+        "permission-case-parent-minh-non-owning-ava"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-parent-teacher-report-permission-privacy-redaction-report.json",
+        "exports/learning-local-demo-parent-portal-approved-report-inbox-read-receipt-report.json"
+      ],
+      "expectedEvidence": "Held previews remain hidden and a non-owning parent receives no child evidence.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-parent-inactive-or-expired-path",
+      "scenarioFixtureId": "rc-fixture-parent-inactive-or-expired-path",
+      "role": "PARENT",
+      "scenario": "INACTIVE_OR_EXPIRED_PATH",
+      "actorFixtureId": "guardian-ava-parent",
+      "targetSurface": "/v1/parent/children/child-ava-demo/learning-summary",
+      "decision": "BLOCKED",
+      "permissionReasonCode": "EXPIRED_OR_INACTIVE_FIXTURE",
+      "fixtureRefs": [
+        "rc-fixture-parent-inactive-or-expired-path",
+        "guardian-ava-parent",
+        "guardian-minh-parent",
+        "student-ava",
+        "student-khoa",
+        "permission-case-parent-minh-non-owning-ava"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-parent-teacher-report-permission-privacy-redaction-report.json",
+        "exports/learning-local-demo-parent-portal-approved-report-inbox-read-receipt-report.json"
+      ],
+      "expectedEvidence": "A refunded, revoked, or expired child entitlement stays visible as blocked evidence without granting learning access.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-parent-permission-negative-path",
+      "scenarioFixtureId": "rc-fixture-parent-permission-negative-path",
+      "role": "PARENT",
+      "scenario": "PERMISSION_NEGATIVE_PATH",
+      "actorFixtureId": "guardian-ava-parent",
+      "targetSurface": "/v1/parent/children/child-ava-demo/learning-summary",
+      "decision": "DENIED",
+      "permissionReasonCode": "ROLE_SCOPE_MISMATCH",
+      "fixtureRefs": [
+        "rc-fixture-parent-permission-negative-path",
+        "guardian-ava-parent",
+        "guardian-minh-parent",
+        "student-ava",
+        "student-khoa",
+        "permission-case-parent-minh-non-owning-ava"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-parent-teacher-report-permission-privacy-redaction-report.json",
+        "exports/learning-local-demo-parent-portal-approved-report-inbox-read-receipt-report.json"
+      ],
+      "expectedEvidence": "Parent ownership is enforced and no parent can read another family child profile.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-teacher-happy-path",
+      "scenarioFixtureId": "rc-fixture-teacher-happy-path",
+      "role": "TEACHER",
+      "scenario": "HAPPY_PATH",
+      "actorFixtureId": "content-owner-teacher-mai",
+      "targetSurface": "/v1/teacher/classes/class-a1-june-weekday/review-queue",
+      "decision": "ALLOWED_FIXTURE_ONLY",
+      "permissionReasonCode": "MATCHED_ACTIVE_ROLE_FIXTURE",
+      "fixtureRefs": [
+        "rc-fixture-teacher-happy-path",
+        "class-a1-june-weekday",
+        "class-phonics-may-booster",
+        "permission-case-teacher-mai-assigned-a1",
+        "permission-case-teacher-mai-unassigned-phonics-denied",
+        "teacher-escalation-followup-resolution-minh-colors-2026-06-09"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-teacher-intervention-remedial-assignment-support-plan-report.json",
+        "exports/learning-local-demo-teacher-escalation-followup-resolution-report.json"
+      ],
+      "expectedEvidence": "The assigned teacher reviews learning evidence, applies the support plan, and closes the fixture escalation.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-teacher-denied-path",
+      "scenarioFixtureId": "rc-fixture-teacher-denied-path",
+      "role": "TEACHER",
+      "scenario": "DENIED_PATH",
+      "actorFixtureId": "content-owner-teacher-mai",
+      "targetSurface": "/v1/teacher/classes/class-a1-june-weekday/review-queue",
+      "decision": "DENIED",
+      "permissionReasonCode": "ACTION_DENIED_BY_FIXTURE_POLICY",
+      "fixtureRefs": [
+        "rc-fixture-teacher-denied-path",
+        "class-a1-june-weekday",
+        "class-phonics-may-booster",
+        "permission-case-teacher-mai-assigned-a1",
+        "permission-case-teacher-mai-unassigned-phonics-denied",
+        "teacher-escalation-followup-resolution-minh-colors-2026-06-09"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-teacher-intervention-remedial-assignment-support-plan-report.json",
+        "exports/learning-local-demo-teacher-escalation-followup-resolution-report.json"
+      ],
+      "expectedEvidence": "The teacher cannot read or change an unassigned class or its student evidence.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-teacher-inactive-or-expired-path",
+      "scenarioFixtureId": "rc-fixture-teacher-inactive-or-expired-path",
+      "role": "TEACHER",
+      "scenario": "INACTIVE_OR_EXPIRED_PATH",
+      "actorFixtureId": "content-owner-teacher-mai",
+      "targetSurface": "/v1/teacher/classes/class-a1-june-weekday/review-queue",
+      "decision": "BLOCKED",
+      "permissionReasonCode": "EXPIRED_OR_INACTIVE_FIXTURE",
+      "fixtureRefs": [
+        "rc-fixture-teacher-inactive-or-expired-path",
+        "class-a1-june-weekday",
+        "class-phonics-may-booster",
+        "permission-case-teacher-mai-assigned-a1",
+        "permission-case-teacher-mai-unassigned-phonics-denied",
+        "teacher-escalation-followup-resolution-minh-colors-2026-06-09"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-teacher-intervention-remedial-assignment-support-plan-report.json",
+        "exports/learning-local-demo-teacher-escalation-followup-resolution-report.json"
+      ],
+      "expectedEvidence": "Withdrawn learner evidence is retained read-only and cannot restart a learning path.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-teacher-permission-negative-path",
+      "scenarioFixtureId": "rc-fixture-teacher-permission-negative-path",
+      "role": "TEACHER",
+      "scenario": "PERMISSION_NEGATIVE_PATH",
+      "actorFixtureId": "content-owner-teacher-mai",
+      "targetSurface": "/v1/teacher/classes/class-a1-june-weekday/review-queue",
+      "decision": "DENIED",
+      "permissionReasonCode": "ROLE_SCOPE_MISMATCH",
+      "fixtureRefs": [
+        "rc-fixture-teacher-permission-negative-path",
+        "class-a1-june-weekday",
+        "class-phonics-may-booster",
+        "permission-case-teacher-mai-assigned-a1",
+        "permission-case-teacher-mai-unassigned-phonics-denied",
+        "teacher-escalation-followup-resolution-minh-colors-2026-06-09"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-teacher-intervention-remedial-assignment-support-plan-report.json",
+        "exports/learning-local-demo-teacher-escalation-followup-resolution-report.json"
+      ],
+      "expectedEvidence": "Assigned-class scope is required before report, intervention, or content actions.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-admin-happy-path",
+      "scenarioFixtureId": "rc-fixture-admin-happy-path",
+      "role": "ADMIN",
+      "scenario": "HAPPY_PATH",
+      "actorFixtureId": "content-owner-admin-hoa",
+      "targetSurface": "/v1/learning-local-demo/release-candidate-go-live-gate-matrix-report",
+      "decision": "ALLOWED_FIXTURE_ONLY",
+      "permissionReasonCode": "MATCHED_ACTIVE_ROLE_FIXTURE",
+      "fixtureRefs": [
+        "rc-fixture-admin-happy-path",
+        "permission-case-admin-hoa-phonics-class",
+        "runtime-config-fail-closed",
+        "manual-go-live-approval"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-production-runtime-gate-matrix-report.json",
+        "docs/hoctap_minhhuong/production_hardening_go_live_gate.md"
+      ],
+      "expectedEvidence": "Admin reads release-candidate, audit, runtime-safety, and fixture evidence only.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-admin-denied-path",
+      "scenarioFixtureId": "rc-fixture-admin-denied-path",
+      "role": "ADMIN",
+      "scenario": "DENIED_PATH",
+      "actorFixtureId": "content-owner-admin-hoa",
+      "targetSurface": "/v1/learning-local-demo/release-candidate-go-live-gate-matrix-report",
+      "decision": "DENIED",
+      "permissionReasonCode": "ACTION_DENIED_BY_FIXTURE_POLICY",
+      "fixtureRefs": [
+        "rc-fixture-admin-denied-path",
+        "permission-case-admin-hoa-phonics-class",
+        "runtime-config-fail-closed",
+        "manual-go-live-approval"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-production-runtime-gate-matrix-report.json",
+        "docs/hoctap_minhhuong/production_hardening_go_live_gate.md"
+      ],
+      "expectedEvidence": "Admin cannot use this local-demo surface for a production mutation or go-live enablement.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-admin-inactive-or-expired-path",
+      "scenarioFixtureId": "rc-fixture-admin-inactive-or-expired-path",
+      "role": "ADMIN",
+      "scenario": "INACTIVE_OR_EXPIRED_PATH",
+      "actorFixtureId": "content-owner-admin-hoa",
+      "targetSurface": "/v1/learning-local-demo/release-candidate-go-live-gate-matrix-report",
+      "decision": "BLOCKED",
+      "permissionReasonCode": "EXPIRED_OR_INACTIVE_FIXTURE",
+      "fixtureRefs": [
+        "rc-fixture-admin-inactive-or-expired-path",
+        "permission-case-admin-hoa-phonics-class",
+        "runtime-config-fail-closed",
+        "manual-go-live-approval"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-production-runtime-gate-matrix-report.json",
+        "docs/hoctap_minhhuong/production_hardening_go_live_gate.md"
+      ],
+      "expectedEvidence": "An expired or revoked admin session is denied before readiness evidence is returned.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-admin-permission-negative-path",
+      "scenarioFixtureId": "rc-fixture-admin-permission-negative-path",
+      "role": "ADMIN",
+      "scenario": "PERMISSION_NEGATIVE_PATH",
+      "actorFixtureId": "content-owner-admin-hoa",
+      "targetSurface": "/v1/learning-local-demo/release-candidate-go-live-gate-matrix-report",
+      "decision": "DENIED",
+      "permissionReasonCode": "ROLE_SCOPE_MISMATCH",
+      "fixtureRefs": [
+        "rc-fixture-admin-permission-negative-path",
+        "permission-case-admin-hoa-phonics-class",
+        "runtime-config-fail-closed",
+        "manual-go-live-approval"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-production-runtime-gate-matrix-report.json",
+        "docs/hoctap_minhhuong/production_hardening_go_live_gate.md"
+      ],
+      "expectedEvidence": "Admin visibility does not override provider, production database, or manual approval gates.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-support-happy-path",
+      "scenarioFixtureId": "rc-fixture-support-happy-path",
+      "role": "SUPPORT",
+      "scenario": "HAPPY_PATH",
+      "actorFixtureId": "support-ops-auditor-lan",
+      "targetSurface": "/v1/auth/operational-alert-audits/incident-export",
+      "decision": "ALLOWED_FIXTURE_ONLY",
+      "permissionReasonCode": "MATCHED_ACTIVE_ROLE_FIXTURE",
+      "fixtureRefs": [
+        "rc-fixture-support-happy-path",
+        "permission-case-support-ops-lan-audit-read-only",
+        "followup-outcome-minh-parent-practice-window",
+        "auth-alert-audit-support-read-only"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-auth-operational-alert-policy-matrix-report.json",
+        "exports/learning-local-demo-parent-teacher-report-permission-privacy-redaction-report.json"
+      ],
+      "expectedEvidence": "Support inspects redacted issue, escalation, and audit evidence without changing learner or money state.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-support-denied-path",
+      "scenarioFixtureId": "rc-fixture-support-denied-path",
+      "role": "SUPPORT",
+      "scenario": "DENIED_PATH",
+      "actorFixtureId": "support-ops-auditor-lan",
+      "targetSurface": "/v1/auth/operational-alert-audits/incident-export",
+      "decision": "DENIED",
+      "permissionReasonCode": "ACTION_DENIED_BY_FIXTURE_POLICY",
+      "fixtureRefs": [
+        "rc-fixture-support-denied-path",
+        "permission-case-support-ops-lan-audit-read-only",
+        "followup-outcome-minh-parent-practice-window",
+        "auth-alert-audit-support-read-only"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-auth-operational-alert-policy-matrix-report.json",
+        "exports/learning-local-demo-parent-teacher-report-permission-privacy-redaction-report.json"
+      ],
+      "expectedEvidence": "Support cannot bypass privacy redaction, teacher scope, or mutation restrictions.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-support-inactive-or-expired-path",
+      "scenarioFixtureId": "rc-fixture-support-inactive-or-expired-path",
+      "role": "SUPPORT",
+      "scenario": "INACTIVE_OR_EXPIRED_PATH",
+      "actorFixtureId": "support-ops-auditor-lan",
+      "targetSurface": "/v1/auth/operational-alert-audits/incident-export",
+      "decision": "BLOCKED",
+      "permissionReasonCode": "EXPIRED_OR_INACTIVE_FIXTURE",
+      "fixtureRefs": [
+        "rc-fixture-support-inactive-or-expired-path",
+        "permission-case-support-ops-lan-audit-read-only",
+        "followup-outcome-minh-parent-practice-window",
+        "auth-alert-audit-support-read-only"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-auth-operational-alert-policy-matrix-report.json",
+        "exports/learning-local-demo-parent-teacher-report-permission-privacy-redaction-report.json"
+      ],
+      "expectedEvidence": "An expired or revoked support session is denied before audit repository access.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-support-permission-negative-path",
+      "scenarioFixtureId": "rc-fixture-support-permission-negative-path",
+      "role": "SUPPORT",
+      "scenario": "PERMISSION_NEGATIVE_PATH",
+      "actorFixtureId": "support-ops-auditor-lan",
+      "targetSurface": "/v1/auth/operational-alert-audits/incident-export",
+      "decision": "DENIED",
+      "permissionReasonCode": "ROLE_SCOPE_MISMATCH",
+      "fixtureRefs": [
+        "rc-fixture-support-permission-negative-path",
+        "permission-case-support-ops-lan-audit-read-only",
+        "followup-outcome-minh-parent-practice-window",
+        "auth-alert-audit-support-read-only"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-auth-operational-alert-policy-matrix-report.json",
+        "exports/learning-local-demo-parent-teacher-report-permission-privacy-redaction-report.json"
+      ],
+      "expectedEvidence": "Support access is read-only, audited, bounded, and excludes identity/token/rate-key fields.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-sales-happy-path",
+      "scenarioFixtureId": "rc-fixture-sales-happy-path",
+      "role": "SALES",
+      "scenario": "HAPPY_PATH",
+      "actorFixtureId": "demo-sale-lan",
+      "targetSurface": "/fixture/subscription-payment-commission-trace",
+      "decision": "ALLOWED_FIXTURE_ONLY",
+      "permissionReasonCode": "MATCHED_ACTIVE_ROLE_FIXTURE",
+      "fixtureRefs": [
+        "rc-fixture-sales-happy-path",
+        "enroll-ava-a1-active",
+        "pay-ava-a1-succeeded",
+        "commission-ava-sale-pending",
+        "commission-khoa-sale-canceled"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-student-course-enrollment-subscription-flow-report.json"
+      ],
+      "expectedEvidence": "Sales traces the fixture order, payment, entitlement, refund-window, and pending commission evidence.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-sales-denied-path",
+      "scenarioFixtureId": "rc-fixture-sales-denied-path",
+      "role": "SALES",
+      "scenario": "DENIED_PATH",
+      "actorFixtureId": "demo-sale-lan",
+      "targetSurface": "/fixture/subscription-payment-commission-trace",
+      "decision": "DENIED",
+      "permissionReasonCode": "ACTION_DENIED_BY_FIXTURE_POLICY",
+      "fixtureRefs": [
+        "rc-fixture-sales-denied-path",
+        "enroll-ava-a1-active",
+        "pay-ava-a1-succeeded",
+        "commission-ava-sale-pending",
+        "commission-khoa-sale-canceled"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-student-course-enrollment-subscription-flow-report.json"
+      ],
+      "expectedEvidence": "Sales cannot approve payout, issue a provider refund, or unlock an unpaid entitlement.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-sales-inactive-or-expired-path",
+      "scenarioFixtureId": "rc-fixture-sales-inactive-or-expired-path",
+      "role": "SALES",
+      "scenario": "INACTIVE_OR_EXPIRED_PATH",
+      "actorFixtureId": "demo-sale-lan",
+      "targetSurface": "/fixture/subscription-payment-commission-trace",
+      "decision": "BLOCKED",
+      "permissionReasonCode": "EXPIRED_OR_INACTIVE_FIXTURE",
+      "fixtureRefs": [
+        "rc-fixture-sales-inactive-or-expired-path",
+        "enroll-ava-a1-active",
+        "pay-ava-a1-succeeded",
+        "commission-ava-sale-pending",
+        "commission-khoa-sale-canceled"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-student-course-enrollment-subscription-flow-report.json"
+      ],
+      "expectedEvidence": "Refunded/canceled fixture business closes entitlement and cancels the related commission.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-sales-permission-negative-path",
+      "scenarioFixtureId": "rc-fixture-sales-permission-negative-path",
+      "role": "SALES",
+      "scenario": "PERMISSION_NEGATIVE_PATH",
+      "actorFixtureId": "demo-sale-lan",
+      "targetSurface": "/fixture/subscription-payment-commission-trace",
+      "decision": "DENIED",
+      "permissionReasonCode": "ROLE_SCOPE_MISMATCH",
+      "fixtureRefs": [
+        "rc-fixture-sales-permission-negative-path",
+        "enroll-ava-a1-active",
+        "pay-ava-a1-succeeded",
+        "commission-ava-sale-pending",
+        "commission-khoa-sale-canceled"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-student-course-enrollment-subscription-flow-report.json"
+      ],
+      "expectedEvidence": "Sales evidence excludes finance approval and unrelated learner/private report access.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-channel-happy-path",
+      "scenarioFixtureId": "rc-fixture-channel-happy-path",
+      "role": "CHANNEL",
+      "scenario": "HAPPY_PATH",
+      "actorFixtureId": "demo-agency-hcm",
+      "targetSurface": "/fixture/channel-commission-trace",
+      "decision": "ALLOWED_FIXTURE_ONLY",
+      "permissionReasonCode": "MATCHED_ACTIVE_ROLE_FIXTURE",
+      "fixtureRefs": [
+        "rc-fixture-channel-happy-path",
+        "enroll-linh-phonics-active",
+        "pay-linh-phonics-succeeded",
+        "commission-linh-agency-payable",
+        "commission-khoa-sale-canceled"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-student-course-enrollment-subscription-report.json"
+      ],
+      "expectedEvidence": "Channel reads its payable fixture commission after the refund window without executing payout.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-channel-denied-path",
+      "scenarioFixtureId": "rc-fixture-channel-denied-path",
+      "role": "CHANNEL",
+      "scenario": "DENIED_PATH",
+      "actorFixtureId": "demo-agency-hcm",
+      "targetSurface": "/fixture/channel-commission-trace",
+      "decision": "DENIED",
+      "permissionReasonCode": "ACTION_DENIED_BY_FIXTURE_POLICY",
+      "fixtureRefs": [
+        "rc-fixture-channel-denied-path",
+        "enroll-linh-phonics-active",
+        "pay-linh-phonics-succeeded",
+        "commission-linh-agency-payable",
+        "commission-khoa-sale-canceled"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-student-course-enrollment-subscription-report.json"
+      ],
+      "expectedEvidence": "Channel cannot inspect another beneficiary ledger or bypass a commission hold/cancellation.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-channel-inactive-or-expired-path",
+      "scenarioFixtureId": "rc-fixture-channel-inactive-or-expired-path",
+      "role": "CHANNEL",
+      "scenario": "INACTIVE_OR_EXPIRED_PATH",
+      "actorFixtureId": "demo-agency-hcm",
+      "targetSurface": "/fixture/channel-commission-trace",
+      "decision": "BLOCKED",
+      "permissionReasonCode": "EXPIRED_OR_INACTIVE_FIXTURE",
+      "fixtureRefs": [
+        "rc-fixture-channel-inactive-or-expired-path",
+        "enroll-linh-phonics-active",
+        "pay-linh-phonics-succeeded",
+        "commission-linh-agency-payable",
+        "commission-khoa-sale-canceled"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-student-course-enrollment-subscription-report.json"
+      ],
+      "expectedEvidence": "A refunded subscription keeps the canceled commission unavailable for payout.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-channel-permission-negative-path",
+      "scenarioFixtureId": "rc-fixture-channel-permission-negative-path",
+      "role": "CHANNEL",
+      "scenario": "PERMISSION_NEGATIVE_PATH",
+      "actorFixtureId": "demo-agency-hcm",
+      "targetSurface": "/fixture/channel-commission-trace",
+      "decision": "DENIED",
+      "permissionReasonCode": "ROLE_SCOPE_MISMATCH",
+      "fixtureRefs": [
+        "rc-fixture-channel-permission-negative-path",
+        "enroll-linh-phonics-active",
+        "pay-linh-phonics-succeeded",
+        "commission-linh-agency-payable",
+        "commission-khoa-sale-canceled"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-student-course-enrollment-subscription-report.json"
+      ],
+      "expectedEvidence": "Channel scope is limited to its fixture beneficiary evidence and never exposes child learning details.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-finance-happy-path",
+      "scenarioFixtureId": "rc-fixture-finance-happy-path",
+      "role": "FINANCE",
+      "scenario": "HAPPY_PATH",
+      "actorFixtureId": "demo-finance-manager",
+      "targetSurface": "/fixture/refund-commission-payout-safety-trace",
+      "decision": "ALLOWED_FIXTURE_ONLY",
+      "permissionReasonCode": "MATCHED_ACTIVE_ROLE_FIXTURE",
+      "fixtureRefs": [
+        "rc-fixture-finance-happy-path",
+        "pay-khoa-a1-refunded",
+        "refund-khoa-a1-succeeded",
+        "commission-khoa-sale-canceled",
+        "commission-linh-sale-approved"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-student-course-enrollment-subscription-report.json",
+        "apps/api/src/channel-finance/channel-finance.service.spec.ts"
+      ],
+      "expectedEvidence": "Finance reviews fixture payment/refund/commission evidence and the invoice/available-balance payout gate.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-finance-denied-path",
+      "scenarioFixtureId": "rc-fixture-finance-denied-path",
+      "role": "FINANCE",
+      "scenario": "DENIED_PATH",
+      "actorFixtureId": "demo-finance-manager",
+      "targetSurface": "/fixture/refund-commission-payout-safety-trace",
+      "decision": "DENIED",
+      "permissionReasonCode": "ACTION_DENIED_BY_FIXTURE_POLICY",
+      "fixtureRefs": [
+        "rc-fixture-finance-denied-path",
+        "pay-khoa-a1-refunded",
+        "refund-khoa-a1-succeeded",
+        "commission-khoa-sale-canceled",
+        "commission-linh-sale-approved"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-student-course-enrollment-subscription-report.json",
+        "apps/api/src/channel-finance/channel-finance.service.spec.ts"
+      ],
+      "expectedEvidence": "No provider payment, refund, commission release, or payout mutation is available in this local gate.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-finance-inactive-or-expired-path",
+      "scenarioFixtureId": "rc-fixture-finance-inactive-or-expired-path",
+      "role": "FINANCE",
+      "scenario": "INACTIVE_OR_EXPIRED_PATH",
+      "actorFixtureId": "demo-finance-manager",
+      "targetSurface": "/fixture/refund-commission-payout-safety-trace",
+      "decision": "BLOCKED",
+      "permissionReasonCode": "EXPIRED_OR_INACTIVE_FIXTURE",
+      "fixtureRefs": [
+        "rc-fixture-finance-inactive-or-expired-path",
+        "pay-khoa-a1-refunded",
+        "refund-khoa-a1-succeeded",
+        "commission-khoa-sale-canceled",
+        "commission-linh-sale-approved"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-student-course-enrollment-subscription-report.json",
+        "apps/api/src/channel-finance/channel-finance.service.spec.ts"
+      ],
+      "expectedEvidence": "Refunded payment and canceled commission remain non-payable and preserve the audit trace.",
+      "productionMutationAllowed": false
+    },
+    {
+      "journeyId": "rc-finance-permission-negative-path",
+      "scenarioFixtureId": "rc-fixture-finance-permission-negative-path",
+      "role": "FINANCE",
+      "scenario": "PERMISSION_NEGATIVE_PATH",
+      "actorFixtureId": "demo-finance-manager",
+      "targetSurface": "/fixture/refund-commission-payout-safety-trace",
+      "decision": "DENIED",
+      "permissionReasonCode": "ROLE_SCOPE_MISMATCH",
+      "fixtureRefs": [
+        "rc-fixture-finance-permission-negative-path",
+        "pay-khoa-a1-refunded",
+        "refund-khoa-a1-succeeded",
+        "commission-khoa-sale-canceled",
+        "commission-linh-sale-approved"
+      ],
+      "evidencePaths": [
+        "exports/learning-local-demo-student-course-enrollment-subscription-report.json",
+        "apps/api/src/channel-finance/channel-finance.service.spec.ts"
+      ],
+      "expectedEvidence": "Finance approval cannot set production_ready or bypass separate provider and manual go-live approvals.",
+      "productionMutationAllowed": false
+    }
+  ],
+  "smokeRows": [
+    {
+      "smokeId": "rc-smoke-auth-session-negative-matrix",
+      "journey": "login -> logout -> expired token -> revoked session -> wrong role",
+      "verificationLevel": "AUTOMATED_UNIT",
+      "status": "PASS_LOCAL",
+      "commandOrEvidence": "npm run test:learning-local",
+      "evidencePaths": [
+        "apps/api/src/learning-local-demo/learning-local-demo.production-hardening.spec.ts",
+        "exports/learning-local-demo-auth-session-smoke-matrix-report.json"
+      ],
+      "expectedResult": "All required auth/session denial scenarios remain covered.",
+      "productionBlocker": false
+    },
+    {
+      "smokeId": "rc-smoke-parent-child-learning-flow",
+      "journey": "parent -> owned child -> active entitlement -> daily plan -> video -> practice -> approved report",
+      "verificationLevel": "FIXTURE_REPORT",
+      "status": "PASS_LOCAL",
+      "commandOrEvidence": "npm run seed:demo && npm run report:demo",
+      "evidencePaths": [
+        "exports/learning-local-demo-mvp-end-to-end-readiness-trace-report.json",
+        "exports/learning-local-demo-parent-portal-approved-report-inbox-read-receipt-report.json"
+      ],
+      "expectedResult": "The preserved fixture journey is complete and parent-owned.",
+      "productionBlocker": false
+    },
+    {
+      "smokeId": "rc-smoke-role-permission-negative-paths",
+      "journey": "non-owning parent + unassigned teacher + learner wrong role + support mutation denial",
+      "verificationLevel": "AUTOMATED_UNIT",
+      "status": "PASS_LOCAL",
+      "commandOrEvidence": "npm run test:learning-local",
+      "evidencePaths": [
+        "apps/api/src/learning-local-demo/learning-local-demo.production-hardening.spec.ts"
+      ],
+      "expectedResult": "Every required role has a permission-negative fixture row.",
+      "productionBlocker": false
+    },
+    {
+      "smokeId": "rc-smoke-entitlement-lifecycle",
+      "journey": "active + pending payment + refunded + expired + revoked",
+      "verificationLevel": "AUTOMATED_UNIT",
+      "status": "PASS_LOCAL",
+      "commandOrEvidence": "npm run test:learning-local",
+      "evidencePaths": [
+        "exports/learning-local-demo-subscription-entitlement-daily-plan-access-report.json"
+      ],
+      "expectedResult": "Only active entitlement unlocks the learning fixture.",
+      "productionBlocker": false
+    },
+    {
+      "smokeId": "rc-smoke-refund-commission-payout-safety",
+      "journey": "fixture payment -> 10-day refund window -> commission hold/release -> refund clawback -> payout guards",
+      "verificationLevel": "AUTOMATED_UNIT",
+      "status": "PASS_LOCAL",
+      "commandOrEvidence": "npm --prefix apps/api run test -- activation-orders.service.spec.ts entitlement.service.spec.ts package-entitlement-order-flow.spec.ts package-entitlement-snapshot.spec.ts channel-finance.service.spec.ts --runInBand",
+      "evidencePaths": [
+        "apps/api/src/activation-orders/activation-orders.service.spec.ts",
+        "apps/api/src/channel-finance/channel-finance.service.spec.ts"
+      ],
+      "expectedResult": "Fixture-only money policy remains preserved with no provider call.",
+      "productionBlocker": false
+    },
+    {
+      "smokeId": "rc-smoke-local-demo-production-containment",
+      "journey": "production environment -> local-demo route -> not found",
+      "verificationLevel": "AUTOMATED_UNIT",
+      "status": "PASS_LOCAL",
+      "commandOrEvidence": "npm run test:learning-local",
+      "evidencePaths": [
+        "apps/api/src/runtime-safety/local-demo-only.guard.ts",
+        "exports/learning-local-demo-production-runtime-gate-matrix-report.json"
+      ],
+      "expectedResult": "Fixture routes cannot be exposed in production mode.",
+      "productionBlocker": false
+    },
+    {
+      "smokeId": "rc-smoke-staging-release-rehearsal",
+      "journey": "backup -> migrate -> smoke -> rollback/forward repair -> restore verify",
+      "verificationLevel": "STAGING_REQUIRED",
+      "status": "PASS_ISOLATED_STAGING",
+      "commandOrEvidence": "npm --prefix apps/api run rehearse:staging",
+      "evidencePaths": [
+        "docs/hoctap_minhhuong/prisma_auth_session_store_runbook.md",
+        "exports/minhhuong-staging-rc-v3-local-rehearsal.json"
+      ],
+      "expectedResult": "Named owners approve RPO/RTO, rollback, and restore evidence.",
+      "productionBlocker": true
+    },
+    {
+      "smokeId": "rc-smoke-observability-incident-drill",
+      "journey": "health/error/latency alert -> correlation -> owner ack -> containment",
+      "verificationLevel": "STAGING_REQUIRED",
+      "status": "PASS_ISOLATED_STAGING",
+      "commandOrEvidence": "npm --prefix apps/api run rehearse:staging",
+      "evidencePaths": [
+        "docs/hoctap_minhhuong/production_hardening_go_live_gate.md",
+        "exports/minhhuong-staging-rc-v3-local-rehearsal.json"
+      ],
+      "expectedResult": "Dashboards, routing, thresholds, and incident drill are accepted.",
+      "productionBlocker": true
+    }
+  ],
+  "approvalRows": [
+    {
+      "approvalId": "release-approval-database-owner",
+      "ownerRole": "DATABASE_OWNER",
+      "approvalScope": "Staging migration, read validation, backup, restore, forward repair, rollback, capacity, failover, RPO, and RTO",
+      "status": "APPROVED_WITH_CONDITIONS_FOR_STAGING_REHEARSAL",
+      "approverName": null,
+      "authorityPrincipal": "Minh Huong workspace/project owner",
+      "approvedAt": "2026-07-10T20:30:22+07:00",
+      "approvalEvidenceRefs": [
+        "docs/hoctap_minhhuong/approvals/2026-07-10_staging_conditional_approval.json"
+      ],
+      "acceptanceCriteria": [
+        "The target is an explicitly named non-production staging database with sanitized fixtures, least-privilege access, and an approved change window.",
+        "Migration, schema/read validation, backup checksum, restore integrity, forward repair, and rollback or containment steps have named stop conditions.",
+        "Numeric RPO/RTO, capacity, connection, concurrency, and failover thresholds are accepted before rehearsal."
+      ],
+      "requiredEvidence": [
+        "Named database-owner approval with timestamp, staging target identifier, release version, and change window.",
+        "Migration/read/backup/restore/forward-repair rehearsal record with checksums, timings, abort criteria, and exact cleanup.",
+        "Accepted RPO/RTO, rollback, capacity, and failover evidence."
+      ],
+      "stagingApprovalRequired": true,
+      "productionBlocker": true
+    },
+    {
+      "approvalId": "release-approval-privacy-retention-owner",
+      "ownerRole": "PRIVACY_RETENTION_OWNER",
+      "approvalScope": "Child data, auth/audit, upload, transcript, deletion, redaction, retention, and export handling",
+      "status": "APPROVED_WITH_CONDITIONS_FOR_STAGING_REHEARSAL",
+      "approverName": null,
+      "authorityPrincipal": "Minh Huong workspace/project owner",
+      "approvedAt": "2026-07-10T20:30:22+07:00",
+      "approvalEvidenceRefs": [
+        "docs/hoctap_minhhuong/approvals/2026-07-10_staging_conditional_approval.json"
+      ],
+      "acceptanceCriteria": [
+        "Retention and deletion periods are approved for child data, auth/audit rows, uploads, exports, and any future AI transcript data.",
+        "Support access, privacy redaction, export purpose, incident access, and deletion exceptions are documented and auditable.",
+        "A staging-only export/deletion/redaction dry-run uses synthetic or sanitized data and has explicit cleanup criteria."
+      ],
+      "requiredEvidence": [
+        "Named privacy/retention-owner approval with policy version and effective date.",
+        "Approved retention/deletion/export schedule and access-control matrix.",
+        "Synthetic staging dry-run evidence with redaction and access audit results."
+      ],
+      "stagingApprovalRequired": true,
+      "productionBlocker": true
+    },
+    {
+      "approvalId": "release-approval-incident-owner",
+      "ownerRole": "INCIDENT_OWNER",
+      "approvalScope": "Monitoring, alert routing, log/trace correlation, incident response, rollback, and drill ownership",
+      "status": "APPROVED_WITH_CONDITIONS_FOR_STAGING_REHEARSAL",
+      "approverName": null,
+      "authorityPrincipal": "Minh Huong workspace/project owner",
+      "approvedAt": "2026-07-10T20:30:22+07:00",
+      "approvalEvidenceRefs": [
+        "docs/hoctap_minhhuong/approvals/2026-07-10_staging_conditional_approval.json"
+      ],
+      "acceptanceCriteria": [
+        "Dashboards and alerts cover health, error rate, latency, auth denial/replay, refund, commission, payout, and repository failure signals.",
+        "Thresholds, routing, acknowledgement, escalation, containment, rollback, and recovery owners are named.",
+        "A staging incident drill proves alert-to-correlation-to-owner acknowledgement and safe containment within accepted targets."
+      ],
+      "requiredEvidence": [
+        "Named incident-owner approval, on-call route, escalation path, and rollback owner.",
+        "Approved dashboard/alert threshold inventory with log/trace correlation fields.",
+        "Timed staging incident drill and after-action record."
+      ],
+      "stagingApprovalRequired": true,
+      "productionBlocker": true
+    },
+    {
+      "approvalId": "release-approval-security-owner",
+      "ownerRole": "SECURITY_OWNER",
+      "approvalScope": "External security review, secret handling, least privilege, webhook verification, abuse controls, and residual findings",
+      "status": "APPROVED_WITH_CONDITIONS_FOR_STAGING_REHEARSAL",
+      "approverName": null,
+      "authorityPrincipal": "Minh Huong workspace/project owner",
+      "approvedAt": "2026-07-10T20:30:22+07:00",
+      "approvalEvidenceRefs": [
+        "docs/hoctap_minhhuong/approvals/2026-07-10_staging_conditional_approval.json"
+      ],
+      "acceptanceCriteria": [
+        "Secrets remain in an approved secret store; staging and production credentials are separated and never exported in evidence.",
+        "Least-privilege access, webhook signature verification, idempotency, rate limiting, replay defense, and audit redaction are reviewed.",
+        "External security findings have severity, owner, due date, accepted residual risk, and release-blocking disposition."
+      ],
+      "requiredEvidence": [
+        "Named security-owner approval and external review reference.",
+        "Threat model and access/secret/webhook control checklist for the release version.",
+        "Finding register showing closure or explicit risk acceptance for every release-relevant item."
+      ],
+      "stagingApprovalRequired": true,
+      "productionBlocker": true
+    },
+    {
+      "approvalId": "release-approval-provider-owner",
+      "ownerRole": "PROVIDER_OWNER",
+      "approvalScope": "Payment, refund, payout, notification, and AI provider acceptance, reconciliation, loss limits, and kill switches",
+      "status": "APPROVED_WITH_CONDITIONS_FOR_STAGING_REHEARSAL",
+      "approverName": null,
+      "authorityPrincipal": "Minh Huong workspace/project owner",
+      "approvedAt": "2026-07-10T20:30:22+07:00",
+      "approvalEvidenceRefs": [
+        "docs/hoctap_minhhuong/approvals/2026-07-10_staging_conditional_approval.json"
+      ],
+      "acceptanceCriteria": [
+        "Each provider has separately approved staging credentials, webhook verification, idempotency, reconciliation, rate/loss limits, and a tested kill switch.",
+        "Payment, 10-day refund, commission release/clawback, payout approval, notification, and AI boundaries have provider-specific rollback or containment criteria.",
+        "No live or production provider mode is enabled by the Codex auto-loop; every staging provider smoke requires explicit scoped approval."
+      ],
+      "requiredEvidence": [
+        "Named owner approval per provider and explicitly scoped staging-smoke authorization.",
+        "Provider acceptance matrix covering secrets, webhooks, idempotency, reconciliation, limits, kill switch, rollback, and incident routing.",
+        "Staging-only smoke evidence with synthetic transactions and confirmed cleanup or reversal."
+      ],
+      "stagingApprovalRequired": true,
+      "productionBlocker": true
+    },
+    {
+      "approvalId": "release-approval-release-owner",
+      "ownerRole": "RELEASE_OWNER",
+      "approvalScope": "Named release decision, accepted residual risk, rollback ownership, and production enablement record",
+      "status": "STAGING_REHEARSAL_APPROVED_PRODUCTION_NOT_APPROVED",
+      "approverName": null,
+      "authorityPrincipal": "Minh Huong workspace/project owner",
+      "approvedAt": "2026-07-10T20:30:22+07:00",
+      "approvalEvidenceRefs": [
+        "docs/hoctap_minhhuong/approvals/2026-07-10_staging_conditional_approval.json"
+      ],
+      "acceptanceCriteria": [
+        "The named release owner reviews the exact release version, all prerequisite approvals, unresolved risks, and rollback or containment ownership.",
+        "The go-live decision records approver, timestamp, release version, accepted residual risks, enablement window, and rollback owner.",
+        "production_ready and production_enabled remain false until that separate signed decision exists; no auto-loop output can substitute for it."
+      ],
+      "requiredEvidence": [
+        "Named release-owner approval referencing every prerequisite approval and the immutable release version.",
+        "Signed residual-risk acceptance and rollback/containment ownership record.",
+        "Separate production enablement record outside the Codex auto-loop."
+      ],
+      "stagingApprovalRequired": false,
+      "productionBlocker": true
+    }
+  ],
+  "deployReadinessRows": [
+    {
+      "gateId": "runtime-config-fail-closed",
+      "area": "ENVIRONMENT_SEPARATION",
+      "decision": "CLOSED_BY_CODE",
+      "productionBlocker": false,
+      "evidencePaths": [
+        "apps/api/src/runtime-safety/production-runtime-safety.ts",
+        "apps/api/src/main.ts",
+        "apps/api/src/auth/auth.module.ts",
+        "apps/api/src/upload-storage/filesystem-upload-storage.ts",
+        "apps/api/src/health/dependency-readiness.service.ts",
+        "exports/learning-local-demo-upload-storage-hardening-matrix-report.json"
+      ],
+      "requiredNextEvidence": [],
+      "rollbackOrContainment": "Rollback may revert the release artifact, but must never restore placeholder production secrets or credentialed wildcard CORS."
+    },
+    {
+      "gateId": "local-demo-route-containment",
+      "area": "LOCAL_DEMO_CONTAINMENT",
+      "decision": "CLOSED_BY_CODE",
+      "productionBlocker": false,
+      "evidencePaths": [
+        "apps/api/src/runtime-safety/local-demo-only.guard.ts",
+        "apps/api/src/learning-local-demo/learning-local-demo.controller.ts",
+        "apps/api/src/erp-local-demo/erp-local-demo.controller.ts"
+      ],
+      "requiredNextEvidence": [],
+      "rollbackOrContainment": "Keep demo seed/report generation as an offline command; never re-enable HTTP demo routes in production."
+    },
+    {
+      "gateId": "migration-and-rollback-rehearsal",
+      "area": "MIGRATION_ROLLBACK",
+      "decision": "BLOCKED_PENDING_STAGING",
+      "productionBlocker": true,
+      "evidencePaths": [
+        "apps/api/prisma/migrations",
+        "audit-output/promt_hoctap_minhhuong_4B_db_migration_recovery/promt_hoctap_minhhuong_4B_db_recovery_report.md"
+      ],
+      "requiredNextEvidence": [
+        "Disposable staging migration dry-run with schema diff approval.",
+        "Timed rollback rehearsal that preserves append-only audit data."
+      ],
+      "rollbackOrContainment": "Disable new release writes first; use forward repair after data writes rather than destructive schema rollback."
+    },
+    {
+      "gateId": "backup-and-restore-rehearsal",
+      "area": "BACKUP_RESTORE",
+      "decision": "BLOCKED_PENDING_STAGING",
+      "productionBlocker": true,
+      "evidencePaths": [
+        "docs/hoctap_minhhuong/production_hardening_go_live_gate.md"
+      ],
+      "requiredNextEvidence": [
+        "Encrypted staging backup with retention owner and checksum.",
+        "Restore rehearsal with measured RPO/RTO and data integrity checks."
+      ],
+      "rollbackOrContainment": "Keep production_enabled=false until restore success is independently verified."
+    },
+    {
+      "gateId": "monitoring-alerting-and-incident-runbook",
+      "area": "MONITORING_INCIDENT",
+      "decision": "BLOCKED_PENDING_STAGING",
+      "productionBlocker": true,
+      "evidencePaths": [
+        "apps/api/src/health/health.controller.ts",
+        "apps/api/src/auth/auth-operational-control.ts",
+        "apps/api/src/learning-local-demo/auth-operational-control-matrix.ts",
+        "docker-compose.yml"
+      ],
+      "requiredNextEvidence": [
+        "Shared multi-instance rate-limit/metrics adapter plus staging health, error-rate, latency, auth-denial, refund, and payout alert smoke.",
+        "Incident response and rollback owner acknowledgement."
+      ],
+      "rollbackOrContainment": "Use a release kill switch and stop new writes when health or reconciliation alerts breach approved thresholds."
+    },
+    {
+      "gateId": "privacy-audit-and-retention",
+      "area": "PRIVACY_AUDIT_RETENTION",
+      "decision": "BLOCKED_PENDING_STAGING",
+      "productionBlocker": true,
+      "evidencePaths": [
+        "apps/api/src/learning-local-demo/learning-local-demo.production-hardening.spec.ts",
+        "apps/api/src/learning-local-demo/auth-persistence-security-gate-matrix.ts"
+      ],
+      "requiredNextEvidence": [
+        "Approved child-data, AI transcript, auth audit, and upload retention schedule.",
+        "Staging redaction/export/deletion dry-run with support access audit."
+      ],
+      "rollbackOrContainment": "Disable exports/provider sends without deleting append-only audit records needed for investigation."
+    },
+    {
+      "gateId": "auth-persistence-and-distributed-revocation",
+      "area": "AUTH_PERSISTENCE",
+      "decision": "BLOCKED_PENDING_STAGING",
+      "productionBlocker": true,
+      "evidencePaths": [
+        "apps/api/src/learning-local-demo/auth-refresh-lifecycle-matrix.ts",
+        "apps/api/src/learning-local-demo/auth-session-repository-contract-matrix.ts",
+        "apps/api/src/auth/prisma-auth-session.store.ts",
+        "apps/api/src/auth/prisma-auth-session.integration.spec.ts"
+      ],
+      "requiredNextEvidence": [
+        "Approved staging migration, backup/restore, and retention evidence for the implemented persistent AuthSessionStore.",
+        "Two-process staging API revocation and repository outage smoke."
+      ],
+      "rollbackOrContainment": "Disable new sessions and preserve token/audit hashes if the persistent store or distributed revocation layer fails."
+    },
+    {
+      "gateId": "live-provider-execution-gates",
+      "area": "LIVE_PROVIDER_EXECUTION",
+      "decision": "BLOCKED_PENDING_MANUAL_APPROVAL",
+      "productionBlocker": true,
+      "evidencePaths": [
+        "docs/hoctap_minhhuong/production_hardening_go_live_gate.md",
+        "apps/api/src/ai-chat/ai-chat.service.ts"
+      ],
+      "requiredNextEvidence": [
+        "Approved secret-store, webhook verification, idempotency, reconciliation, rate/loss limit, and kill-switch design per provider.",
+        "Staging-only provider smoke with explicit human approval."
+      ],
+      "rollbackOrContainment": "Keep provider modes disabled and retain manual, fixture-only evidence until each provider has a separately approved rollback plan."
+    },
+    {
+      "gateId": "manual-go-live-approval",
+      "area": "MANUAL_GO_LIVE_APPROVAL",
+      "decision": "BLOCKED_PENDING_MANUAL_APPROVAL",
+      "productionBlocker": true,
+      "evidencePaths": [
+        "docs/hoctap_minhhuong/00_truc_lamviec_hoctap_minhhuong.md",
+        "docs/hoctap_minhhuong/production_hardening_go_live_gate.md"
+      ],
+      "requiredNextEvidence": [
+        "Named approver, timestamp, release version, accepted residual risks, rollback owner, and production enablement record."
+      ],
+      "rollbackOrContainment": "No automatic loop may set production_ready or production_enabled to true."
+    }
+  ],
+  "testStandard": {
+    "baselineJobId": "codex_job_minhhuong_00073_staging_rehearsal_conditional_approval",
+    "baselineLearningLocalTestCount": 118,
+    "verificationCommand": "npm run test:learning-local",
+    "existingTestsDeleted": false,
+    "existingTestsSkipped": false,
+    "existingTestsRenamed": false,
+    "assertionsRelaxed": false,
+    "acceptanceCriteriaWeakened": false,
+    "newTestsAdded": true,
+    "testStandardChangeRequestRequired": false
+  },
+  "evidenceIntegrity": {
+    "status": "PASS_LOCAL",
+    "scenarioFixtureCount": 32,
+    "uniqueScenarioFixtureCount": 32,
+    "resolvedJourneyFixtureCount": 32,
+    "roleMismatchCount": 0,
+    "unsafeEvidencePathCount": 0,
+    "uniqueEvidencePathCount": 40
+  },
+  "safety": {
+    "productionDbUsed": false,
+    "stagingDbUsed": true,
+    "providerApiUsed": false,
+    "paymentProviderMutationUsed": false,
+    "refundProviderMutationUsed": false,
+    "payoutProviderMutationUsed": false,
+    "notificationDeliveryUsed": false,
+    "liveAiProviderUsed": false,
+    "realCustomerOrStudentMutationUsed": false,
+    "productionDeployUsed": false,
+    "plaintextSecretsIncluded": false
+  },
+  "totals": {
+    "requiredRoleCount": 8,
+    "coveredRoleCount": 8,
+    "requiredScenarioCountPerRole": 4,
+    "completeRoleCoverageCount": 8,
+    "roleScenarioFixtureCount": 32,
+    "resolvedJourneyFixtureCount": 32,
+    "roleJourneyCount": 32,
+    "happyPathCount": 8,
+    "deniedPathCount": 8,
+    "inactiveOrExpiredPathCount": 8,
+    "permissionNegativePathCount": 8,
+    "localSmokePassCount": 6,
+    "stagingSmokeBlockerCount": 0,
+    "stagingSmokePassCount": 2,
+    "deployGateCount": 9,
+    "productionBlockerCount": 7,
+    "rollbackOrContainmentCount": 9,
+    "requiredApprovalCount": 6,
+    "pendingApprovalCount": 0,
+    "approvedApprovalCount": 6,
+    "approvalEvidenceCount": 6,
+    "approvalsWithDefinedAcceptanceCriteriaCount": 6,
+    "stagingApprovalBlockerCount": 0,
+    "uniqueEvidencePathCount": 40,
+    "unsafeEvidencePathCount": 0,
+    "productionReadyClaimCount": 0,
+    "openSafetyGateCount": 0
+  }
+}

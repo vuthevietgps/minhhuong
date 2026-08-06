@@ -1,0 +1,154 @@
+{
+  "prompt": "Promt_quanly_minhhuong_9",
+  "date": "2026-06-14",
+  "mode": "test-hardening-implementation-narrow-slice",
+  "verdict": "CONDITIONAL",
+  "conditional_reasons": [
+    "DB-backed channel-admin scope coverage is implemented and final tests pass, but an initial required prisma:generate run failed once before the same command passed on rerun without source changes."
+  ],
+  "db_backed_coverage": true,
+  "migration_deploy_used": true,
+  "db_push_used_for_final_proof": false,
+  "product_source_changed": false,
+  "tests_added_or_changed": [
+    {
+      "file": "apps/api/src/channel-admin/channel-admin-scope.integration.spec.ts",
+      "covers": [
+        "agency list subtree visibility",
+        "participant visibility through summary counts and listUsers participant payloads",
+        "user list subtree visibility",
+        "admin and operations global visibility",
+        "unscoped non-admin safe empty behavior",
+        "manager A positive in-scope user status update",
+        "manager A sibling sale status rejection",
+        "agency A owner positive in-scope password reset",
+        "agency A owner sibling password reset rejection",
+        "manager A positive in-scope agency member update",
+        "manager A sibling agency member update rejection"
+      ]
+    }
+  ],
+  "service_surfaces_tested": [
+    "ChannelAdminService.getSummary",
+    "ChannelAdminService.listAgencies",
+    "ChannelAdminService.listUsers",
+    "ChannelAdminService.updateUserStatus",
+    "ChannelAdminService.resetUserPassword",
+    "ChannelAdminService.updateAgencyMember"
+  ],
+  "fixture": {
+    "tree": "director-root -> manager-A -> agency-A1 -> sale-A plus sale-A-direct; director-root -> manager-B -> agency-B1 -> sale-B plus sale-B-direct",
+    "users": [
+      "admin user",
+      "operations user",
+      "director/root user",
+      "manager A",
+      "manager B",
+      "agency A owner",
+      "agency B owner",
+      "sale A",
+      "sale B",
+      "sale A direct",
+      "sale B direct",
+      "unscoped non-admin user"
+    ],
+    "sibling_rows_present": true
+  },
+  "coverage_matrix": {
+    "participant_list_visibility": "covered_db_backed_via_summary_counts_and_listUsers_participant_payloads",
+    "agency_list_visibility": "covered_db_backed",
+    "user_list_visibility": "covered_db_backed",
+    "sibling_action_rejection": "covered_db_backed",
+    "positive_in_scope_actions": "covered_db_backed",
+    "admin_operations_global_behavior": "covered_db_backed",
+    "unscoped_non_admin_safety": "covered_db_backed"
+  },
+  "tests_run": [
+    {
+      "command": "npm --prefix apps/api run prisma:generate",
+      "status": "passed_on_final_rerun",
+      "summary": "Final run generated Prisma Client successfully. One earlier run failed with P1012 on DailyLearningPlanItem.activity, then validate/generate and the same required command passed without source changes."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-scope.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 3 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-admin-scope.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 3 tests. Uses prisma migrate deploy against a temp PostgreSQL database."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts channel-finance.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 22 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand entitlement.service.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 7 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand learning.service.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 12 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand",
+      "status": "passed",
+      "summary": "16 suites, 87 tests."
+    },
+    {
+      "command": "npm --prefix apps/api run test:e2e -- --runInBand",
+      "status": "passed",
+      "summary": "2 suites, 4 tests."
+    },
+    {
+      "command": "npm --prefix apps/api run build",
+      "status": "passed",
+      "summary": "Nest build completed."
+    },
+    {
+      "command": "git status --short",
+      "status": "failed_environment",
+      "summary": "fatal: not a git repository (or any of the parent directories): .git"
+    }
+  ],
+  "interim_failures": [
+    {
+      "command": "npm --prefix apps/api run prisma:generate",
+      "status": "failed_before_final_rerun",
+      "error": "P1012: DailyLearningPlanItem.activity relation field reported missing an opposite relation field on Activity.",
+      "likely_cause": "Transient Prisma CLI/schema load anomaly; Activity.dailyPlanItems was present in schema and subsequent validate/generate passed without source changes.",
+      "source_changed_afterward": false
+    }
+  ],
+  "hard_bans_check": {
+    "affiliate_qr_not_implemented": true,
+    "payment_gateway_not_implemented": true,
+    "frontend_rewrite_not_done": true,
+    "package_entitlement_not_implemented": true,
+    "commission_policy_engine_not_implemented": true,
+    "entitlement_enforcement_not_changed": true,
+    "lead_crm_not_implemented": true,
+    "renewal_opportunity_not_implemented": true,
+    "agency_member_cleanup_not_done": true,
+    "broad_model_rename_not_done": true
+  },
+  "remaining_gaps": [
+    "ChannelParticipant_parentParticipantId_fkey remains NOT VALID from Prompt 8 and still needs a later data-quality/constraint validation pass.",
+    "Prompt 6 sourceOrderId uniqueness remains deferred pending legacy duplicate audit.",
+    "OrderStatusHistory lifecycle expansion beyond approval remains deferred.",
+    "Package entitlement/snapshot remains deferred.",
+    "Commission policy version/snapshot remains deferred.",
+    "Affiliate/QR remains blocked until canonical BA docs are synced."
+  ],
+  "recommended_next_prompt": {
+    "name": "Promt_quanly_minhhuong_10.md",
+    "type": "blocker-hardening-data-quality",
+    "scope": "Validate or prepare validation for ChannelParticipant_parentParticipantId_fkey by auditing invalid parent references on migration-created and existing databases, without broad channel hierarchy redesign.",
+    "reason": "Prompt 9 covers channel-admin scope. The remaining deploy-safety item from Prompt 8 is the NOT VALID parent self-FK."
+  }
+}
+

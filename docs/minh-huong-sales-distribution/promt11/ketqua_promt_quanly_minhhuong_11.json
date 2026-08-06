@@ -1,0 +1,183 @@
+{
+  "prompt": "Promt_quanly_minhhuong_11",
+  "date": "2026-06-14",
+  "mode": "implementation-narrow-slice-commercial-correctness",
+  "verdict": "PASS",
+  "files_read": [
+    "docs/minh-huong-sales-distribution/promt10/ketqua_promt_quanly_minhhuong_10.md",
+    "docs/minh-huong-sales-distribution/promt10/ketqua_promt_quanly_minhhuong_10.json",
+    "docs/minh-huong-sales-distribution/promt10/07_tests_run.md",
+    "docs/minh-huong-sales-distribution/promt10/11_next_prompt_recommendation.md",
+    "docs/minh-huong-sales-distribution/promt9/ketqua_promt_quanly_minhhuong_9.md",
+    "docs/minh-huong-sales-distribution/promt8/ketqua_promt_quanly_minhhuong_8.md",
+    "docs/minh-huong-sales-distribution/promt8/04_migrate_deploy_test_db_evidence.md",
+    "docs/minh-huong-sales-distribution/promt6/ketqua_promt_quanly_minhhuong_6.md",
+    "docs/minh-huong-sales-distribution/promt6/03_subscription_traceability_evidence.md",
+    "docs/minh-huong-sales-distribution/promt6/06_learning_access_compatibility_evidence.md",
+    "docs/minh-huong-sales-distribution/promt4/ketqua_promt_quanly_minhhuong_4.md",
+    "docs/minh-huong-sales-distribution/promt4/04_idempotency_contract_evidence.md",
+    "docs/minh-huong-sales-distribution/promt4/05_activation_approval_idempotency_evidence.md",
+    "docs/minh-huong-sales-distribution/promt3/03_package_entitlement_design.md",
+    "docs/minh-huong-sales-distribution/promt3/11_acceptance_test_plan.md",
+    "docs/minh-huong-sales-distribution/promt3/12_risks_decisions_questions.md",
+    "docs/minh-huong-sales-distribution/promt2/03_order_subscription_test_evidence.md",
+    "docs/minh-huong-sales-distribution/promt2/04_commission_test_evidence.md",
+    "docs/minh-huong-sales-distribution/promt2/05_payout_scope_test_evidence.md",
+    "docs/minh-huong-sales-distribution/promt2/07_tests_run.md"
+  ],
+  "schema_changes": {
+    "package_entitlement_table": true,
+    "package_entitlement_status_enum": true,
+    "activation_package_version": true,
+    "activation_order_entitlement_snapshot_json": true,
+    "subscription_entitlement_snapshot_json": true,
+    "partial_unique_active_package_key_index": true,
+    "backward_compatible_nullable_fields": true
+  },
+  "migration_files": [
+    "apps/api/prisma/migrations/20260614190000_package_entitlement_snapshot/migration.sql"
+  ],
+  "source_changes": [
+    "apps/api/prisma/schema.prisma",
+    "apps/api/src/package-entitlement/package-entitlement-snapshot.ts",
+    "apps/api/src/activation-orders/activation-orders.service.ts",
+    "apps/api/src/entitlement/entitlement.service.ts",
+    "apps/api/src/channel-admin/channel-admin.service.ts",
+    "apps/api/src/channel-admin/channel-admin.controller.ts",
+    "apps/api/src/channel-admin/dto/agency.dto.ts"
+  ],
+  "tests_added_or_changed": [
+    "apps/api/src/package-entitlement/package-entitlement-snapshot.spec.ts",
+    "apps/api/src/package-entitlement/package-entitlement-order-flow.spec.ts",
+    "apps/api/src/package-entitlement/package-entitlement-migration.integration.spec.ts",
+    "apps/api/src/entitlement/entitlement.service.spec.ts",
+    "apps/api/src/channel-admin/channel-admin.service.spec.ts"
+  ],
+  "snapshot_behavior": {
+    "self_service_order_captures_snapshot": true,
+    "sale_assisted_order_captures_snapshot": true,
+    "sale_override_amount_duration_supported": true,
+    "package_without_entitlement_rows_supported": true,
+    "custom_unresolved_package_fallback_supported": true,
+    "approval_copies_order_snapshot_to_subscription": true,
+    "legacy_approval_reconstructs_fallback_snapshot": true,
+    "snapshot_immutability_tested": true,
+    "learning_enforcement_not_added": true
+  },
+  "backfill": {
+    "activation_order_backfill": "deterministic from order fields and exact ActivationPackage.code match; entitlements remain empty for historical rows",
+    "subscription_backfill": "copies snapshots from directly linked orders by sourceOrderId or providerRef matching ActivationOrder.id",
+    "fuzzy_matching_used": false,
+    "unmatched_legacy_subscriptions_remain_null_safe": true
+  },
+  "commands_run": [
+    {
+      "command": "powershell -ExecutionPolicy Bypass -File scripts\\Start-LocalPostgres.ps1",
+      "status": "passed",
+      "summary": "Started repo portable PostgreSQL after local 5432 was not listening."
+    },
+    {
+      "command": "npm --prefix apps/api run prisma:generate",
+      "status": "passed",
+      "summary": "Final run generated Prisma Client successfully."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand package-entitlement",
+      "status": "passed",
+      "summary": "Final run passed, 3 suites, 12 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts channel-finance.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 22 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand entitlement.service.spec.ts learning.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 21 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-participant-fk.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 1 test."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-scope.integration.spec.ts channel-admin-scope.integration.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 6 tests. Non-failing pg deprecation warning emitted."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand",
+      "status": "passed",
+      "summary": "21 suites, 116 tests. Non-failing pg deprecation warning emitted."
+    },
+    {
+      "command": "npm --prefix apps/api run test:e2e -- --runInBand",
+      "status": "passed",
+      "summary": "3 suites, 7 tests."
+    },
+    {
+      "command": "npm --prefix apps/api run build",
+      "status": "passed",
+      "summary": "Nest build completed."
+    },
+    {
+      "command": "git status --short",
+      "status": "failed_environment",
+      "summary": "fatal: not a git repository (or any of the parent directories): .git"
+    }
+  ],
+  "interim_failures": [
+    {
+      "command": "npm --prefix apps/api test -- --runInBand package-entitlement",
+      "status": "failed_before_final_rerun",
+      "error": "Migration proof failed at CREATE DATABASE while PostgreSQL was not listening on localhost:5432; diagnostic pg connection returned ECONNREFUSED.",
+      "source_changed_afterward": false,
+      "resolution": "Started local portable PostgreSQL with scripts/Start-LocalPostgres.ps1."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand package-entitlement",
+      "status": "failed_before_final_rerun",
+      "error": "Temp database name exceeded PostgreSQL identifier length and current_database() returned a truncated name.",
+      "source_changed_afterward": true,
+      "resolution": "Shortened migration proof temp DB prefix to p11_ent_; final rerun passed."
+    },
+    {
+      "command": "docker ps --format \"table {{.Names}}\\t{{.Status}}\\t{{.Ports}}\"",
+      "status": "failed_diagnostic",
+      "error": "Docker Desktop Linux engine pipe was not available.",
+      "source_changed_afterward": false,
+      "resolution": "Used repo portable PostgreSQL script instead."
+    }
+  ],
+  "hard_bans_check": {
+    "affiliate_qr_not_implemented": true,
+    "payment_gateway_not_implemented": true,
+    "webhook_reconciliation_not_implemented": true,
+    "learning_entitlement_enforcement_not_added": true,
+    "commission_policy_engine_not_implemented": true,
+    "frontend_rewrite_not_done": true,
+    "lead_crm_not_implemented": true,
+    "renewal_opportunity_not_implemented": true,
+    "agency_member_cleanup_not_done": true,
+    "broad_model_rename_not_done": true,
+    "broad_channel_hierarchy_redesign_not_done": true,
+    "broad_order_subscription_commission_rewrite_not_done": true,
+    "payment_refund_clawback_redesign_not_done": true,
+    "activation_package_not_renamed": true
+  },
+  "remaining_gaps": [
+    "No frontend UI was added for package entitlements.",
+    "Unmatched legacy subscriptions without sourceOrderId or providerRef matching an ActivationOrder remain null snapshot, but active access remains unchanged.",
+    "Prompt 6 sourceOrderId uniqueness remains deferred pending legacy duplicate audit.",
+    "OrderStatusHistory lifecycle expansion beyond approval remains deferred.",
+    "Commission policy version/snapshot remains deferred.",
+    "Affiliate/QR remains blocked until canonical BA docs are synced."
+  ],
+  "recommended_next_prompt": {
+    "name": "Promt_quanly_minhhuong_12.md",
+    "type": "commercial-audit-history-hardening",
+    "scope": "Expand OrderStatusHistory beyond approval to proof upload, resubmit, cancel, reject, and revoke without changing payment gateway, affiliate/QR, or commission policy scope.",
+    "reason": "Package entitlement/snapshot foundation is implemented. The next narrow commercial correctness gap is lifecycle history coverage outside approval."
+  }
+}

@@ -1,0 +1,233 @@
+{
+  "schemaVersion": "minh_huong.staging_rehearsal.v1",
+  "releaseCandidate": "learning-release-candidate-go-live-gate.v3",
+  "runId": "36e8470a-4500-4d5d-836d-486e731a7c3f",
+  "target": "minhhuong-staging-rc-v3-local",
+  "targetClassification": "isolated_nonproduction_local_staging",
+  "generatedAt": "2026-07-10T13:47:22.901Z",
+  "startedAt": "2026-07-10T13:46:10.439Z",
+  "completedAt": "2026-07-10T13:47:22.901Z",
+  "totalDurationMs": 72462,
+  "status": "PASS",
+  "failure": null,
+  "decision": "PASS",
+  "approval": {
+    "code": "MH_RC_V3_USER_DELEGATED_STAGING_CONDITIONAL_20260710_01",
+    "decisionId": "MH-RC-V3-STAGING-CONDITIONAL-20260710-01",
+    "evidencePath": "docs/hoctap_minhhuong/approvals/2026-07-10_staging_conditional_approval.json",
+    "authorityPrincipal": "Minh Huong workspace/project owner",
+    "scope": "staging_dry_run",
+    "approvedWithConditions": true,
+    "productionApproved": false
+  },
+  "objectives": {
+    "rpoMaximumMs": 86400000,
+    "rtoMaximumMs": 14400000,
+    "acknowledgementMaximumMs": 900000,
+    "containmentDecisionMaximumMs": 1800000,
+    "minimumResourceHeadroomPercent": 30
+  },
+  "measured": {
+    "migrationRollbackForwardRepairDurationMs": 21903,
+    "backupWindowMs": 394,
+    "observedRpoMs": 655,
+    "restoreAndValidationRtoMs": 1175,
+    "backupSourceDigest": "1c5533ed17df68e1d38fddb9b817b3cc35e83e98099c0cf8dcb1179e7ab4f96a",
+    "restoredDigest": "1c5533ed17df68e1d38fddb9b817b3cc35e83e98099c0cf8dcb1179e7ab4f96a",
+    "authAlertMaxLockWaitMs": 516.1400000000003,
+    "authAlertP95LockWaitMs": 516.1400000000003,
+    "headroom": {
+      "metric": "host_free_physical_memory_percent",
+      "requiredMinimumPercent": 30,
+      "before": {
+        "totalBytes": 34233393152,
+        "freeBytes": 14378438656,
+        "freePercent": 42
+      },
+      "after": {
+        "totalBytes": 34233393152,
+        "freeBytes": 11669704704,
+        "freePercent": 34.09
+      },
+      "minimumObservedFreeMemoryPercent": 34.09,
+      "productionCapacityClaimed": false
+    }
+  },
+  "gates": {
+    "checks": {
+      "migrationRollbackForwardRepair": true,
+      "backupChecksumRestore": true,
+      "stagingRpoObjective": true,
+      "stagingRtoObjective": true,
+      "twoProcessSession": true,
+      "twoProcessOperational": true,
+      "twoProcessAlert": true,
+      "privacyRedactionAccessExport": true,
+      "privacyExactRetentionCleanup": true,
+      "incidentDrill": true,
+      "resourceHeadroom": true,
+      "exactCleanup": true
+    },
+    "failedChecks": [],
+    "passedCheckCount": 12,
+    "requiredCheckCount": 12,
+    "status": "PASS"
+  },
+  "commandEvidence": [
+    {
+      "id": "migration-rollback-forward-repair",
+      "command": "npm --prefix apps/api run test -- prisma-auth-session.integration.spec.ts --runInBand",
+      "status": "PASS",
+      "startedAt": "2026-07-10T13:46:11.090Z",
+      "completedAt": "2026-07-10T13:46:32.993Z",
+      "durationMs": 21903,
+      "testCount": 5,
+      "stdoutSummary": "at _log (../node_modules/dotenv/lib/main.js:131:11)",
+      "stderrSummary": "Ran all test suites matching prisma-auth-session.integration.spec.ts."
+    },
+    {
+      "id": "two-process-session-backup-restore",
+      "command": "npm --prefix apps/api run smoke:auth-session-disposable",
+      "status": "PASS",
+      "startedAt": "2026-07-10T13:46:32.997Z",
+      "completedAt": "2026-07-10T13:46:48.631Z",
+      "durationMs": 15634,
+      "testCount": null,
+      "stdoutSummary": "{\"status\":\"PASS\",\"processCount\":2,\"sharedRevocationVerified\":true,\"outageFailClosedVerified\":true,\"backupWindowMs\":394,\"observedLocalRpoMs\":655,\"restoreAndValidationRtoMs\":1175,\"integrityVerified\":true,\"cleanupVerified\":true,\"productionReady\":false}",
+      "stderrSummary": null
+    },
+    {
+      "id": "two-process-operational-control",
+      "command": "npm --prefix apps/api run smoke:auth-operational-control-disposable",
+      "status": "PASS",
+      "startedAt": "2026-07-10T13:46:48.631Z",
+      "completedAt": "2026-07-10T13:47:04.410Z",
+      "durationMs": 15779,
+      "testCount": null,
+      "stdoutSummary": "{\"status\":\"PASS\",\"processCount\":2,\"loginDenied\":5,\"loginThrottled\":7,\"refreshDenied\":10,\"refreshThrottled\":6,\"sharedCounters\":true,\"failClosedOutage\":true,\"retentionCleanup\":true,\"exactCleanup\":true,\"productionReady\":false}",
+      "stderrSummary": null
+    },
+    {
+      "id": "two-process-alert-state-privacy",
+      "command": "npm --prefix apps/api run smoke:auth-operational-alert-state-disposable",
+      "status": "PASS",
+      "startedAt": "2026-07-10T13:47:04.410Z",
+      "completedAt": "2026-07-10T13:47:20.527Z",
+      "durationMs": 16117,
+      "testCount": null,
+      "stdoutSummary": "{\"status\":\"PASS\",\"processCount\":2,\"openCandidateSets\":1,\"cooldownSuppressedSets\":7,\"appendOnlyAuditRows\":8,\"idempotentAudit\":true,\"auditReadModelRows\":9,\"auditReadModelPages\":3,\"auditReadModelDeterministic\":true,\"auditReadModelBoundedWindow\":true,\"auditReadModelRedacted\":true,\"maxLockWaitMs\":516.1400000000003,\"contentionCapacityWithinThreshold\":true,\"explicitRollingWindow\":true,\"stateOutageFailClosed\":true,\"auditOutageFailClosed\":true,\"auditReadModelOutageFailClosed\":true,\"snapshotOutageFailClosed\":true,\"exactRetentionCleanup\":true,\"exactDatabaseCleanup\":true,\"productionReady\":false}",
+      "stderrSummary": null
+    }
+  ],
+  "incidentDrill": {
+    "schemaVersion": "minh_huong.synthetic_incident_drill.v1",
+    "correlationId": "staging-incident:36e8470a-4500-4d5d-836d-486e731a7c3f",
+    "syntheticFixtureOnly": true,
+    "thresholds": {
+      "fiveXxPercent": 1,
+      "fiveXxWindowMinutes": 5,
+      "databaseUtilizationPercent": 80,
+      "databaseWindowMinutes": 10,
+      "authFailureBaselineMultiplier": 3,
+      "authFailureBaselineWindowMinutes": 15
+    },
+    "simulatedSignal": {
+      "availability": "DEGRADED_FIXTURE",
+      "fiveXxPercent": 1,
+      "authFailureBaselineMultiplier": 3,
+      "databaseUtilizationPercent": 0,
+      "queueBacklog": 0,
+      "providerState": "DISABLED"
+    },
+    "acknowledgementMs": 72462,
+    "containmentDecisionMs": 72462,
+    "acknowledgementObjectiveMs": 900000,
+    "containmentDecisionObjectiveMs": 1800000,
+    "acknowledgementWithinObjective": true,
+    "containmentDecisionWithinObjective": true,
+    "escalation": "LOCAL_REHEARSAL_INCIDENT_OWNER_FIXTURE",
+    "providerKillSwitchVerified": true,
+    "containmentDecision": "KEEP_PRODUCTION_DISABLED_AND_ROLL_BACK_TO_CLEAN_DISPOSABLE_STATE",
+    "recoveryVerified": true,
+    "productionEnabled": false,
+    "externalAlertDeliveryUsed": false,
+    "events": [
+      "synthetic_alert_correlated",
+      "incident_acknowledged",
+      "fixture_escalation_recorded",
+      "provider_kill_switch_confirmed",
+      "containment_decision_recorded",
+      "cleanup_and_recovery_verified"
+    ]
+  },
+  "privacy": {
+    "fixturePolicy": "synthetic_or_pseudonymized_only",
+    "evidenceRetentionDays": 30,
+    "evidenceExpiresAt": "2026-08-09T13:47:22.901Z",
+    "adminSupportReadOnlyAccessVerified": true,
+    "redactionVerified": true,
+    "boundedExportVerified": true,
+    "exactExpiredDeletionVerified": true,
+    "rawIdentityTokenRateKeyOrSecretStored": false,
+    "realPersonDataUsed": false
+  },
+  "providers": {
+    "mode": "mock_fixture_only",
+    "sandboxCredentialsSupplied": false,
+    "blocker": "PROVIDER_SANDBOX_CREDENTIALS_NOT_SUPPLIED_CONTRACTS_VERIFIED_WITH_MOCKS_ONLY",
+    "providerApiUsed": false,
+    "liveMutationUsed": false,
+    "idempotencyReconciliationLimitsKillSwitchContractVerified": true
+  },
+  "cleanup": {
+    "databaseNamesChecked": [
+      "auth_session_smoke_source_c28d70f7_6cfc_45fd_bc67_35a84577ec6e",
+      "auth_session_smoke_restore_c28d70f7_6cfc_45fd_bc67_35a84577ec6e",
+      "auth_operational_control_smoke_01a51971_7429_400c_a373_cc237536a93a",
+      "auth_operational_alert_state_smoke_2fb46778_41e5_4fc6_9afe_bc4d7fe3416d"
+    ],
+    "matchingDatabaseCount": 0,
+    "matchingDatabases": [],
+    "matchingProcessCount": 0,
+    "matchingProcesses": [],
+    "matchingListenerCount": 0,
+    "matchingListeners": [],
+    "matchingTemporaryArtifactCount": 0,
+    "matchingTemporaryArtifacts": []
+  },
+  "componentEvidence": {
+    "authSession": {
+      "path": "exports/learning-local-demo-auth-session-disposable-smoke-report.json",
+      "sha256": "075edfb94104ab4c642bf2d054a7143bce19f1464238bf2521d8b24d423ac2a1"
+    },
+    "operationalControl": {
+      "path": "exports/learning-local-demo-auth-operational-control-disposable-smoke-report.json",
+      "sha256": "4fb92d12fb69730260192db5ab25e6115f99d599c79e1cb37c87d4a982fddca7"
+    },
+    "alertState": {
+      "path": "exports/learning-local-demo-auth-operational-alert-state-disposable-smoke-report.json",
+      "sha256": "f31b68a9b6c0207f1a0a6757a958d126a55276cd54458b1002d08e60208e1246"
+    }
+  },
+  "safety": {
+    "productionReady": false,
+    "productionEnabled": false,
+    "productionDatabaseUsed": false,
+    "productionDeployUsed": false,
+    "productionCredentialsUsed": false,
+    "productionDataUsed": false,
+    "providerApiUsed": false,
+    "paymentRefundCommissionPayoutMutationUsed": false,
+    "liveNotificationUsed": false,
+    "liveAiProviderUsed": false,
+    "realCustomerLearnerOrderPaymentMutationUsed": false,
+    "plaintextSecretsIncluded": false,
+    "separateFinalReleaseApprovalRequired": true
+  },
+  "limitations": [
+    "This is isolated localhost staging evidence, not hosted staging or production capacity evidence.",
+    "Resource headroom is a host free-memory snapshot, not a production load or failover benchmark.",
+    "External providers remained disabled; sandbox credentials were not supplied to this lane.",
+    "A separate final release-owner decision is required before any production action."
+  ]
+}

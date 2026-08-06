@@ -1,0 +1,140 @@
+{
+  "prompt": "Promt_quanly_minhhuong_4",
+  "date": "2026-06-14",
+  "mode": "implementation-narrow-slice",
+  "verdict": "PASS",
+  "input_files_read": [
+    "docs/minh-huong-sales-distribution/promt3/00_chain_ledger.md",
+    "docs/minh-huong-sales-distribution/promt3/01_prompt2_review_sync.md",
+    "docs/minh-huong-sales-distribution/promt3/02_current_schema_contract_inventory.md",
+    "docs/minh-huong-sales-distribution/promt3/04_order_status_history_design.md",
+    "docs/minh-huong-sales-distribution/promt3/05_idempotency_contract_design.md",
+    "docs/minh-huong-sales-distribution/promt3/10_migration_implementation_plan.md",
+    "docs/minh-huong-sales-distribution/promt3/11_acceptance_test_plan.md",
+    "docs/minh-huong-sales-distribution/promt3/12_risks_decisions_questions.md",
+    "docs/minh-huong-sales-distribution/promt3/13_next_prompt_recommendation.md",
+    "docs/minh-huong-sales-distribution/promt3/ketqua_promt_quanly_minhhuong_3.md",
+    "docs/minh-huong-sales-distribution/promt3/ketqua_promt_quanly_minhhuong_3.json",
+    "docs/minh-huong-sales-distribution/promt2/00_chain_ledger.md",
+    "docs/minh-huong-sales-distribution/promt2/02_tests_added_or_changed.md",
+    "docs/minh-huong-sales-distribution/promt2/08_bugs_found_and_fixes.md"
+  ],
+  "source_changes": [
+    {
+      "file": "apps/api/src/commercial-idempotency.ts",
+      "summary": "Shared key validation, stable request hash, replay/conflict resolver, TTL helper, and JSON-safe response serialization."
+    },
+    {
+      "file": "apps/api/src/activation-orders/activation-orders.controller.ts",
+      "summary": "Pass optional Idempotency-Key header to approve service."
+    },
+    {
+      "file": "apps/api/src/activation-orders/activation-orders.service.ts",
+      "summary": "Optional idempotency for approve and transaction-bound APPROVE OrderStatusHistory row."
+    },
+    {
+      "file": "apps/api/src/channel-finance/channel-finance.controller.ts",
+      "summary": "Pass optional Idempotency-Key header to payout pay/reject service."
+    },
+    {
+      "file": "apps/api/src/channel-finance/channel-finance.service.ts",
+      "summary": "Optional idempotency for payout pay and reject."
+    }
+  ],
+  "schema_changes": [
+    {
+      "file": "apps/api/prisma/schema.prisma",
+      "summary": "Added IdempotencyRecordStatus enum, OrderStatusHistory model, IdempotencyRecord model, and relations to User/ActivationOrder."
+    }
+  ],
+  "migrations": [
+    {
+      "file": "apps/api/prisma/migrations/20260614143000_order_history_idempotency/migration.sql",
+      "summary": "Creates IdempotencyRecordStatus enum, OrderStatusHistory table, IdempotencyRecord table, indexes, unique scope/key, and foreign keys."
+    }
+  ],
+  "tests_added_or_changed": [
+    {
+      "file": "apps/api/src/activation-orders/activation-orders.service.spec.ts",
+      "covers": [
+        "approve writes APPROVE order status history",
+        "same-key approve replay does not duplicate payment/subscription/commission/history",
+        "same-key different approve payload conflicts",
+        "stale approve still creates no duplicate history"
+      ]
+    },
+    {
+      "file": "apps/api/src/channel-finance/channel-finance.service.spec.ts",
+      "covers": [
+        "same-key payout pay replay does not duplicate RELEASE/DEBIT",
+        "same-key different payout pay payload conflicts",
+        "same-key payout reject replay does not duplicate RELEASE",
+        "same-key different payout reject payload conflicts"
+      ]
+    }
+  ],
+  "idempotency_coverage": {
+    "approve_activation_order": "covered",
+    "payout_pay": "covered",
+    "payout_reject": "covered"
+  },
+  "history_coverage": {
+    "order_approve": "covered",
+    "order_create": "deferred",
+    "order_proof_upload": "deferred",
+    "order_reject_cancel_revoke": "deferred"
+  },
+  "tests_run": [
+    {
+      "command": "npm --prefix apps/api run prisma:generate",
+      "status": "passed",
+      "summary": "Prisma Client generated after schema change."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts channel-finance.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 20 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand",
+      "status": "passed",
+      "summary": "13 suites, 60 tests."
+    },
+    {
+      "command": "npm --prefix apps/api run test:e2e -- --runInBand",
+      "status": "passed",
+      "summary": "1 suite, 1 test."
+    },
+    {
+      "command": "npm --prefix apps/api run build",
+      "status": "passed",
+      "summary": "Nest build completed."
+    },
+    {
+      "command": "git status --short",
+      "status": "failed",
+      "summary": "Workspace is not a git repository."
+    }
+  ],
+  "bugs_found": [],
+  "hard_bans_check": {
+    "affiliate_qr_not_implemented": true,
+    "payment_gateway_not_implemented": true,
+    "frontend_rewrite_not_done": true,
+    "package_entitlement_not_implemented": true,
+    "commission_policy_engine_not_implemented": true
+  },
+  "remaining_gaps": [
+    "OrderStatusHistory is currently written only for approve; create/proof/reject/cancel/revoke are deferred by Prompt 4 scope.",
+    "Payout status history was not added; payout idempotency is implemented, but payout lifecycle trail remains a later design choice.",
+    "Subscription sourceOrderId/activationPackageId traceability remains for Prompt 5.",
+    "Package entitlement/snapshot and commission policy version/snapshot remain deferred.",
+    "Canonical BA v1.1 affiliate/QR docs are still missing."
+  ],
+  "recommended_next_prompt": {
+    "name": "Promt_quanly_minhhuong_5.md",
+    "type": "implementation-narrow-slice",
+    "scope": "Subscription traceability with sourceOrderId, activationPackageId, providerRef backfill compatibility, and tests; alternatively DB-backed channel scope integration tests.",
+    "reason": "Prompt 4 now has lifecycle/idempotency foundation for the riskiest review actions. The next safest commercial data contract is explicit subscription traceability, while affiliate/QR remains blocked by missing canonical BA docs."
+  }
+}

@@ -1,0 +1,228 @@
+{
+  "prompt": "Promt_quanly_minhhuong_2",
+  "date": "2026-06-14",
+  "mode": "test-hardening",
+  "verdict": "PASS",
+  "repo": {
+    "root": "C:/Users/PC/Documents/code/minhhuong",
+    "git_status_before": "not a git repository: fatal: not a git repository (or any of the parent directories): .git",
+    "git_status_after": "not a git repository: fatal: not a git repository (or any of the parent directories): .git"
+  },
+  "prompt1_inputs_read": [
+    {
+      "file": "docs/minh-huong-sales-distribution/bromt1/00_chain_ledger.md",
+      "status": "found",
+      "notes": "Read before changes."
+    },
+    {
+      "file": "docs/minh-huong-sales-distribution/bromt1/ketquabromt1.md",
+      "status": "found",
+      "notes": "Read before changes."
+    },
+    {
+      "file": "docs/minh-huong-sales-distribution/bromt1/ketquabromt1.json",
+      "status": "found",
+      "notes": "Read before changes."
+    },
+    {
+      "file": "docs/minh-huong-sales-distribution/bromt1/03_current_capability_matrix.md",
+      "status": "found",
+      "notes": "Read before changes."
+    },
+    {
+      "file": "docs/minh-huong-sales-distribution/bromt1/04_gap_matrix_p0_p1_p2_p3.md",
+      "status": "found",
+      "notes": "Read before changes."
+    },
+    {
+      "file": "docs/minh-huong-sales-distribution/bromt1/07_order_subscription_commission_flow_audit.md",
+      "status": "found",
+      "notes": "Read before changes."
+    },
+    {
+      "file": "docs/minh-huong-sales-distribution/bromt1/08_channel_scope_rbac_audit.md",
+      "status": "found",
+      "notes": "Read before changes."
+    },
+    {
+      "file": "docs/minh-huong-sales-distribution/bromt1/10_tests_run.md",
+      "status": "found",
+      "notes": "Read before changes."
+    },
+    {
+      "file": "docs/minh-huong-sales-distribution/bromt1/11_risks_decisions_questions.md",
+      "status": "found",
+      "notes": "Read before changes."
+    },
+    {
+      "file": "docs/minh-huong-sales-distribution/bromt1/12_next_bromt_recommendation.md",
+      "status": "found",
+      "notes": "Read before changes."
+    }
+  ],
+  "tests_added_or_changed": [
+    {
+      "file": "apps/api/src/activation-orders/activation-orders.service.spec.ts",
+      "type": "unit",
+      "covers": [
+        "self-service order/proof/approve/subscription",
+        "sale-assisted order/duplicate guard/commission",
+        "approve idempotency claim",
+        "commission release idempotency",
+        "canceled source order commission release"
+      ]
+    },
+    {
+      "file": "apps/api/src/channel-finance/channel-finance.service.spec.ts",
+      "type": "unit",
+      "covers": [
+        "payout HOLD",
+        "payout pay RELEASE and DEBIT",
+        "repeated pay guard",
+        "reject RELEASE",
+        "repeated reject guard",
+        "terminal transition guard",
+        "channel subtree finance scope"
+      ]
+    }
+  ],
+  "commercial_coverage": {
+    "self_service_order_to_subscription": {
+      "status": "covered",
+      "evidence": [
+        "apps/api/src/activation-orders/activation-orders.service.spec.ts:249"
+      ]
+    },
+    "sale_order_to_commission": {
+      "status": "covered",
+      "evidence": [
+        "apps/api/src/activation-orders/activation-orders.service.spec.ts:362"
+      ]
+    },
+    "commission_release_idempotency": {
+      "status": "covered",
+      "evidence": [
+        "apps/api/src/activation-orders/activation-orders.service.spec.ts:483",
+        "apps/api/src/activation-orders/activation-orders.service.spec.ts:577"
+      ]
+    },
+    "payout_ledger_idempotency": {
+      "status": "covered",
+      "evidence": [
+        "apps/api/src/channel-finance/channel-finance.service.spec.ts:137",
+        "apps/api/src/channel-finance/channel-finance.service.spec.ts:180",
+        "apps/api/src/channel-finance/channel-finance.service.spec.ts:222",
+        "apps/api/src/channel-finance/channel-finance.service.spec.ts:244",
+        "apps/api/src/channel-finance/channel-finance.service.spec.ts:281",
+        "apps/api/src/channel-finance/channel-finance.service.spec.ts:306"
+      ]
+    },
+    "channel_subtree_scope": {
+      "status": "partial",
+      "evidence": [
+        "apps/api/src/channel-finance/channel-finance.service.spec.ts:330",
+        "apps/api/src/channel-finance/channel-finance.service.spec.ts:360",
+        "apps/api/src/channel-finance/channel-finance.service.ts:986"
+      ]
+    }
+  },
+  "source_changes": [
+    {
+      "file": "apps/api/src/activation-orders/activation-orders.service.ts",
+      "reason": "Claim activation order approval and commission release with conditional updates to prevent duplicate side effects and stale metrics.",
+      "risk": "medium",
+      "evidence": [
+        "apps/api/src/activation-orders/activation-orders.service.ts:615",
+        "apps/api/src/activation-orders/activation-orders.service.ts:681",
+        "apps/api/src/activation-orders/activation-orders.service.ts:1417"
+      ]
+    },
+    {
+      "file": "apps/api/src/channel-finance/channel-finance.service.ts",
+      "reason": "Claim payout pay/reject transitions with conditional updates before ledger writes to prevent double RELEASE/DEBIT.",
+      "risk": "low",
+      "evidence": [
+        "apps/api/src/channel-finance/channel-finance.service.ts:702",
+        "apps/api/src/channel-finance/channel-finance.service.ts:773"
+      ]
+    }
+  ],
+  "bugs_found": [
+    {
+      "title": "Concurrent activation approval could double-create commercial side effects",
+      "severity": "P0",
+      "status": "fixed",
+      "evidence": [
+        "apps/api/src/activation-orders/activation-orders.service.ts:615",
+        "apps/api/src/activation-orders/activation-orders.service.spec.ts:543"
+      ],
+      "fix_summary": "Use transactional conditional updateMany on order id + PENDING_REVIEW before creating payment, subscription, wallet, and commission side effects."
+    },
+    {
+      "title": "Concurrent payout pay/reject could double-write ledger entries",
+      "severity": "P0",
+      "status": "fixed",
+      "evidence": [
+        "apps/api/src/channel-finance/channel-finance.service.ts:702",
+        "apps/api/src/channel-finance/channel-finance.service.ts:773",
+        "apps/api/src/channel-finance/channel-finance.service.spec.ts:222",
+        "apps/api/src/channel-finance/channel-finance.service.spec.ts:281"
+      ],
+      "fix_summary": "Use transactional conditional updateMany on payout id + allowed statuses before writing RELEASE/DEBIT/RELEASE ledger entries."
+    },
+    {
+      "title": "Commission release stale read could over-report released count",
+      "severity": "P2",
+      "status": "fixed",
+      "evidence": [
+        "apps/api/src/activation-orders/activation-orders.service.ts:1417",
+        "apps/api/src/activation-orders/activation-orders.service.spec.ts:483"
+      ],
+      "fix_summary": "Return a boolean from the transaction and increment released only when the conditional update and CREDIT ledger write happen."
+    }
+  ],
+  "tests_run": [
+    {
+      "command": "git status --short",
+      "status": "failed",
+      "summary": "Workspace is not a git repository."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand",
+      "status": "passed",
+      "summary": "Baseline before changes passed: 6 suites, 20 tests. Final after changes passed: 8 suites, 34 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts channel-finance.service.spec.ts",
+      "status": "passed",
+      "summary": "Final targeted tests passed: 2 suites, 14 tests."
+    },
+    {
+      "command": "npm --prefix apps/api run test:e2e -- --runInBand",
+      "status": "passed",
+      "summary": "Final e2e passed: 1 suite, 1 test."
+    },
+    {
+      "command": "npm --prefix apps/api run build",
+      "status": "passed",
+      "summary": "Nest build completed successfully."
+    }
+  ],
+  "hard_bans_check": {
+    "affiliate_qr_not_implemented": true,
+    "payment_gateway_not_implemented": true,
+    "frontend_rewrite_not_done": true,
+    "schema_migration_not_done_or_justified": true
+  },
+  "remaining_gaps": [
+    "Channel subtree tests are service-level scope-shape tests; DB-backed sibling/director/agency/manager matrix tests remain for Prompt 3 or Prompt 4.",
+    "No package entitlement snapshot, sourceOrderId/packageId subscription trace, order status history, or explicit idempotency key schema was added.",
+    "No affiliate/QR or payment gateway work was done by design."
+  ],
+  "recommended_next_prompt": {
+    "name": "Promt_quanly_minhhuong_3.md",
+    "type": "technical-spec/no-code or narrow design",
+    "scope": "package entitlement snapshot, status history, explicit idempotency contract, subscription order/package traceability, commission policy snapshot",
+    "reason": "Prompt 2 hardened the current money and access flows with service-level tests and small P0 fixes; the remaining gaps need deliberate schema/API design before implementation."
+  }
+}

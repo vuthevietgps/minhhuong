@@ -1,0 +1,117 @@
+{
+  "reportId": "learning-local-demo-prisma-auth-session-store-matrix",
+  "generatedAt": "2026-07-10T04:00:00.000Z",
+  "scope": "repo-local/disposable-local-database-only",
+  "productionReady": false,
+  "productionEnabled": false,
+  "decision": "LOCAL_IMPLEMENTATION_VERIFIED_GO_LIVE_BLOCKED",
+  "safety": {
+    "productionDbUsed": false,
+    "productionDeployUsed": false,
+    "realSessionMutationUsed": false,
+    "plaintextRefreshTokenPersisted": false,
+    "malformedRefreshTokenHashAccepted": false,
+    "providerApiUsed": false
+  },
+  "totals": {
+    "evidenceCount": 8,
+    "implementedCount": 3,
+    "disposableLocalVerifiedCount": 4,
+    "stagingBlockerCount": 1,
+    "productionBlockerCount": 1,
+    "productionReadyClaimCount": 0,
+    "openLocalSafetyGateCount": 0
+  },
+  "evidenceRows": [
+    {
+      "evidenceId": "prisma-auth-provider-selection",
+      "control": "AUTH_SESSION_STORE provider selection",
+      "status": "IMPLEMENTED",
+      "evidencePaths": [
+        "apps/api/src/auth/auth-session-store.provider.ts",
+        "apps/api/src/auth/auth.module.ts"
+      ],
+      "verification": "Local demo defaults to fixture, explicit local/staging Prisma is allowed, and production fixture fallback is rejected.",
+      "productionBlocker": false
+    },
+    {
+      "evidenceId": "prisma-auth-repository",
+      "control": "Prisma AuthSessionStore repository",
+      "status": "IMPLEMENTED",
+      "evidencePaths": [
+        "apps/api/src/auth/prisma-auth-session.store.ts",
+        "apps/api/prisma/schema.prisma"
+      ],
+      "verification": "Sessions, refresh-token hashes, and append-only audit events persist behind the async AuthSessionStore seam.",
+      "productionBlocker": false
+    },
+    {
+      "evidenceId": "prisma-auth-refresh-hash-integrity",
+      "control": "Refresh-token SHA-256 persistence integrity",
+      "status": "VERIFIED_DISPOSABLE_LOCAL",
+      "evidencePaths": [
+        "apps/api/src/auth/prisma-auth-session.store.ts",
+        "apps/api/prisma/migrations/20260710140000_auth_refresh_token_hash_integrity/migration.sql",
+        "apps/api/prisma/runbooks/20260710140000_auth_refresh_token_hash_integrity_forward_repair.sql",
+        "apps/api/src/auth/prisma-auth-session.integration.spec.ts"
+      ],
+      "verification": "Repository reads/writes reject malformed hashes; a validated PostgreSQL constraint enforces lowercase SHA-256, and the disposable forward repair revokes, tombstones, and audits malformed rows without exporting their values.",
+      "productionBlocker": false
+    },
+    {
+      "evidenceId": "prisma-auth-migration-disposable-local",
+      "control": "Migration deploy and schema validation",
+      "status": "VERIFIED_DISPOSABLE_LOCAL",
+      "evidencePaths": [
+        "apps/api/prisma/migrations/20260710090000_prisma_auth_session_store/migration.sql",
+        "apps/api/src/auth/prisma-auth-session.integration.spec.ts"
+      ],
+      "verification": "migrate deploy creates three tables, foreign keys, and lookup indexes in a random disposable localhost database.",
+      "productionBlocker": false
+    },
+    {
+      "evidenceId": "prisma-auth-fail-closed",
+      "control": "Repository outage and inconsistent-row denial",
+      "status": "IMPLEMENTED",
+      "evidencePaths": [
+        "apps/api/src/auth/auth-session.service.ts",
+        "apps/api/src/auth/prisma-auth-session.store.spec.ts"
+      ],
+      "verification": "Repository transport and integrity failures become controlled service-unavailable denials before protected access.",
+      "productionBlocker": false
+    },
+    {
+      "evidenceId": "prisma-auth-two-instance-revocation",
+      "control": "Shared two-instance termination and revocation contract",
+      "status": "VERIFIED_DISPOSABLE_LOCAL",
+      "evidencePaths": [
+        "apps/api/src/auth/auth-session.service.ts",
+        "apps/api/src/auth/prisma-auth-session.store.ts",
+        "apps/api/src/auth/prisma-auth-session.integration.spec.ts"
+      ],
+      "verification": "Session-row locking serializes refresh issuance/rotation with atomic logout and revocation; two independent Prisma clients run six rotate/revoke and six rotate/logout races, all ending with a denied session and zero active refresh tokens.",
+      "productionBlocker": false
+    },
+    {
+      "evidenceId": "prisma-auth-rollback-forward-repair",
+      "control": "Pre-activation rollback and forward repair",
+      "status": "VERIFIED_DISPOSABLE_LOCAL",
+      "evidencePaths": [
+        "apps/api/prisma/runbooks/20260710090000_prisma_auth_session_store_pre_activation_rollback.sql",
+        "docs/hoctap_minhhuong/prisma_auth_session_store_runbook.md"
+      ],
+      "verification": "Disposable test drops only new auth objects, preserves the base schema, reapplies reviewed migrations, rehearses constraint-only rollback, and verifies all auth tables and hash integrity return.",
+      "productionBlocker": false
+    },
+    {
+      "evidenceId": "prisma-auth-staging-operations",
+      "control": "Staging backup, restore, monitoring, and incident rehearsal",
+      "status": "BLOCKED_PENDING_STAGING",
+      "evidencePaths": [
+        "docs/hoctap_minhhuong/prisma_auth_session_store_runbook.md"
+      ],
+      "verification": "No staging infrastructure or production credentials were used in this repo-local job.",
+      "productionBlocker": true
+    }
+  ]
+}

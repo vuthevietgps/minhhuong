@@ -1,0 +1,124 @@
+{
+  "prompt": "Promt_quanly_minhhuong_13",
+  "date": "2026-06-14",
+  "mode": "implementation-narrow-slice-read-side-hardening",
+  "verdict": "PASS",
+  "read_surface_decision": {
+    "decision": "Added dedicated scoped endpoint GET /activation-orders/:orderId/status-history",
+    "reason": "No safe scoped order detail endpoint existed, and full history should not be added to high-volume list rows.",
+    "order_list_payload_changed": false,
+    "customer_me_path_changed": false
+  },
+  "source_files_changed": [
+    "apps/api/src/activation-orders/activation-orders.controller.ts",
+    "apps/api/src/activation-orders/activation-orders.service.ts"
+  ],
+  "tests_added_or_changed": [
+    "apps/api/src/activation-orders/activation-orders.service.spec.ts",
+    "apps/api/src/channel-finance/channel-scope.integration.spec.ts"
+  ],
+  "routes_service_methods_touched": [
+    "GET /activation-orders/:orderId/status-history",
+    "ActivationOrdersService.getStatusHistory",
+    "ActivationOrdersService.orderVisibilityWhere",
+    "ActivationOrdersService.sanitizeHistoryMetadata",
+    "ActivationOrdersService.listOrders"
+  ],
+  "scope_rbac_result": {
+    "uses_activation_order_view_roles": true,
+    "uses_same_visibility_helper_as_list_orders": true,
+    "admin_operations_global": true,
+    "channel_subtree_and_created_orders": true,
+    "out_of_scope_returns_not_found": true,
+    "db_backed_scope_tests": true
+  },
+  "history_ordering_and_shape": {
+    "order_by": [
+      "createdAt ASC",
+      "id ASC"
+    ],
+    "fields_returned": [
+      "id",
+      "orderId",
+      "fromStatus",
+      "toStatus",
+      "action",
+      "actorUserId",
+      "reason",
+      "metadataJson",
+      "createdAt"
+    ],
+    "all_prompt12_actions_tested": true
+  },
+  "metadata_safety_result": {
+    "recursive_sanitization": true,
+    "storage_keys_reduced_to_filenames": true,
+    "urls_reduced_to_filenames": true,
+    "raw_base64_blob_file_content_redacted": true,
+    "raw_file_content_exposed": false
+  },
+  "tests_run": [
+    {
+      "command": "npm --prefix apps/api run prisma:generate",
+      "status": "passed"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 17 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts channel-finance.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 29 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand package-entitlement",
+      "status": "passed",
+      "summary": "3 suites, 12 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand entitlement.service.spec.ts learning.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 21 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-participant-fk.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 1 test"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-scope.integration.spec.ts channel-admin-scope.integration.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 7 tests; existing non-failing pg deprecation warning emitted"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand",
+      "status": "passed",
+      "summary": "21 suites, 128 tests; existing non-failing pg deprecation warning emitted"
+    },
+    {
+      "command": "npm --prefix apps/api run test:e2e -- --runInBand",
+      "status": "passed",
+      "summary": "4 suites, 10 tests"
+    },
+    {
+      "command": "npm --prefix apps/api run build",
+      "status": "passed"
+    },
+    {
+      "command": "git status --short",
+      "status": "failed",
+      "summary": "fatal: not a git repository (or any of the parent directories): .git"
+    }
+  ],
+  "remaining_risks": [
+    "Customer-facing /me activation order history remains intentionally deferred.",
+    "History actor summary is not expanded; endpoint returns actorUserId only.",
+    "OrderStatusHistory.action remains a string by design.",
+    "Existing non-failing pg deprecation warning remains in DB-backed channel tests."
+  ],
+  "next_prompt_recommendation": "Consider a narrow actor-display/read-usability slice for history rows, or customer-facing own-order history only if product requirements explicitly need it.",
+  "hard_bans_respected": true
+}
+

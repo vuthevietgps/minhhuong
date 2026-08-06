@@ -1,0 +1,123 @@
+{
+  "prompt": "Promt_quanly_minhhuong_14",
+  "date": "2026-06-14",
+  "mode": "implementation-narrow-slice-read-side-audit-usability",
+  "verdict": "CONDITIONAL",
+  "conditional_reason": "Implementation and all required tests/build pass, but the existing non-failing pg deprecation warning remains in DB-backed channel scope suites.",
+  "source_changes": [
+    "apps/api/src/activation-orders/activation-orders.service.ts"
+  ],
+  "tests_added_or_changed": [
+    "apps/api/src/activation-orders/activation-orders.service.spec.ts",
+    "apps/api/src/channel-finance/channel-scope.integration.spec.ts"
+  ],
+  "routes_service_methods_touched": [
+    "GET /activation-orders/:orderId/status-history",
+    "ActivationOrdersService.getStatusHistory"
+  ],
+  "actor_fields_exposed": [
+    "actor.id",
+    "actor.displayName",
+    "actor.email"
+  ],
+  "actor_field_source": {
+    "id": "User.id",
+    "email": "User.email",
+    "displayName": "Profile.displayName"
+  },
+  "sensitive_fields_not_exposed": [
+    "passwordHash",
+    "passwordResetTokens",
+    "refreshToken",
+    "providerIds",
+    "privateAuthMetadata",
+    "roles",
+    "childProfiles",
+    "payments",
+    "profile.avatarUrl",
+    "profile.locale",
+    "profile.timezone"
+  ],
+  "scope_rbac_result": {
+    "order_visibility_checked_before_history_read": true,
+    "same_order_visibility_helper_as_list_orders": true,
+    "out_of_scope_returns_not_found_before_actor_lookup": true,
+    "db_backed_scope_regression_passed": true
+  },
+  "metadata_shape_regression": {
+    "metadata_sanitization_unchanged": true,
+    "storage_keys_reduced_to_filenames": true,
+    "raw_file_content_redacted": true,
+    "order_list_payload_not_broadened": true,
+    "status_history_write_semantics_changed": false
+  },
+  "tests_run": [
+    {
+      "command": "npm --prefix apps/api run prisma:generate",
+      "status": "passed"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 17 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-scope.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 4 tests; targeted DB-backed check"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts channel-finance.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 29 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand package-entitlement",
+      "status": "passed",
+      "summary": "3 suites, 12 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand entitlement.service.spec.ts learning.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 21 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-participant-fk.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 1 test"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-scope.integration.spec.ts channel-admin-scope.integration.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 7 tests; existing non-failing pg deprecation warning emitted"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand",
+      "status": "passed",
+      "summary": "21 suites, 128 tests; existing non-failing pg deprecation warning emitted"
+    },
+    {
+      "command": "npm --prefix apps/api run test:e2e -- --runInBand",
+      "status": "passed",
+      "summary": "4 suites, 10 tests"
+    },
+    {
+      "command": "npm --prefix apps/api run build",
+      "status": "passed"
+    },
+    {
+      "command": "git status --short",
+      "status": "failed_environment",
+      "summary": "fatal: not a git repository (or any of the parent directories): .git"
+    }
+  ],
+  "remaining_risks": [
+    "Actor displayName can be null when a user has no Profile.displayName.",
+    "Customer-facing /me order history remains intentionally deferred.",
+    "Existing non-failing pg deprecation warning remains.",
+    "git status is unavailable because the workspace is not a git repository."
+  ],
+  "next_recommendation": "Only if needed, add a narrow read-side audit usability pass for actor fallback display labels or customer own-order history; keep write semantics and hard-banned scopes unchanged.",
+  "hard_bans_respected": true
+}
+

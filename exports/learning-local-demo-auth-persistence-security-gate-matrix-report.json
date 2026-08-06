@@ -1,0 +1,317 @@
+{
+  "reportName": "Learning Local Demo Auth Persistence Security Gate Matrix",
+  "generatedFor": "local-demo-auth-persistence-security-gate-matrix",
+  "generatedAt": "2026-07-01T03:00:00.000Z",
+  "productionReady": false,
+  "fixtureOnly": true,
+  "endpointPath": "/v1/learning-local-demo/auth-persistence-security-gate-matrix-report",
+  "dashboardEvidencePath": "/admin/learning-local-demo#auth-persistence-security-gate-matrix",
+  "jsonExportPath": "exports/learning-local-demo-auth-persistence-security-gate-matrix-report.json",
+  "markdownExportPath": "exports/learning-local-demo-auth-persistence-security-gate-matrix-report.md",
+  "safety": {
+    "fixtureOnly": true,
+    "productionDbUsed": false,
+    "noProductionDbRead": true,
+    "providerApiUsed": false,
+    "paymentProviderUsed": false,
+    "notificationProviderUsed": false,
+    "aiProviderExecutionUsed": false,
+    "liveAdsExecuted": false,
+    "realAuthMutationUsed": false,
+    "realSessionMutationUsed": false,
+    "realRefreshTokenMutationUsed": false,
+    "realAuditMutationUsed": false,
+    "realLearningMutationUsed": false,
+    "realErpMutationUsed": false,
+    "secretsRequired": false
+  },
+  "currentStatus": {
+    "status": "LOCAL_DEMO_READY_WITH_NOTES",
+    "summary": "Prisma auth persistence code, schema, migration, fail-closed behavior, two-client revocation, rollback, and forward repair are disposable-local verified while production readiness remains false.",
+    "remainingLocalDemoNotes": [
+      "The Prisma session and shared auth operational-control providers are implemented but not production-enabled; approved staging rehearsal, dashboards, alert routing, retention ownership, and manual go-live approval remain open.",
+      "Security review, staging backup/restore rehearsal, migration approval, retention approval, and manual go-live approval remain required before production enablement."
+    ]
+  },
+  "totals": {
+    "securityDesignGateCount": 6,
+    "schemaRepositoryContractCount": 1,
+    "distributedRevocationContractCount": 1,
+    "refreshRetentionReusePolicyCount": 1,
+    "auditRetentionExportPolicyCount": 1,
+    "rateLimitMonitoringHookCount": 1,
+    "rollbackMigrationNoteCount": 1,
+    "productionBlockerCount": 6,
+    "manualApprovalRequiredCount": 6,
+    "evidenceRowCount": 7,
+    "localDemoNoteCount": 2,
+    "productionReadyClaimCount": 0,
+    "safetyGateCount": 13,
+    "closedSafetyGateCount": 13,
+    "openSafetyGateCount": 0
+  },
+  "statusCounts": {
+    "gateKind": {
+      "SCHEMA_REPOSITORY_CONTRACT": 1,
+      "DISTRIBUTED_REVOCATION_CONTRACT": 1,
+      "REFRESH_RETENTION_REUSE_POLICY": 1,
+      "AUDIT_RETENTION_EXPORT_POLICY": 1,
+      "RATE_LIMIT_MONITORING_HOOKS": 1,
+      "ROLLBACK_MIGRATION_NOTES": 1
+    },
+    "readinessDecision": {
+      "LOCAL_DEMO_DESIGN_EVIDENCE_READY": 6
+    }
+  },
+  "securityGateRows": [
+    {
+      "gateRowId": "auth-persistence-schema-repository-contract-design",
+      "gateKind": "SCHEMA_REPOSITORY_CONTRACT",
+      "contractSurface": "AuthSessionStore production repository contract for auth_sessions, auth_refresh_tokens, and auth_session_audit_events.",
+      "expectedProductionContract": "A future PostgreSQL/Prisma repository must implement the existing AuthSessionStore methods with atomic writes for session state, refresh-token state, and append-only audit events.",
+      "localFixtureEvidence": "AUTH_SESSION_STORE now selects FixtureBackedAuthSessionStore for local demo or PrismaAuthSessionStore for explicit disposable local/staging use; the migration and repository contract pass against a random localhost database.",
+      "requiredProductionControls": [
+        "Store only refresh-token hashes, never raw refresh tokens.",
+        "Use indexed session id, user id, device id, state, and expiresAt columns.",
+        "Constrain refresh-token state transitions to ACTIVE, ROTATED, REUSED, REVOKED, and EXPIRED.",
+        "Write audit events append-only with admin/support read filters."
+      ],
+      "plannedVerification": [
+        "Repository contract and migration/rollback tests pass against a disposable non-production database.",
+        "Staging migration diff, backup/restore, and security review remain required before any production deploy."
+      ],
+      "rollbackOrMigrationNote": "Add tables behind a repository provider flag; rollback before production writes may drop tables, while rollback after writes must disable the provider and preserve data for audit.",
+      "productionBlocker": true,
+      "manualApprovalRequired": true,
+      "readinessDecision": "LOCAL_DEMO_DESIGN_EVIDENCE_READY",
+      "fixtureOnly": true,
+      "productionDbUsed": false,
+      "noProductionDbRead": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Production schema/repository design is documented as a contract only; no production DB was read or mutated."
+    },
+    {
+      "gateRowId": "auth-persistence-distributed-revocation-contract",
+      "gateKind": "DISTRIBUTED_REVOCATION_CONTRACT",
+      "contractSurface": "Cross-instance session and refresh-token revocation behavior for JWT guard and refresh endpoint.",
+      "expectedProductionContract": "Every API instance must deny a session after the central repository marks it ENDED, REVOKED, or EXPIRED; cache invalidation must be bounded by a documented max staleness window.",
+      "localFixtureEvidence": "Job 00059 uses two independent Prisma clients against one disposable localhost database; revocation by instance A is denied by instance B.",
+      "requiredProductionControls": [
+        "Central revocation version or updatedAt cursor checked by every instance.",
+        "Refresh-token reuse revokes the related session family across devices.",
+        "JWT guard must fail closed when repository lookup or revocation cache is unavailable."
+      ],
+      "plannedVerification": [
+        "Two-instance non-production smoke: revoke on instance A and deny on instance B.",
+        "Cache outage test proves fail-closed behavior for protected routes."
+      ],
+      "rollbackOrMigrationNote": "Distributed revocation must launch with a kill switch that reverts traffic to the current local/session guard behavior only in non-production until manual approval.",
+      "productionBlocker": true,
+      "manualApprovalRequired": true,
+      "readinessDecision": "LOCAL_DEMO_DESIGN_EVIDENCE_READY",
+      "fixtureOnly": true,
+      "productionDbUsed": false,
+      "noProductionDbRead": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Distributed revocation is specified as an expected cross-instance contract and remains a production blocker until staged."
+    },
+    {
+      "gateRowId": "auth-persistence-refresh-retention-reuse-policy",
+      "gateKind": "REFRESH_RETENTION_REUSE_POLICY",
+      "contractSurface": "Refresh-token retention, rotation, reuse response, and session-family revocation policy.",
+      "expectedProductionContract": "Rotated, reused, revoked, and expired refresh-token hashes must be retained long enough for replay detection and audit while raw token values remain unavailable.",
+      "localFixtureEvidence": "Job 00037 refresh lifecycle matrix covers rotation denial, reuse denial, session revocation, and audit visibility with fixture rows.",
+      "requiredProductionControls": [
+        "Retain inactive refresh-token hashes for at least 30 days, subject to legal/security review.",
+        "On reused token detection, mark token REUSED, revoke the session family, and emit an audit event.",
+        "Deny refresh for expired or non-active tokens with a stable unauthorized response."
+      ],
+      "plannedVerification": [
+        "Retention cleanup dry-run report shows deleted candidates without deleting production data.",
+        "Replay test proves reused token denial and session-family revocation."
+      ],
+      "rollbackOrMigrationNote": "Retention cleanup must run in dry-run mode first; rollback disables cleanup scheduling and preserves token hash rows.",
+      "productionBlocker": true,
+      "manualApprovalRequired": true,
+      "readinessDecision": "LOCAL_DEMO_DESIGN_EVIDENCE_READY",
+      "fixtureOnly": true,
+      "productionDbUsed": false,
+      "noProductionDbRead": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Refresh-token retention and reuse response are policy evidence only; no production token data was accessed."
+    },
+    {
+      "gateRowId": "auth-persistence-audit-retention-read-only-export-policy",
+      "gateKind": "AUDIT_RETENTION_EXPORT_POLICY",
+      "contractSurface": "Auth lifecycle audit retention, admin/support visibility, and read-only export policy.",
+      "expectedProductionContract": "Session and refresh-token lifecycle audit events must be append-only, retained according to policy, and exportable through a redacted read-only admin/support path.",
+      "localFixtureEvidence": "Fixture audit events are visible to ADMIN and SUPPORT roles while learner roles receive no audit rows.",
+      "requiredProductionControls": [
+        "Audit export must be read-only and scoped to admin/support roles.",
+        "Exports must redact token hashes and avoid raw IP/user-agent payloads unless approved.",
+        "Retention must be documented before production enablement."
+      ],
+      "plannedVerification": [
+        "Read-only export smoke proves admin/support can export and student cannot.",
+        "Audit payload scan proves no raw refresh tokens or secrets are present."
+      ],
+      "rollbackOrMigrationNote": "Audit tables are append-only; rollback may disable export endpoints but must not delete retained audit rows.",
+      "productionBlocker": true,
+      "manualApprovalRequired": true,
+      "readinessDecision": "LOCAL_DEMO_DESIGN_EVIDENCE_READY",
+      "fixtureOnly": true,
+      "productionDbUsed": false,
+      "noProductionDbRead": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Audit retention/export policy is represented as read-only fixture evidence and remains production gated."
+    },
+    {
+      "gateRowId": "auth-persistence-rate-limit-monitoring-hooks",
+      "gateKind": "RATE_LIMIT_MONITORING_HOOKS",
+      "contractSurface": "Login, refresh, logout, session revocation, audit export, and cleanup monitoring hooks.",
+      "expectedProductionContract": "Auth endpoints must emit rate-limit decisions and monitoring counters for success, denial, reuse detection, cleanup, repository errors, and audit export reads.",
+      "localFixtureEvidence": "AUTH_OPERATIONAL_CONTROL now provides deterministic hashed-key login/refresh throttling and counters for success, denial, replay, cleanup, repository errors, and audit export without installing a live monitoring provider.",
+      "requiredProductionControls": [
+        "Replace the process-local fixture with a shared multi-instance limiter keyed by approved actor, IP, and device signals.",
+        "Export the implemented counters through an approved metrics adapter and retention policy.",
+        "Route alerts for refresh-token replay spikes and repository lookup failures to an acknowledged incident owner."
+      ],
+      "plannedVerification": [
+        "Completed locally: deterministic tests verify counter names, hashed-key snapshots, and role-scoped audit export totals.",
+        "Completed locally: repeated login and refresh failures return 429; rate-limit seam outage returns service unavailable.",
+        "Still required: multi-process staging smoke proves shared windows, metric export, and alert routing."
+      ],
+      "rollbackOrMigrationNote": "Monitoring hooks must be additive; rollback removes dashboards/alerts before removing emitted metric names.",
+      "productionBlocker": true,
+      "manualApprovalRequired": true,
+      "readinessDecision": "LOCAL_DEMO_DESIGN_EVIDENCE_READY",
+      "fixtureOnly": true,
+      "productionDbUsed": false,
+      "noProductionDbRead": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Rate-limit and monitoring hooks are implemented and fixture-verified without calling any live provider or exposing secrets; shared production controls remain blocked."
+    },
+    {
+      "gateRowId": "auth-persistence-rollback-migration-notes",
+      "gateKind": "ROLLBACK_MIGRATION_NOTES",
+      "contractSurface": "Auth persistence migration, rollback, and production enablement runbook notes.",
+      "expectedProductionContract": "Production auth persistence must ship through staged migrations, feature flags, backup verification, and a rollback plan that preserves security audit data.",
+      "localFixtureEvidence": "This local-demo matrix records the migration/rollback requirements before any schema migration is created.",
+      "requiredProductionControls": [
+        "Run migration in staging with disposable fixtures before production.",
+        "Take and verify backup/restore evidence before enabling persistent auth sessions.",
+        "Keep production_ready=false until security review and manual go-live approval."
+      ],
+      "plannedVerification": [
+        "Staging migration dry-run and rollback rehearsal evidence.",
+        "Backup/restore rehearsal evidence tied to auth session tables."
+      ],
+      "rollbackOrMigrationNote": "Rollback after production writes must disable new writes and preserve tables; destructive rollback is allowed only before production enablement.",
+      "productionBlocker": true,
+      "manualApprovalRequired": true,
+      "readinessDecision": "LOCAL_DEMO_DESIGN_EVIDENCE_READY",
+      "fixtureOnly": true,
+      "productionDbUsed": false,
+      "noProductionDbRead": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Rollback and migration notes are captured as local evidence; no deploy or production migration was run."
+    }
+  ],
+  "evidenceRows": [
+    {
+      "evidenceKind": "SCHEMA_REPOSITORY_CONTRACT",
+      "evidenceCount": 1,
+      "stableFixtureIds": [
+        "auth-persistence-schema-repository-contract-design"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "1 fixture-only schema_repository_contract design evidence row(s)."
+    },
+    {
+      "evidenceKind": "DISTRIBUTED_REVOCATION_CONTRACT",
+      "evidenceCount": 1,
+      "stableFixtureIds": [
+        "auth-persistence-distributed-revocation-contract"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "1 fixture-only distributed_revocation_contract design evidence row(s)."
+    },
+    {
+      "evidenceKind": "REFRESH_RETENTION_REUSE_POLICY",
+      "evidenceCount": 1,
+      "stableFixtureIds": [
+        "auth-persistence-refresh-retention-reuse-policy"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "1 fixture-only refresh_retention_reuse_policy design evidence row(s)."
+    },
+    {
+      "evidenceKind": "AUDIT_RETENTION_EXPORT_POLICY",
+      "evidenceCount": 1,
+      "stableFixtureIds": [
+        "auth-persistence-audit-retention-read-only-export-policy"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "1 fixture-only audit_retention_export_policy design evidence row(s)."
+    },
+    {
+      "evidenceKind": "RATE_LIMIT_MONITORING_HOOKS",
+      "evidenceCount": 1,
+      "stableFixtureIds": [
+        "auth-persistence-rate-limit-monitoring-hooks"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "1 fixture-only rate_limit_monitoring_hooks design evidence row(s)."
+    },
+    {
+      "evidenceKind": "ROLLBACK_MIGRATION_NOTES",
+      "evidenceCount": 1,
+      "stableFixtureIds": [
+        "auth-persistence-rollback-migration-notes"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "1 fixture-only rollback_migration_notes design evidence row(s)."
+    },
+    {
+      "evidenceKind": "SAFETY_GATE",
+      "evidenceCount": 13,
+      "stableFixtureIds": [
+        "productionDbUsed=false",
+        "noProductionDbRead=true",
+        "providerApiUsed=false",
+        "paymentProviderUsed=false",
+        "notificationProviderUsed=false",
+        "aiProviderExecutionUsed=false",
+        "liveAdsExecuted=false",
+        "realAuthMutationUsed=false",
+        "realSessionMutationUsed=false",
+        "realRefreshTokenMutationUsed=false",
+        "realAuditMutationUsed=false",
+        "realLearningMutationUsed=false",
+        "secretsRequired=false"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Auth persistence security gate evidence is local-demo only and keeps production_ready=false."
+    }
+  ]
+}

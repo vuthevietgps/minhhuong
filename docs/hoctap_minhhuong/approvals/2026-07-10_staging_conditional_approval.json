@@ -1,0 +1,101 @@
+{
+  "schema_version": "minhhuong_approval_evidence.v1",
+  "decision_id": "MH-RC-V3-STAGING-CONDITIONAL-20260710-01",
+  "release_candidate": "learning-release-candidate-go-live-gate.v3",
+  "issued_at": "2026-07-10T20:30:22+07:00",
+  "authority_source": {
+    "type": "user_directive",
+    "channel": "Codex task",
+    "principal": "Minh Huong workspace/project owner",
+    "directive": "Cứ tự quyết theo thông lệ kinh doanh thông thường",
+    "authenticity_note": "This records the actual user directive. No personal name, signature, credential, or external approval is fabricated."
+  },
+  "decision_summary": {
+    "staging": "APPROVED_WITH_CONDITIONS",
+    "production": "NOT_APPROVED",
+    "auto_loop": "RESUME_FOR_APPROVED_STAGING_REHEARSAL_ONLY",
+    "production_ready": false
+  },
+  "approved_target": {
+    "name": "minhhuong-staging-rc-v3-local",
+    "classification": "isolated_nonproduction_local_staging",
+    "data_policy": "synthetic_or_pseudonymized_fixture_only",
+    "production_credentials_allowed": false,
+    "production_data_allowed": false,
+    "external_provider_mutation_allowed": false
+  },
+  "owner_decisions": [
+    {
+      "owner_role": "database_owner",
+      "decision": "APPROVED_FOR_STAGING_REHEARSAL_WITH_CONDITIONS",
+      "conditions": [
+        "Use only the named isolated non-production target.",
+        "Capture a pre-migration backup and checksum before any schema change.",
+        "Run migration, read validation, forward repair, rollback, restore, and exact cleanup evidence.",
+        "Abort on migration error, checksum mismatch, unsafe data access, failed restore, or failed acceptance test.",
+        "Use staging objectives RPO <= 24 hours and RTO <= 4 hours; measure actual local rehearsal results without claiming production capacity.",
+        "Keep at least 30 percent measured resource headroom during the rehearsal."
+      ]
+    },
+    {
+      "owner_role": "privacy_retention_owner",
+      "decision": "APPROVED_FOR_STAGING_REHEARSAL_WITH_CONDITIONS",
+      "conditions": [
+        "Use synthetic or pseudonymized fixtures only; no real learner, parent, order, or payment data.",
+        "Redact identities, tokens, rate keys, secrets, and provider payloads from logs and exports.",
+        "Default staging evidence retention is 30 days, followed by verified deletion unless a shorter repository policy applies.",
+        "Exports remain access-controlled and release-scoped; deletion and cleanup must be evidenced."
+      ]
+    },
+    {
+      "owner_role": "incident_owner",
+      "decision": "APPROVED_FOR_STAGING_REHEARSAL_WITH_CONDITIONS",
+      "conditions": [
+        "Create dashboards or machine-readable snapshots for availability, 5xx, auth denials, database saturation, queue/backlog, and provider-disabled state.",
+        "Use conservative rehearsal alerts: 5xx >= 1 percent for 5 minutes, database utilization >= 80 percent for 10 minutes, or auth failures >= 3x the 15-minute fixture baseline.",
+        "Acknowledge simulated critical alerts within 15 minutes and make a rollback or containment decision within 30 minutes.",
+        "Run one timed synthetic incident drill and record correlation, escalation, kill-switch, rollback, and recovery evidence."
+      ]
+    },
+    {
+      "owner_role": "security_owner",
+      "decision": "APPROVED_FOR_STAGING_REHEARSAL_WITH_CONDITIONS",
+      "conditions": [
+        "No plaintext secrets; use environment references or local disposable secret fixtures.",
+        "Apply least privilege, deny-by-default access, session revocation, idempotency, replay protection, and fail-closed outage behavior.",
+        "Do not expose admin/support inspection publicly and do not weaken existing negative tests.",
+        "Record residual risks and block production on any unresolved critical or high finding."
+      ]
+    },
+    {
+      "owner_role": "provider_owner",
+      "decision": "APPROVED_FOR_SANDBOX_OR_MOCK_STAGING_ONLY",
+      "conditions": [
+        "Use mock, fixture, or provider sandbox/test mode only.",
+        "No real payment, refund, payout, notification, AI, or other provider mutation.",
+        "Require per-provider idempotency, reconciliation, limits, kill switch, rollback, and cleanup evidence before any later live request.",
+        "If sandbox credentials are absent, produce a truthful blocker and continue with contract/mock verification only."
+      ]
+    },
+    {
+      "owner_role": "release_owner",
+      "decision": "STAGING_REHEARSAL_APPROVED_PRODUCTION_NOT_APPROVED",
+      "conditions": [
+        "The approved scope is limited to the named non-production staging rehearsal.",
+        "Production deploy, production database access, live providers, and real-data mutation remain forbidden.",
+        "A separate final release decision is required after all rehearsal evidence, blockers, rollback ownership, and residual risks are reviewed.",
+        "production_ready and production_enabled must remain false."
+      ]
+    }
+  ],
+  "resume_condition": "Runner may execute one non-production staging-rehearsal slice within these conditions. Any request outside this scope remains blocked.",
+  "evidence_required_from_next_job": [
+    "APPROVAL_EVIDENCE_MATRIX.md",
+    "STAGING_REHEARSAL_REPORT.md",
+    "migration_backup_restore_forward_repair evidence",
+    "timed incident drill evidence",
+    "privacy retention deletion export evidence",
+    "security and provider sandbox blocker evidence",
+    "updated GO_LIVE_GATE_REPORT.md with production_ready=false"
+  ]
+}

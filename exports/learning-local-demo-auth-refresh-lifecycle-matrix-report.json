@@ -1,0 +1,325 @@
+{
+  "reportName": "Learning Local Demo Auth Refresh Lifecycle Matrix",
+  "generatedFor": "local-demo-auth-refresh-lifecycle-matrix",
+  "generatedAt": "2026-07-01T02:15:00.000Z",
+  "productionReady": false,
+  "fixtureOnly": true,
+  "endpointPath": "/v1/learning-local-demo/auth-refresh-lifecycle-matrix-report",
+  "dashboardEvidencePath": "/admin/learning-local-demo#auth-refresh-lifecycle-matrix",
+  "jsonExportPath": "exports/learning-local-demo-auth-refresh-lifecycle-matrix-report.json",
+  "markdownExportPath": "exports/learning-local-demo-auth-refresh-lifecycle-matrix-report.md",
+  "safety": {
+    "fixtureOnly": true,
+    "productionDbUsed": false,
+    "noProductionDbRead": true,
+    "providerApiUsed": false,
+    "paymentProviderUsed": false,
+    "notificationProviderUsed": false,
+    "aiProviderExecutionUsed": false,
+    "liveAdsExecuted": false,
+    "realAuthMutationUsed": false,
+    "realSessionMutationUsed": false,
+    "realRefreshTokenMutationUsed": false,
+    "realLearningMutationUsed": false,
+    "realErpMutationUsed": false,
+    "secretsRequired": false
+  },
+  "currentStatus": {
+    "status": "LOCAL_DEMO_READY_WITH_NOTES",
+    "summary": "Persistent fixture-backed session lookup, refresh rotation/reuse denial, cross-device revocation, expiry cleanup, and admin/support audit visibility are covered without production readiness claims.",
+    "remainingLocalDemoNotes": [
+      "Production-grade database persistence and cross-instance distributed revocation remain out of scope for this fixture-only slice.",
+      "External security review, token retention policy, deploy gates, and monitoring gates remain required before any production claim."
+    ]
+  },
+  "totals": {
+    "lifecycleCaseCount": 6,
+    "persistentSessionLookupCount": 1,
+    "refreshTokenRotationDeniedCount": 1,
+    "reusedRefreshTokenDeniedCount": 1,
+    "crossDeviceRevocationCount": 1,
+    "sessionCleanupExpiryCount": 1,
+    "adminSupportAuditVisibilityCount": 1,
+    "adminSupportAuditRoleCount": 2,
+    "allowedCaseCount": 1,
+    "deniedCaseCount": 3,
+    "cleanedUpCaseCount": 1,
+    "readOnlyVisibleCaseCount": 1,
+    "evidenceRowCount": 8,
+    "localDemoNoteCount": 2,
+    "productionReadyClaimCount": 0,
+    "safetyGateCount": 11,
+    "closedSafetyGateCount": 11,
+    "openSafetyGateCount": 0
+  },
+  "statusCounts": {
+    "role": {
+      "STUDENT": 2,
+      "PARENT": 2,
+      "TEACHER": 1,
+      "ADMIN": 0,
+      "SUPPORT": 1
+    },
+    "scenario": {
+      "PERSISTENT_SESSION_LOOKUP": 1,
+      "REFRESH_TOKEN_ROTATION_DENIAL": 1,
+      "REUSED_REFRESH_TOKEN_DENIAL": 1,
+      "CROSS_DEVICE_REVOCATION": 1,
+      "SESSION_CLEANUP_EXPIRY": 1,
+      "ADMIN_SUPPORT_AUDIT_READ_ONLY": 1
+    },
+    "decision": {
+      "ALLOWED": 1,
+      "DENIED": 3,
+      "CLEANED_UP": 1,
+      "READ_ONLY_VISIBLE": 1
+    }
+  },
+  "lifecycleCaseRows": [
+    {
+      "lifecycleCaseId": "auth-refresh-persistent-session-store-lookup",
+      "actorId": "demo-student",
+      "actorEmail": "student@demo.local",
+      "role": "STUDENT",
+      "scenario": "PERSISTENT_SESSION_LOOKUP",
+      "targetSurface": "AuthSessionService.getSession",
+      "expectedHttpStatus": 200,
+      "authDecision": "ALLOWED",
+      "sessionStore": "FIXTURE_BACKED_PERSISTENT_STORE",
+      "tokenState": "VALID",
+      "refreshTokenState": "ACTIVE",
+      "sessionState": "ACTIVE",
+      "deviceId": "local-demo-web-student",
+      "auditVisibleTo": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "denialReason": null,
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "A session created through one service instance is readable through another service instance sharing the fixture-backed store."
+    },
+    {
+      "lifecycleCaseId": "auth-refresh-rotated-token-denied",
+      "actorId": "demo-parent",
+      "actorEmail": "parent@demo.local",
+      "role": "PARENT",
+      "scenario": "REFRESH_TOKEN_ROTATION_DENIAL",
+      "targetSurface": "POST /auth/refresh",
+      "expectedHttpStatus": 401,
+      "authDecision": "DENIED",
+      "sessionStore": "FIXTURE_BACKED_PERSISTENT_STORE",
+      "tokenState": "ROTATED",
+      "refreshTokenState": "ROTATED",
+      "sessionState": "ACTIVE",
+      "deviceId": "local-demo-web-parent",
+      "auditVisibleTo": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "denialReason": "Refresh token reuse denied",
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "A refresh token is rotated after first use and the old token is denied on replay."
+    },
+    {
+      "lifecycleCaseId": "auth-refresh-reused-token-denied-and-audited",
+      "actorId": "demo-parent",
+      "actorEmail": "parent@demo.local",
+      "role": "PARENT",
+      "scenario": "REUSED_REFRESH_TOKEN_DENIAL",
+      "targetSurface": "POST /auth/refresh",
+      "expectedHttpStatus": 401,
+      "authDecision": "DENIED",
+      "sessionStore": "FIXTURE_BACKED_PERSISTENT_STORE",
+      "tokenState": "REUSED",
+      "refreshTokenState": "REUSED",
+      "sessionState": "REVOKED",
+      "deviceId": "local-demo-web-parent",
+      "auditVisibleTo": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "denialReason": "Refresh token reuse denied",
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "A replayed rotated token is marked reused, denied, and tied to admin/support audit visibility."
+    },
+    {
+      "lifecycleCaseId": "auth-refresh-cross-device-session-revoked",
+      "actorId": "demo-teacher",
+      "actorEmail": "teacher@demo.local",
+      "role": "TEACHER",
+      "scenario": "CROSS_DEVICE_REVOCATION",
+      "targetSurface": "AuthSessionService.revokeOtherSessions",
+      "expectedHttpStatus": 401,
+      "authDecision": "DENIED",
+      "sessionStore": "FIXTURE_BACKED_PERSISTENT_STORE",
+      "tokenState": "REVOKED",
+      "refreshTokenState": "REVOKED",
+      "sessionState": "REVOKED",
+      "deviceId": "local-demo-tablet-teacher",
+      "auditVisibleTo": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "denialReason": "Session has been revoked",
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "A teacher session on a second fixture device is revoked while the current device remains active."
+    },
+    {
+      "lifecycleCaseId": "auth-refresh-session-cleanup-expiry",
+      "actorId": "demo-student",
+      "actorEmail": "student@demo.local",
+      "role": "STUDENT",
+      "scenario": "SESSION_CLEANUP_EXPIRY",
+      "targetSurface": "AuthSessionService.cleanupExpiredSessions",
+      "expectedHttpStatus": 401,
+      "authDecision": "CLEANED_UP",
+      "sessionStore": "FIXTURE_BACKED_PERSISTENT_STORE",
+      "tokenState": "EXPIRED",
+      "refreshTokenState": "EXPIRED",
+      "sessionState": "EXPIRED",
+      "deviceId": "local-demo-web-student-expired",
+      "auditVisibleTo": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "denialReason": "Invalid or expired token",
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Expired sessions and active refresh tokens attached to them are cleaned up by the fixture-backed store."
+    },
+    {
+      "lifecycleCaseId": "auth-refresh-admin-support-read-only-audit-visible",
+      "actorId": "demo-support",
+      "actorEmail": "support@demo.local",
+      "role": "SUPPORT",
+      "scenario": "ADMIN_SUPPORT_AUDIT_READ_ONLY",
+      "targetSurface": "AuthSessionService.listAuditEventsForRoles",
+      "expectedHttpStatus": 200,
+      "authDecision": "READ_ONLY_VISIBLE",
+      "sessionStore": "FIXTURE_BACKED_PERSISTENT_STORE",
+      "tokenState": "VALID",
+      "refreshTokenState": "NOT_REQUIRED",
+      "sessionState": "ACTIVE",
+      "deviceId": "local-demo-support-console",
+      "auditVisibleTo": [
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "denialReason": null,
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Admin and support roles can read fixture audit events while learner roles receive no audit event rows."
+    }
+  ],
+  "evidenceRows": [
+    {
+      "evidenceKind": "PERSISTENT_SESSION_LOOKUP",
+      "evidenceCount": 1,
+      "stableFixtureIds": [
+        "auth-refresh-persistent-session-store-lookup"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "1 fixture-only persistent_session_lookup case(s)."
+    },
+    {
+      "evidenceKind": "REFRESH_TOKEN_ROTATION_DENIAL",
+      "evidenceCount": 1,
+      "stableFixtureIds": [
+        "auth-refresh-rotated-token-denied"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "1 fixture-only refresh_token_rotation_denial case(s)."
+    },
+    {
+      "evidenceKind": "REUSED_REFRESH_TOKEN_DENIAL",
+      "evidenceCount": 1,
+      "stableFixtureIds": [
+        "auth-refresh-reused-token-denied-and-audited"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "1 fixture-only reused_refresh_token_denial case(s)."
+    },
+    {
+      "evidenceKind": "CROSS_DEVICE_REVOCATION",
+      "evidenceCount": 1,
+      "stableFixtureIds": [
+        "auth-refresh-cross-device-session-revoked"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "1 fixture-only cross_device_revocation case(s)."
+    },
+    {
+      "evidenceKind": "SESSION_CLEANUP_EXPIRY",
+      "evidenceCount": 1,
+      "stableFixtureIds": [
+        "auth-refresh-session-cleanup-expiry"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "1 fixture-only session_cleanup_expiry case(s)."
+    },
+    {
+      "evidenceKind": "ADMIN_SUPPORT_AUDIT_READ_ONLY",
+      "evidenceCount": 1,
+      "stableFixtureIds": [
+        "auth-refresh-admin-support-read-only-audit-visible"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "1 fixture-only admin_support_audit_read_only case(s)."
+    },
+    {
+      "evidenceKind": "STORE_ABSTRACTION",
+      "evidenceCount": 1,
+      "stableFixtureIds": [
+        "FixtureBackedAuthSessionStore",
+        "AUTH_SESSION_STORE"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "AuthSessionService uses a store abstraction backed by a repo-local fixture store for this hardening slice."
+    },
+    {
+      "evidenceKind": "SAFETY_GATE",
+      "evidenceCount": 11,
+      "stableFixtureIds": [
+        "productionDbUsed=false",
+        "noProductionDbRead=true",
+        "providerApiUsed=false",
+        "paymentProviderUsed=false",
+        "notificationProviderUsed=false",
+        "aiProviderExecutionUsed=false",
+        "realAuthMutationUsed=false",
+        "realSessionMutationUsed=false",
+        "realRefreshTokenMutationUsed=false",
+        "realLearningMutationUsed=false",
+        "secretsRequired=false"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Refresh/session lifecycle evidence uses local demo fixtures and fixture-backed store state only."
+    }
+  ]
+}

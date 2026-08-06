@@ -1,0 +1,163 @@
+{
+  "prompt": "Promt_quanly_minhhuong_7",
+  "date": "2026-06-14",
+  "mode": "test-hardening-implementation-narrow-slice",
+  "verdict": "CONDITIONAL",
+  "conditional_reasons": [
+    "Channel-admin participant/agency/user DB-backed scope tests were deferred even though stable service seams exist.",
+    "Prisma migration history does not contain SQL for current channel hierarchy fields, so the DB-backed harness uses prisma db push against a disposable temp database instead of migrate deploy."
+  ],
+  "db_backed_coverage": true,
+  "mocked_coverage_claimed": false,
+  "test_db_strategy": {
+    "database": "PostgreSQL",
+    "source_url": "DATABASE_URL or postgresql://minhhuong:minhhuong@localhost:5432/minhhuong?schema=public",
+    "isolation": "Creates a per-run database named prompt7_scope_<uuid>.",
+    "schema_setup": "Runs Prisma CLI db push with apps/api/prisma/schema.prisma against the temp database.",
+    "connection_check": "Asserts select current_database() equals the generated temp database name.",
+    "cleanup": "Disconnects test Prisma client and drops the temp database with DROP DATABASE IF EXISTS ... WITH (FORCE).",
+    "migration_note": "migrate deploy was not used for final harness because migration history is missing SQL for current channel hierarchy fields."
+  },
+  "source_changes": [],
+  "tests_added_or_changed": [
+    {
+      "file": "apps/api/src/channel-finance/channel-scope.integration.spec.ts",
+      "covers": [
+        "activation order subtree scope for sale, manager, director, admin, operations, and unscoped users",
+        "finance report and overview subtree scope",
+        "wallet and commission ledger subtree scope",
+        "payout list subtree scope",
+        "orders CSV export subtree scope",
+        "admin and operations global finance scope",
+        "empty channel participant scope returns no commercial data"
+      ]
+    }
+  ],
+  "fixtures": {
+    "tree": "director-root -> manager-A -> agency-A1 -> sale-A plus sale-A-direct; director-root -> manager-B -> agency-B1 -> sale-B plus sale-B-direct",
+    "sibling_rows_present": true,
+    "orders": [
+      "p7-order-sale-a",
+      "p7-order-sale-a-direct",
+      "p7-order-agency-a",
+      "p7-order-sale-b",
+      "p7-order-agency-b"
+    ],
+    "ledger_entries": [
+      "p7-ledger-sale-a-credit",
+      "p7-ledger-sale-a-hold",
+      "p7-ledger-agency-a-credit",
+      "p7-ledger-agency-a-release",
+      "p7-ledger-sale-b-credit",
+      "p7-ledger-agency-b-credit"
+    ],
+    "payouts": [
+      "p7-payout-sale-a",
+      "p7-payout-agency-a",
+      "p7-payout-sale-b"
+    ]
+  },
+  "coverage_matrix": {
+    "activation_order_visibility_by_subtree": "covered_db_backed",
+    "channel_finance_report_by_subtree": "covered_db_backed",
+    "channel_finance_overview_by_subtree": "covered_db_backed",
+    "wallet_ledger_by_subtree": "covered_db_backed",
+    "payout_list_by_subtree": "covered_db_backed",
+    "csv_export_by_subtree": "covered_db_backed",
+    "admin_operations_global_scope": "covered_db_backed",
+    "empty_participant_scope": "covered_db_backed",
+    "channel_admin_participant_agency_user_scope": "deferred"
+  },
+  "bugs_found_and_fixes": [
+    {
+      "area": "test harness",
+      "finding": "Using npx.cmd from Jest was unreliable in this Windows environment.",
+      "fix": "The DB harness invokes the local Prisma CLI through process.execPath and apps/api/node_modules/prisma/build/index.js."
+    },
+    {
+      "area": "test database isolation",
+      "finding": "Schema/search_path isolation was not reliable enough with the Prisma PostgreSQL adapter for this scope proof.",
+      "fix": "The harness creates and drops a dedicated PostgreSQL database per run."
+    },
+    {
+      "area": "migration history",
+      "finding": "The current Prisma schema contains channel hierarchy fields that are absent from migration SQL history.",
+      "fix": "No migration fix was made in Prompt 7; the test harness uses db push and the gap is escalated as the next prompt."
+    }
+  ],
+  "tests_run": [
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-scope.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 3 tests."
+    },
+    {
+      "command": "npm --prefix apps/api run prisma:generate",
+      "status": "passed",
+      "summary": "Prisma Client generated successfully."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts channel-finance.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 22 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand entitlement.service.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 7 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand learning.service.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 12 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand",
+      "status": "passed",
+      "summary": "15 suites, 84 tests."
+    },
+    {
+      "command": "npm --prefix apps/api run test:e2e -- --runInBand",
+      "status": "passed",
+      "summary": "1 suite, 1 test."
+    },
+    {
+      "command": "npm --prefix apps/api run build",
+      "status": "passed",
+      "summary": "Nest build completed."
+    },
+    {
+      "command": "git status --short",
+      "status": "failed",
+      "summary": "fatal: not a git repository (or any of the parent directories): .git"
+    }
+  ],
+  "hard_bans_check": {
+    "affiliate_qr_not_implemented": true,
+    "payment_gateway_not_implemented": true,
+    "frontend_rewrite_not_done": true,
+    "package_entitlement_not_implemented": true,
+    "commission_policy_engine_not_implemented": true,
+    "entitlement_enforcement_not_changed": true,
+    "lead_crm_not_implemented": true,
+    "renewal_opportunity_not_implemented": true,
+    "agency_member_cleanup_not_done": true,
+    "broad_model_rename_not_done": true
+  },
+  "remaining_gaps": [
+    "Channel-admin participant/agency/user DB-backed subtree tests remain missing.",
+    "Prisma migration history must be reconciled for channel hierarchy fields before relying on migrate deploy for this area.",
+    "Prompt 6 sourceOrderId uniqueness remains deferred pending legacy duplicate audit.",
+    "OrderStatusHistory lifecycle expansion beyond approval remains deferred.",
+    "Package entitlement/snapshot and commission policy version/snapshot remain deferred.",
+    "Affiliate/QR remains blocked."
+  ],
+  "affiliate_qr_still_blocked": true,
+  "recommended_next_prompt": {
+    "name": "Promt_quanly_minhhuong_8.md",
+    "type": "blocker-fix-test-hardening",
+    "scope": "Reconcile Prisma migration history for channel hierarchy fields used by commercial scope filters and rerun DB-backed scope tests under migration deployment semantics.",
+    "reason": "Prompt 7 proved current-code scope behavior with a real database, but the migration history gap must be fixed before treating the scope foundation as deploy-safe."
+  }
+}
+

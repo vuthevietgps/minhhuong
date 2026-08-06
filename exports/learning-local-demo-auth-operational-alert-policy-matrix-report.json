@@ -1,0 +1,378 @@
+{
+  "reportId": "learning-local-demo-auth-operational-alert-policy-matrix",
+  "generatedAt": "2026-07-10T06:00:00.000Z",
+  "scope": "repo-local-synthetic-plus-disposable-local-evidence",
+  "decision": "AUTH_ALERT_AUDIT_READ_MODEL_DISPOSABLE_LOCAL_VERIFIED",
+  "productionReady": false,
+  "productionEnabled": false,
+  "fixture": {
+    "snapshotSource": "SYNTHETIC_SHARED_COUNTER_SNAPSHOT",
+    "loginThrottled": 7,
+    "refreshThrottled": 6,
+    "refreshReplayDenied": 2,
+    "sessionRepositoryErrors": 1
+  },
+  "totals": {
+    "policyCount": 4,
+    "initialOpenCandidateCount": 4,
+    "cooldownSuppressedCandidateCount": 4,
+    "rolePermissionCaseCount": 4,
+    "allowedReadOnlyRoleCount": 2,
+    "deniedBeforeSnapshotRoleCount": 2,
+    "snapshotOutageDeniedCount": 1,
+    "stateOutageDeniedCount": 1,
+    "auditOutageDeniedCount": 1,
+    "sharedStateDisposableSmokeCount": 1,
+    "appendOnlyAuditDisposableSmokeCount": 1,
+    "contentionCapacityDisposableSmokeCount": 1,
+    "auditCorrelationLookupFixtureCount": 1,
+    "auditIncidentExportFixtureRowCount": 3,
+    "auditIncidentExportFixturePageCount": 2,
+    "auditReadModelDeniedRoleCount": 2,
+    "auditReadModelOutageDeniedCount": 2,
+    "productionBlockerCount": 4,
+    "productionReadyClaimCount": 0,
+    "openLocalSafetyGateCount": 0
+  },
+  "initialEvaluation": {
+    "evaluatedAt": "2026-07-10T06:00:00.000Z",
+    "snapshotGeneratedAt": "2026-07-10T06:00:00.000Z",
+    "snapshotWindow": {
+      "requestedWindowMs": 3600000,
+      "requestedStartedAt": "2026-07-10T05:00:00.000Z",
+      "effectiveStartedAt": "2026-07-10T05:00:00.000Z",
+      "endedAt": "2026-07-10T06:00:00.000Z",
+      "source": "EVENT_TIME",
+      "bucketResolutionMs": null
+    },
+    "decision": "ALERT_CANDIDATES_OPEN",
+    "totals": {
+      "evaluatedPolicyCount": 4,
+      "candidateCount": 4,
+      "openCandidateCount": 4,
+      "suppressedCandidateCount": 0
+    },
+    "candidates": [
+      {
+        "alertCode": "LOGIN_THROTTLE_THRESHOLD",
+        "fingerprint": "auth-operational-alert:LOGIN_THROTTLE_THRESHOLD",
+        "metricKind": "LOGIN_THROTTLED",
+        "severity": "WARNING",
+        "threshold": 5,
+        "observedCount": 7,
+        "lastOccurredAt": "2026-07-10T06:00:00.000Z",
+        "decision": "OPEN",
+        "cooldownUntil": "2026-07-10T06:15:00.000Z",
+        "delivery": "NOT_SENT_LOCAL_POLICY_ONLY"
+      },
+      {
+        "alertCode": "REFRESH_THROTTLE_THRESHOLD",
+        "fingerprint": "auth-operational-alert:REFRESH_THROTTLE_THRESHOLD",
+        "metricKind": "REFRESH_THROTTLED",
+        "severity": "WARNING",
+        "threshold": 5,
+        "observedCount": 6,
+        "lastOccurredAt": "2026-07-10T06:00:00.000Z",
+        "decision": "OPEN",
+        "cooldownUntil": "2026-07-10T06:15:00.000Z",
+        "delivery": "NOT_SENT_LOCAL_POLICY_ONLY"
+      },
+      {
+        "alertCode": "REFRESH_REPLAY_DETECTED",
+        "fingerprint": "auth-operational-alert:REFRESH_REPLAY_DETECTED",
+        "metricKind": "REFRESH_REPLAY_DENIED",
+        "severity": "CRITICAL",
+        "threshold": 1,
+        "observedCount": 2,
+        "lastOccurredAt": "2026-07-10T06:00:00.000Z",
+        "decision": "OPEN",
+        "cooldownUntil": "2026-07-10T07:00:00.000Z",
+        "delivery": "NOT_SENT_LOCAL_POLICY_ONLY"
+      },
+      {
+        "alertCode": "SESSION_REPOSITORY_ERROR_DETECTED",
+        "fingerprint": "auth-operational-alert:SESSION_REPOSITORY_ERROR_DETECTED",
+        "metricKind": "SESSION_REPOSITORY_ERROR",
+        "severity": "CRITICAL",
+        "threshold": 1,
+        "observedCount": 1,
+        "lastOccurredAt": "2026-07-10T06:00:00.000Z",
+        "decision": "OPEN",
+        "cooldownUntil": "2026-07-10T07:00:00.000Z",
+        "delivery": "NOT_SENT_LOCAL_POLICY_ONLY"
+      }
+    ],
+    "evaluationAudit": {
+      "correlationId": null,
+      "decision": "ALERT_CANDIDATES_OPEN",
+      "candidateCount": 4,
+      "openCandidateCount": 4,
+      "suppressedCandidateCount": 0,
+      "expiresAt": null,
+      "appendOnly": false,
+      "redacted": true,
+      "persisted": false,
+      "idempotentReplay": false
+    },
+    "contention": {
+      "lockWaitMs": 0,
+      "evaluationDurationMs": 0
+    },
+    "safety": {
+      "productionReady": false,
+      "externalAlertProviderUsed": false,
+      "liveNotificationUsed": false,
+      "rawRateLimitKeysExposed": false,
+      "rawCredentialsOrTokensExposed": false,
+      "retainedSnapshotTotalsOnly": false,
+      "explicitRollingWindow": true,
+      "appendOnlyEvaluationAudit": false,
+      "redactedEvaluationAudit": true,
+      "deduplicationScope": "PROCESS_LOCAL_FIXTURE_ONLY"
+    }
+  },
+  "cooldownEvaluation": {
+    "evaluatedAt": "2026-07-10T06:01:00.000Z",
+    "snapshotGeneratedAt": "2026-07-10T06:00:00.000Z",
+    "snapshotWindow": {
+      "requestedWindowMs": 3600000,
+      "requestedStartedAt": "2026-07-10T05:00:00.000Z",
+      "effectiveStartedAt": "2026-07-10T05:00:00.000Z",
+      "endedAt": "2026-07-10T06:00:00.000Z",
+      "source": "EVENT_TIME",
+      "bucketResolutionMs": null
+    },
+    "decision": "ALERT_CANDIDATES_SUPPRESSED",
+    "totals": {
+      "evaluatedPolicyCount": 4,
+      "candidateCount": 4,
+      "openCandidateCount": 0,
+      "suppressedCandidateCount": 4
+    },
+    "candidates": [
+      {
+        "alertCode": "LOGIN_THROTTLE_THRESHOLD",
+        "fingerprint": "auth-operational-alert:LOGIN_THROTTLE_THRESHOLD",
+        "metricKind": "LOGIN_THROTTLED",
+        "severity": "WARNING",
+        "threshold": 5,
+        "observedCount": 7,
+        "lastOccurredAt": "2026-07-10T06:00:00.000Z",
+        "decision": "SUPPRESSED_COOLDOWN",
+        "cooldownUntil": "2026-07-10T06:15:00.000Z",
+        "delivery": "NOT_SENT_LOCAL_POLICY_ONLY"
+      },
+      {
+        "alertCode": "REFRESH_THROTTLE_THRESHOLD",
+        "fingerprint": "auth-operational-alert:REFRESH_THROTTLE_THRESHOLD",
+        "metricKind": "REFRESH_THROTTLED",
+        "severity": "WARNING",
+        "threshold": 5,
+        "observedCount": 6,
+        "lastOccurredAt": "2026-07-10T06:00:00.000Z",
+        "decision": "SUPPRESSED_COOLDOWN",
+        "cooldownUntil": "2026-07-10T06:15:00.000Z",
+        "delivery": "NOT_SENT_LOCAL_POLICY_ONLY"
+      },
+      {
+        "alertCode": "REFRESH_REPLAY_DETECTED",
+        "fingerprint": "auth-operational-alert:REFRESH_REPLAY_DETECTED",
+        "metricKind": "REFRESH_REPLAY_DENIED",
+        "severity": "CRITICAL",
+        "threshold": 1,
+        "observedCount": 2,
+        "lastOccurredAt": "2026-07-10T06:00:00.000Z",
+        "decision": "SUPPRESSED_COOLDOWN",
+        "cooldownUntil": "2026-07-10T07:00:00.000Z",
+        "delivery": "NOT_SENT_LOCAL_POLICY_ONLY"
+      },
+      {
+        "alertCode": "SESSION_REPOSITORY_ERROR_DETECTED",
+        "fingerprint": "auth-operational-alert:SESSION_REPOSITORY_ERROR_DETECTED",
+        "metricKind": "SESSION_REPOSITORY_ERROR",
+        "severity": "CRITICAL",
+        "threshold": 1,
+        "observedCount": 1,
+        "lastOccurredAt": "2026-07-10T06:00:00.000Z",
+        "decision": "SUPPRESSED_COOLDOWN",
+        "cooldownUntil": "2026-07-10T07:00:00.000Z",
+        "delivery": "NOT_SENT_LOCAL_POLICY_ONLY"
+      }
+    ],
+    "evaluationAudit": {
+      "correlationId": null,
+      "decision": "ALERT_CANDIDATES_SUPPRESSED",
+      "candidateCount": 4,
+      "openCandidateCount": 0,
+      "suppressedCandidateCount": 4,
+      "expiresAt": null,
+      "appendOnly": false,
+      "redacted": true,
+      "persisted": false,
+      "idempotentReplay": false
+    },
+    "contention": {
+      "lockWaitMs": 0,
+      "evaluationDurationMs": 0
+    },
+    "safety": {
+      "productionReady": false,
+      "externalAlertProviderUsed": false,
+      "liveNotificationUsed": false,
+      "rawRateLimitKeysExposed": false,
+      "rawCredentialsOrTokensExposed": false,
+      "retainedSnapshotTotalsOnly": false,
+      "explicitRollingWindow": true,
+      "appendOnlyEvaluationAudit": false,
+      "redactedEvaluationAudit": true,
+      "deduplicationScope": "PROCESS_LOCAL_FIXTURE_ONLY"
+    }
+  },
+  "rolePermissionRows": [
+    {
+      "role": "ADMIN",
+      "decision": "ALLOWED_READ_ONLY",
+      "snapshotReadAttempted": true,
+      "actorIdentityExposed": false
+    },
+    {
+      "role": "SUPPORT",
+      "decision": "ALLOWED_READ_ONLY",
+      "snapshotReadAttempted": true,
+      "actorIdentityExposed": false
+    },
+    {
+      "role": "STUDENT",
+      "decision": "DENIED_BEFORE_SNAPSHOT",
+      "snapshotReadAttempted": false,
+      "actorIdentityExposed": false
+    },
+    {
+      "role": "PARENT",
+      "decision": "DENIED_BEFORE_SNAPSHOT",
+      "snapshotReadAttempted": false,
+      "actorIdentityExposed": false
+    }
+  ],
+  "auditReadModelFixture": {
+    "windowStartedAt": "2026-07-10T05:00:00.000Z",
+    "windowEndedAt": "2026-07-10T07:00:00.000Z",
+    "maximumWindowDays": 7,
+    "maximumPageSize": 100,
+    "pageSize": 2,
+    "correlationIdsNewestFirst": [
+      "auth-alert-evaluation:00000000-0000-4000-8000-000000000003",
+      "auth-alert-evaluation:00000000-0000-4000-8000-000000000002",
+      "auth-alert-evaluation:00000000-0000-4000-8000-000000000001"
+    ],
+    "expectedPageSizes": [
+      2,
+      1
+    ],
+    "deterministicOrder": "evaluatedAt_DESC_correlationId_DESC",
+    "allowedRoles": [
+      "ADMIN",
+      "SUPPORT"
+    ],
+    "deniedRoles": [
+      "STUDENT",
+      "PARENT"
+    ],
+    "exposedAuditFields": [
+      "correlationId",
+      "evaluatedAt",
+      "decision",
+      "candidateCount",
+      "openCandidateCount",
+      "suppressedCandidateCount",
+      "decisions",
+      "expiresAt",
+      "appendOnly",
+      "redacted",
+      "persisted"
+    ],
+    "excludedFieldFamilies": [
+      "identity",
+      "rate-key",
+      "credential",
+      "access-token",
+      "refresh-token",
+      "input-digest",
+      "fingerprint"
+    ],
+    "repositoryOutageHttpStatus": 503,
+    "externalDeliveryUsed": false
+  },
+  "snapshotOutageEvidence": {
+    "fixtureCase": "synthetic operational snapshot rejection",
+    "expectedHttpStatus": 503,
+    "failClosed": true,
+    "evidencePath": "apps/api/src/auth/auth-operational-alert-policy.spec.ts"
+  },
+  "stateOutageEvidence": {
+    "fixtureCase": "synthetic alert-state rejection",
+    "expectedHttpStatus": 503,
+    "failClosed": true,
+    "evidencePath": "apps/api/src/auth/auth-operational-alert-policy.spec.ts"
+  },
+  "auditOutageEvidence": {
+    "fixtureCase": "synthetic append-only evaluation audit rejection",
+    "expectedHttpStatus": 503,
+    "failClosed": true,
+    "evidencePath": "apps/api/src/auth/auth-operational-alert-policy.spec.ts"
+  },
+  "disposableSmokeEvidence": {
+    "processCount": 2,
+    "randomLocalhostDatabaseCount": 1,
+    "concurrentEvaluationCount": 8,
+    "expectedOpenCandidateSets": 1,
+    "expectedCooldownSuppressedSets": 7,
+    "appendOnlyAudit": true,
+    "idempotentRedactedCorrelation": true,
+    "exactExpiredStateCleanup": true,
+    "exactExpiredAuditCleanup": true,
+    "lockContentionMeasured": true,
+    "correlationLookupVerified": true,
+    "deterministicIncidentPaginationVerified": true,
+    "boundedIncidentWindowVerified": true,
+    "auditReadModelOutageDenied": true,
+    "localTechnicalThresholdMs": 5000,
+    "evidencePath": "exports/learning-local-demo-auth-operational-alert-state-disposable-smoke-report.json"
+  },
+  "productionBlockers": [
+    "External alert routing and delivery are not implemented or called.",
+    "Shared Prisma cooldown/audit state and explicit rolling windows are disposable-local verified only; approved staging migration and calibration remain open.",
+    "Local redacted correlation and contention evidence do not replace production dashboards, log/trace integration, capacity testing, or approved on-call thresholds.",
+    "The audit lookup/export is a bounded JSON read model only; incident ownership, approved retention/export handling, security review, and manual go-live approval remain open."
+  ],
+  "evidencePaths": [
+    "apps/api/src/auth/auth-operational-alert-policy.ts",
+    "apps/api/src/auth/auth-operational-alerts.controller.ts",
+    "apps/api/src/auth/auth-operational-alert-policy.spec.ts",
+    "apps/api/src/auth/auth-operational-alert-state.ts",
+    "apps/api/src/auth/prisma-auth-operational-alert-state.ts",
+    "apps/api/src/auth/prisma-auth-operational-alert-state.spec.ts",
+    "apps/api/src/auth/auth-operational-alert-audit-read-model.ts",
+    "apps/api/src/auth/auth-operational-alert-audits.controller.ts",
+    "apps/api/src/auth/auth-operational-alert-audit-read-model.spec.ts",
+    "apps/api/prisma/migrations/20260710170000_auth_operational_alert_evaluation_audit/migration.sql",
+    "apps/api/prisma/migrations/20260710183000_auth_operational_alert_audit_read_model/migration.sql",
+    "apps/api/src/learning-local-demo/auth-operational-alert-policy-matrix.ts"
+  ],
+  "safety": {
+    "fixtureOnly": false,
+    "disposableLocalOnly": true,
+    "productionDbUsed": false,
+    "stagingDbUsed": false,
+    "externalAlertProviderUsed": false,
+    "liveNotificationUsed": false,
+    "rawRateLimitKeysExposed": false,
+    "rawCredentialsOrTokensExposed": false,
+    "appendOnlyEvaluationAudit": true,
+    "evaluationAuditRedacted": true,
+    "auditReadModelRedacted": true,
+    "auditReadModelExternalDeliveryUsed": false,
+    "realAccountOrSessionUsed": false,
+    "productionReady": false
+  }
+}

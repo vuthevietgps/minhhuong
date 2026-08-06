@@ -1,0 +1,48 @@
+{
+  "prompt": "Promt_quanly_minhhuong_15",
+  "date": "2026-06-14",
+  "mode": "no-code-ba-sync-technical-spec-readiness",
+  "verdict": "FAIL / MISSING_CANONICAL_BA_DOCS",
+  "required_files": [
+    {
+      "name": "ba-phan-quan-ly-ban-hang-phan-phoi-minh-huong-learning-platform-20260614-v1.1-affiliate-qr.md",
+      "found": false
+    },
+    {
+      "name": "ba-bo-sung-affiliate-link-qr-minh-huong-learning-platform-20260614.md",
+      "found": false
+    }
+  ],
+  "searched_paths": [
+    "C:\\Users\\PC\\Documents\\code\\minhhuong",
+    "C:\\Users\\PC\\Documents\\code\\minhhuong\\docs\\minh-huong-sales-distribution\\ba",
+    "C:\\Users\\PC\\Downloads",
+    "C:\\Users\\PC\\Downloads\\Promt_quanly_minhhuong_15.md"
+  ],
+  "near_matches_not_accepted": [
+    {
+      "path": "C:\\Users\\PC\\Downloads\\ba-phan-quan-ly-ban-hang-phan-phoi-minh-huong-learning-platform-20260614.md",
+      "reason": "Missing required v1.1-affiliate-qr filename and canonical scope."
+    },
+    {
+      "path": "C:\\Users\\PC\\Downloads\\ba-phan-hoc-tap-minh-huong-learning-platform-20260614.md",
+      "reason": "Learning BA document, not the required affiliate/QR commercial BA."
+    }
+  ],
+  "ba_files_copied": false,
+  "copied_checksums_match": false,
+  "product_source_schema_test_files_changed": false,
+  "readiness_verdict": "blocked",
+  "technical_spec_generated": false,
+  "reason_technical_spec_not_generated": "Canonical BA source files are missing; generating a readiness spec would require substituting non-canonical assumptions.",
+  "commands_run": [
+    {
+      "command": "git status --short",
+      "status": "failed_environment",
+      "summary": "fatal: not a git repository (or any of the parent directories): .git"
+    }
+  ],
+  "recommended_prompt16": "Do not run Prompt 16 yet. First provide both exact canonical BA files and rerun Prompt 15.",
+  "hard_bans_respected": true
+}
+

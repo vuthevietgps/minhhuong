@@ -1,0 +1,120 @@
+{
+  "protocol_version": "1.0",
+  "direction": "chatgptweb_to_codex",
+  "source_job_id": "manual_gate_minhhuong_hosted_staging_target_authorization",
+  "project_key": "minh_huong_learning",
+  "repo_key": "minhhuong_monorepo",
+  "job_id": "codex_job_minhhuong_00077_s3_object_storage_upload_foundation",
+  "status": "CODEX_READY_NEXT",
+  "allow_codex_execute": true,
+  "updated_at": "2026-07-11T13:12:54+07:00",
+  "prompt_file": {
+    "role": "codex_prompt",
+    "filename": "NEXT_CODEX_PROMPT__codex_job_minhhuong_00077_s3_object_storage_upload_foundation.md",
+    "drive_url": "https://drive.google.com/file/d/1UwwcqrV760ikzdWg5kR8Q2Zk0MVlCIp3/view?usp=drivesdk"
+  },
+  "source_files": [
+    {
+      "role": "business_architecture_decision",
+      "filename": "2026-07-11_object_storage_architecture_decision.json",
+      "drive_url": "https://drive.google.com/file/d/1JqecwKLr4ylYH6K2eNu6XmPeTLZGB5OW/view?usp=drivesdk"
+    },
+    {
+      "role": "chatgpt_review_bundle",
+      "filename": "codex_job_minhhuong_00076_learning_core_production_hardening_go_live_gate_CHATGPT_REVIEW_BUNDLE.md",
+      "drive_url": "https://drive.google.com/file/d/1euMXc5enuuDK5ZMrXx2QLilkj8xOoJEX/view?usp=drivesdk"
+    },
+    {
+      "role": "result",
+      "filename": "codex_job_minhhuong_00076_learning_core_production_hardening_go_live_gate_RESULT.json",
+      "drive_url": "https://drive.google.com/file/d/19CXCDn0md4K9F31lfEFDGRqn6maNLD6S/view?usp=drivesdk"
+    },
+    {
+      "role": "deploy_readiness_gaps",
+      "filename": "codex_job_minhhuong_00076_learning_core_production_hardening_go_live_gate_DEPLOY_READINESS_GAPS.md",
+      "drive_url": "https://drive.google.com/file/d/1awdwVaNU6nD0Thn1Q3sz3_meMiBK0d3L/view?usp=drivesdk"
+    },
+    {
+      "role": "go_live_gate_report",
+      "filename": "codex_job_minhhuong_00076_learning_core_production_hardening_go_live_gate_GO_LIVE_GATE_REPORT.md",
+      "drive_url": "https://drive.google.com/file/d/1WRs-zzXI-gTQIcL8NUBiuRaLvyntpf7B/view?usp=drivesdk"
+    },
+    {
+      "role": "tests_run",
+      "filename": "codex_job_minhhuong_00076_learning_core_production_hardening_go_live_gate_TESTS_RUN.md",
+      "drive_url": "https://drive.google.com/file/d/18xAE5zTeOx4SiJ5Ikf9OQzuc2StxWLmn/view?usp=drivesdk"
+    },
+    {
+      "role": "next_context_packet",
+      "filename": "codex_job_minhhuong_00076_learning_core_production_hardening_go_live_gate_NEXT_CONTEXT_PACKET.md",
+      "drive_url": "https://drive.google.com/file/d/1s0d7DZ8jbNCiDMmqZwPwHvfeFdByT5cu/view?usp=drivesdk"
+    }
+  ],
+  "target": {
+    "repo_path": "C:\\Users\\PC\\Documents\\code\\minhhuong",
+    "area": "upload storage seam, S3-compatible provider, filesystem local fallback, MinIO smoke, readiness, deployment contracts, migration plan",
+    "objective": "Implement and locally verify provider-neutral S3-compatible object storage for all current upload surfaces without external provider calls or production enablement."
+  },
+  "expected_outputs": [
+    "CHATGPT_REVIEW_BUNDLE.md",
+    "RESULT.md",
+    "RESULT.json",
+    "REVIEW_PACKET.md",
+    "MANIFEST.json",
+    "FILES_CHANGED.md",
+    "TESTS_RUN.md",
+    "RISKS_AND_GAPS.md",
+    "NEXT_CONTEXT_PACKET.md",
+    "NEXT_CONTEXT_INDEX.json",
+    "CONTEXT_DELTA.md",
+    "OBJECT_STORAGE_REPORT.md",
+    "UPLOAD_MIGRATION_PLAN.md",
+    "CONTAINER_SMOKE_REPORT.md",
+    "DEPLOY_READINESS_GAPS.md",
+    "GO_LIVE_GATE_REPORT.md"
+  ],
+  "chatgpt_recommended_status": "CODEX_READY_NEXT",
+  "human_approved": true,
+  "approval_code": "MH_RC_V4_OBJECT_STORAGE_20260711_01",
+  "approval_scope": "repo_local_only",
+  "scope": "repo_local_only",
+  "test_strategy": "Run filesystem/S3 provider contract tests, authorization/key/MIME/size/fail-closed tests, disposable MinIO or mock S3 smoke, deployment verification, seed/report, learning-local regression, full build, container builds, secret scan, and exact cleanup. Keep production_ready=false.",
+  "review_decision": {
+    "decision": "APPROVED_FOR_REPO_LOCAL_OBJECT_STORAGE_FOUNDATION",
+    "source": "user_directive_in_codex_task",
+    "authority": "Minh Huong workspace/project owner",
+    "updated_at": "2026-07-11T13:12:54+07:00",
+    "human_approved": true,
+    "approval_code": "MH_RC_V4_OBJECT_STORAGE_20260711_01",
+    "scope": "repo_local_only",
+    "production_approved": false,
+    "runner_may_continue": true
+  },
+  "safety": {
+    "human_approval_required": true,
+    "human_approved": true,
+    "approval_id": "MH_RC_V4_OBJECT_STORAGE_20260711_01",
+    "database_connection_allowed": true,
+    "database_scope": "local_demo",
+    "production_ready": false,
+    "production_enabled": false,
+    "production_db_used_in_tests": false,
+    "provider_api_used": false,
+    "payment_mutation_used": false,
+    "refund_mutation_used": false,
+    "payout_mutation_used": false,
+    "order_mutation_used": false,
+    "student_data_mutation_used": false,
+    "live_notification_used": false,
+    "ai_provider_used": false,
+    "plaintext_secrets_allowed": false,
+    "no_payment_mutation": true,
+    "no_provider_mutation": true,
+    "no_live_ads_execution": true,
+    "no_production_db_access": true,
+    "no_external_deploy": true,
+    "no_real_s3_provider_call": true,
+    "synthetic_data_only": true,
+    "production_ready_requires_separate_final_release_approval": true
+  }
+}

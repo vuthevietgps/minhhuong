@@ -1,0 +1,32 @@
+{
+  "schema_version": "minhhuong_approval_evidence.v1",
+  "decision_id": "MH-RC-V4-AUTO-CODING-DEPLOY-FOUNDATION-20260710-01",
+  "release_candidate": "learning-release-candidate-go-live-gate.v4",
+  "issued_at": "2026-07-10T23:25:32+07:00",
+  "authority_source": {
+    "type": "user_directive",
+    "channel": "Codex task",
+    "principal": "Minh Huong workspace/project owner",
+    "directive": "Hãy chạy luồng auto coding",
+    "authenticity_note": "This records the actual user directive. No external credential, personal signature, provider approval, or production authorization is inferred."
+  },
+  "decision": "APPROVED_FOR_REPO_LOCAL_DEPLOYMENT_ENGINEERING",
+  "approved_scope": [
+    "repo_local_only",
+    "code_and_tests_only",
+    "isolated_container_smoke",
+    "hosted_staging_readiness_evidence"
+  ],
+  "production_deploy_approved": false,
+  "hosted_account_mutation_approved": false,
+  "production_ready": false,
+  "conditions": [
+    "Build provider-neutral deployment engineering and prove it locally with synthetic data.",
+    "Do not select or mutate a paid hosting provider account.",
+    "Do not publish images, push source, change DNS, create cloud resources, or deploy externally.",
+    "Do not use production or provider credentials.",
+    "Keep live payment, refund, payout, notification, AI, and other provider lanes disabled.",
+    "Do not weaken existing tests or production fail-closed controls.",
+    "A separate explicit hosted-staging authorization is required once a target account and domain are in scope."
+  ]
+}

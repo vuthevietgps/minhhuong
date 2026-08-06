@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "learning-upload-storage-hardening-matrix.v1",
+  "generatedAt": "2026-07-11T01:00:00.000Z",
+  "fixtureKind": "repo-local-synthetic-only",
+  "decision": "PASS_OBJECT_STORAGE_FOUNDATION_LOCAL_ONLY",
+  "productionReady": false,
+  "productionEnabled": false,
+  "storageContract": {
+    "provider": "s3",
+    "topology": "shared-object",
+    "apiReplicaCount": 1,
+    "configuredRootReference": "UPLOADS_PATH",
+    "readinessRequiresWritableStorage": true,
+    "multiInstanceClaimAllowed": false
+  },
+  "surfaceRows": [
+    {
+      "surfaceId": "admin-content-video",
+      "actorScope": "ADMIN_CONTENT_EDITOR",
+      "route": "/v1/admin/content/lessons/:lessonId/videos/upload",
+      "subdirectory": "videos",
+      "fallbackBaseName": "video",
+      "configuredRootReference": "UPLOADS_PATH",
+      "provider": "s3",
+      "productionMutationUsed": false
+    },
+    {
+      "surfaceId": "teacher-content-video",
+      "actorScope": "TEACHER",
+      "route": "/v1/teacher/content/lessons/:lessonId/videos/upload",
+      "subdirectory": "videos",
+      "fallbackBaseName": "video",
+      "configuredRootReference": "UPLOADS_PATH",
+      "provider": "s3",
+      "productionMutationUsed": false
+    },
+    {
+      "surfaceId": "activation-order-invoice-payment-proof",
+      "actorScope": "SALES_PARENT_REVIEWER",
+      "route": "/v1/activation-orders/*",
+      "subdirectory": "invoices",
+      "fallbackBaseName": "invoice",
+      "configuredRootReference": "UPLOADS_PATH",
+      "provider": "s3",
+      "productionMutationUsed": false
+    },
+    {
+      "surfaceId": "channel-finance-payout-invoice",
+      "actorScope": "FINANCE",
+      "route": "/v1/channel-finance/payouts/:payoutId/pay",
+      "subdirectory": "invoices",
+      "fallbackBaseName": "payout",
+      "configuredRootReference": "UPLOADS_PATH",
+      "provider": "s3",
+      "productionMutationUsed": false
+    }
+  ],
+  "negativeCases": [
+    {
+      "caseId": "initial-api-multi-instance-denied",
+      "expectedViolation": "HOSTED_STAGING_UPLOAD_TOPOLOGY_INVALID",
+      "observedViolations": [
+        "HOSTED_STAGING_UPLOAD_TOPOLOGY_INVALID"
+      ],
+      "decision": "DENIED_AS_EXPECTED"
+    },
+    {
+      "caseId": "s3-topology-undeclared-denied",
+      "expectedViolation": "HOSTED_STAGING_UPLOAD_TOPOLOGY_INVALID",
+      "observedViolations": [
+        "HOSTED_STAGING_UPLOAD_TOPOLOGY_INVALID"
+      ],
+      "decision": "DENIED_AS_EXPECTED"
+    },
+    {
+      "caseId": "hosted-filesystem-without-emergency-override-denied",
+      "expectedViolation": "HOSTED_STAGING_UPLOADS_INVALID",
+      "observedViolations": [
+        "HOSTED_STAGING_UPLOADS_INVALID",
+        "HOSTED_STAGING_UPLOAD_TOPOLOGY_INVALID"
+      ],
+      "decision": "DENIED_AS_EXPECTED"
+    }
+  ],
+  "totals": {
+    "uploadSurfaceCount": 4,
+    "videoSurfaceCount": 2,
+    "invoiceSurfaceCount": 2,
+    "acceptedContractViolationCount": 0,
+    "deniedNegativeCaseCount": 3,
+    "unsafeAcceptedNegativeCaseCount": 0,
+    "openLocalSafetyGateCount": 0
+  },
+  "safety": {
+    "productionDbUsed": false,
+    "hostedDeploymentUsed": false,
+    "providerApiUsed": false,
+    "realUploadUsed": false,
+    "realLearnerCustomerOrderPaymentDataUsed": false,
+    "plaintextSecretsIncluded": false,
+    "productionReady": false,
+    "productionEnabled": false
+  },
+  "remainingBlockers": [
+    "Initial hosted staging remains limited to exactly one API replica by business decision.",
+    "No real hosted bucket, provider credential reference, or provider acceptance has been supplied.",
+    "Hosted storage capacity, backup/restore, retention/deletion, malware handling, private delivery, and owner acceptance remain external gates."
+  ]
+}

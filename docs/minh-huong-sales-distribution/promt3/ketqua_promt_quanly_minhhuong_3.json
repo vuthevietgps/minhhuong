@@ -1,0 +1,80 @@
+{
+  "prompt": "Promt_quanly_minhhuong_3",
+  "date": "2026-06-14",
+  "mode": "technical-spec-no-code",
+  "verdict": "PASS",
+  "prompt2_inputs_read": [
+    {"file": "docs/minh-huong-sales-distribution/promt2/00_chain_ledger.md", "status": "found", "notes": "Read."},
+    {"file": "docs/minh-huong-sales-distribution/promt2/ketqua_promt_quanly_minhhuong_2.md", "status": "found", "notes": "Read."},
+    {"file": "docs/minh-huong-sales-distribution/promt2/ketqua_promt_quanly_minhhuong_2.json", "status": "found", "notes": "Read and parsed by inspection."},
+    {"file": "docs/minh-huong-sales-distribution/promt2/01_scope_and_baseline.md", "status": "found", "notes": "Read."},
+    {"file": "docs/minh-huong-sales-distribution/promt2/02_tests_added_or_changed.md", "status": "found", "notes": "Read."},
+    {"file": "docs/minh-huong-sales-distribution/promt2/03_order_subscription_test_evidence.md", "status": "found", "notes": "Read."},
+    {"file": "docs/minh-huong-sales-distribution/promt2/04_commission_test_evidence.md", "status": "found", "notes": "Read."},
+    {"file": "docs/minh-huong-sales-distribution/promt2/05_payout_scope_test_evidence.md", "status": "found", "notes": "Read."},
+    {"file": "docs/minh-huong-sales-distribution/promt2/06_files_changed.md", "status": "found", "notes": "Read."},
+    {"file": "docs/minh-huong-sales-distribution/promt2/07_tests_run.md", "status": "found", "notes": "Read."},
+    {"file": "docs/minh-huong-sales-distribution/promt2/08_bugs_found_and_fixes.md", "status": "found", "notes": "Read."},
+    {"file": "docs/minh-huong-sales-distribution/promt2/09_remaining_gaps_and_risks.md", "status": "found", "notes": "Read."},
+    {"file": "docs/minh-huong-sales-distribution/promt2/10_next_prompt_recommendation.md", "status": "found", "notes": "Read."}
+  ],
+  "source_changes": [],
+  "schema_changes": [],
+  "design_outputs": {
+    "package_entitlement": {
+      "status": "designed",
+      "summary": "Keep ActivationPackage, add PackageEntitlement, capture entitlement snapshots on ActivationOrder and Subscription, and phase learning entitlement enforcement with legacy fallback."
+    },
+    "order_status_history": {
+      "status": "designed",
+      "summary": "Add OrderStatusHistory as domain lifecycle trail distinct from AuditLog, written in the same transaction as status changes."
+    },
+    "idempotency": {
+      "status": "designed",
+      "summary": "Add IdempotencyRecord with scoped Idempotency-Key support, request hash, response replay, TTL, and first slice for approve order plus payout pay/reject."
+    },
+    "subscription_traceability": {
+      "status": "designed",
+      "summary": "Add Subscription.sourceOrderId, Subscription.activationPackageId, and entitlementSnapshotJson while preserving providerRef and current renewal stacking."
+    },
+    "commission_policy_version": {
+      "status": "designed",
+      "summary": "Keep CommissionPolicy, add CommissionPolicyVersion, and snapshot policy, calculation basis, and upline data on CommissionEarning."
+    },
+    "channel_scope_integration_tests": {
+      "status": "designed",
+      "summary": "DB-backed fixture covers director, managers, agencies, sales, sibling exclusion, admin/operations global visibility, finance report, wallet, payout, and CSV scope."
+    },
+    "ba_canonical_docs_sync": {
+      "status": "missing",
+      "summary": "Exact BA v1.1 affiliate/QR and addendum files were not found in repo or Downloads; affiliate/QR remains blocked."
+    }
+  },
+  "recommended_prompt4": {
+    "name": "Promt_quanly_minhhuong_4.md",
+    "type": "implementation-narrow-slice",
+    "scope": "Implement OrderStatusHistory plus minimal IdempotencyRecord support for approve activation order, payout pay, and payout reject, with tests preserving Prompt 2 coverage.",
+    "reason": "This builds directly on Prompt 2 P0 duplicate-side-effect fixes and adds explicit lifecycle/replay contracts before entitlement, affiliate, or payment gateway work."
+  },
+  "hard_bans_check": {
+    "no_source_code_changed": true,
+    "no_schema_migration_created": true,
+    "affiliate_qr_not_implemented": true,
+    "payment_gateway_not_implemented": true,
+    "frontend_rewrite_not_done": true
+  },
+  "risks": [
+    "Canonical BA v1.1 affiliate/QR docs are missing.",
+    "Entitlement enforcement can lock out legacy users if fallback is not designed into implementation.",
+    "Idempotency request hashing can reject valid retries if unstable upload metadata is included.",
+    "Subscription sourceOrderId backfill may find legacy providerRef rows that do not match order ids.",
+    "DB-backed scope tests require isolated database setup."
+  ],
+  "business_decisions_needed": [
+    "Exact entitlement limits per commercial package.",
+    "Whether refund is an ActivationOrderStatus or status-history/payment event only.",
+    "Whether payout remains pay/reject or becomes approve plus pay.",
+    "Revoke/clawback policy after commissions are already paid.",
+    "Affiliate attribution rule and attribution window after BA docs are synced."
+  ]
+}

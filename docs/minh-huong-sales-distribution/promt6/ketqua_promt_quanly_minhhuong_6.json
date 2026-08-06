@@ -1,0 +1,121 @@
+{
+  "prompt": "Promt_quanly_minhhuong_6_gom_fix_subscription_traceability",
+  "date": "2026-06-14",
+  "mode": "blocker-fix-implementation-narrow-slice",
+  "verdict": "CONDITIONAL",
+  "conditional_reason": "The sourceOrderId uniqueness guard is deferred because legacy duplicate providerRef rows cannot be audited in this local repo. Approval claim/idempotency behavior and tests prevent new duplicate subscription side effects.",
+  "source_changes": [
+    {
+      "file": "apps/api/src/activation-orders/activation-orders.service.ts",
+      "summary": "Approval resolves ActivationPackage by exact packageCode, writes sourceOrderId and activationPackageId on Subscription while retaining providerRef, and revocation matches sourceOrderId or providerRef."
+    }
+  ],
+  "schema_changes": [
+    {
+      "file": "apps/api/prisma/schema.prisma",
+      "summary": "Added nullable Subscription.sourceOrderId and Subscription.activationPackageId, relations to ActivationOrder and ActivationPackage, back relations, and indexes."
+    }
+  ],
+  "migrations": [
+    {
+      "file": "apps/api/prisma/migrations/20260614162000_subscription_traceability/migration.sql",
+      "summary": "Adds nullable trace fields, directly backfills sourceOrderId from providerRef=ActivationOrder.id, directly backfills activationPackageId from linked order packageCode to ActivationPackage.code, adds indexes and FKs."
+    }
+  ],
+  "tests_added_or_changed": [
+    {
+      "file": "apps/api/src/activation-orders/activation-orders.service.spec.ts",
+      "covers": [
+        "approval writes sourceOrderId and activationPackageId",
+        "unresolved package code leaves activationPackageId null and approval succeeds",
+        "renewal stacking remains based on future currentPeriodEnd",
+        "same-key approve replay does not duplicate subscription",
+        "stale repeated approval does not duplicate subscription"
+      ]
+    },
+    {
+      "file": "apps/api/src/entitlement/entitlement.service.spec.ts",
+      "covers": [
+        "active legacy subscription with null trace fields grants access",
+        "active traced subscription grants access",
+        "expired and canceled subscriptions remain outside active access"
+      ]
+    }
+  ],
+  "traceability_coverage": {
+    "sourceOrderId_schema": "covered",
+    "sourceOrderId_relation": "covered",
+    "activationPackageId_schema": "covered",
+    "activationPackageId_relation": "covered",
+    "providerRef_compatibility": "covered",
+    "approval_writes_sourceOrderId": "covered",
+    "approval_writes_activationPackageId": "covered",
+    "package_miss_approval": "covered",
+    "learning_access_legacy": "covered",
+    "learning_access_traced": "covered"
+  },
+  "tests_run": [
+    {
+      "command": "npm --prefix apps/api run prisma:generate",
+      "status": "passed",
+      "summary": "Prisma Client generated successfully."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts channel-finance.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 22 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand entitlement.service.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 7 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand learning.service.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 12 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand",
+      "status": "passed_after_rerun",
+      "summary": "Final run passed: 14 suites, 81 tests. Earlier run failed in learning.service.spec.ts, then isolated learning spec and full unit rerun passed without source changes after that failure."
+    },
+    {
+      "command": "npm --prefix apps/api run test:e2e -- --runInBand",
+      "status": "passed",
+      "summary": "1 suite, 1 test."
+    },
+    {
+      "command": "npm --prefix apps/api run build",
+      "status": "passed",
+      "summary": "Nest build completed."
+    },
+    {
+      "command": "git status --short",
+      "status": "failed",
+      "summary": "fatal: not a git repository (or any of the parent directories): .git"
+    }
+  ],
+  "hard_bans_check": {
+    "affiliate_qr_not_implemented": true,
+    "payment_gateway_not_implemented": true,
+    "frontend_rewrite_not_done": true,
+    "package_entitlement_not_implemented": true,
+    "commission_policy_engine_not_implemented": true
+  },
+  "remaining_gaps": [
+    "sourceOrderId unique constraint is deferred due legacy duplicate risk.",
+    "DB-backed channel scope integration tests remain missing.",
+    "OrderStatusHistory lifecycle expansion for create/proof/reject/cancel/revoke remains deferred.",
+    "Package entitlement/snapshot remains deferred.",
+    "Commission policy version/snapshot remains deferred.",
+    "Affiliate/QR remains blocked until canonical BA v1.1/addendum docs are copied into repo docs."
+  ],
+  "recommended_next_prompt": {
+    "name": "Promt_quanly_minhhuong_7.md",
+    "type": "test-hardening",
+    "scope": "DB-backed channel scope integration tests for sale/agency/manager visibility boundaries, proving no sibling sale or sibling agency data leakage before affiliate/QR expansion.",
+    "reason": "Subscription traceability is now implemented. The next highest-risk commercial issue is channel hierarchy data visibility before expanding acquisition flows."
+  }
+}
+

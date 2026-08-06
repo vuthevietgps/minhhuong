@@ -1,0 +1,158 @@
+{
+  "date": "2026-06-14",
+  "prompt": "Promt_quanly_minhhuong_18",
+  "mode": "implementation-narrow-slice / activation order attribution snapshot",
+  "verdict": "CONDITIONAL",
+  "conditionalReasons": [
+    "git status --short cannot run because the workspace is not a git repository.",
+    "AFFILIATE_ATTRIBUTION_WINDOW_DAYS has a safe 30-day fallback but should be configured in production.",
+    "DB-backed suites still emit the known non-failing pg deprecation warning."
+  ],
+  "implemented": {
+    "orderInput": [
+      "CreateActivationOrderDto.affiliateClickId optional public click token",
+      "CreateSelfServiceActivationOrderDto.affiliateClickId optional public click token",
+      "DTO validation accepts only clk_ plus 24 hex characters",
+      "Service also validates token shape for direct service calls"
+    ],
+    "snapshotFields": [
+      "ActivationOrder.affiliateAttributionSnapshotJson",
+      "source",
+      "clickId",
+      "affiliateClickEventId",
+      "affiliateLinkId",
+      "affiliateQrAssetId",
+      "participantId",
+      "agencyId",
+      "agencyMemberId",
+      "referralCode",
+      "campaign",
+      "channel",
+      "placement",
+      "packageCode",
+      "clickCreatedAt",
+      "orderSnapshottedAt",
+      "attributionModel",
+      "matchConfidence",
+      "attributionWindowDays"
+    ],
+    "clickResolution": [
+      "resolve AffiliateClickEvent by public clickId",
+      "require click exists",
+      "require event inside attribution window",
+      "require current affiliate link, participant, agency, and member state to remain usable",
+      "use click participant when order has no existing participant",
+      "reject sale-assisted participant conflict without overriding"
+    ],
+    "privacy": [
+      "snapshot excludes raw IP",
+      "snapshot excludes raw User-Agent",
+      "snapshot excludes ipHash and userAgentHash",
+      "snapshot excludes cookie, Authorization, and raw request headers",
+      "snapshot excludes payment proof data"
+    ],
+    "financialSafety": "Order creation writes only ActivationOrder and status history; payment, subscription, wallet ledger, and commission writes remain only in the existing approve flow."
+  },
+  "hardBansNotImplemented": [
+    "mobile first-open/deferred attribution",
+    "AppInstallAttribution",
+    "CustomerAttribution",
+    "register/user attribution API",
+    "first-click/last-click attribution engine",
+    "manual attribution dispute or override",
+    "commission policy changes",
+    "commission calculation redesign",
+    "finance report changes",
+    "payout/payment gateway/webhook/reconciliation",
+    "frontend/UI",
+    "QR image rendering",
+    "coupon/discount",
+    "renewal ownership logic",
+    "broad channel hierarchy changes"
+  ],
+  "tests": [
+    {
+      "command": "npm --prefix apps/api run prisma:generate",
+      "status": "passed"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 21 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-affiliate-migration.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 8 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-affiliate",
+      "status": "passed",
+      "summary": "2 suites, 14 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts channel-finance.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 33 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand package-entitlement",
+      "status": "passed",
+      "summary": "3 suites, 12 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand entitlement.service.spec.ts learning.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 21 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-participant-fk.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 1 test"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-scope.integration.spec.ts channel-admin-scope.integration.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 7 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand",
+      "status": "passed",
+      "summary": "23 suites, 146 tests"
+    },
+    {
+      "command": "npm --prefix apps/api run test:e2e -- --runInBand",
+      "status": "passed",
+      "summary": "5 suites, 12 tests"
+    },
+    {
+      "command": "npm --prefix apps/api run build",
+      "status": "passed"
+    },
+    {
+      "command": "git status --short",
+      "status": "failed",
+      "summary": "fatal: not a git repository (or any of the parent directories): .git"
+    }
+  ],
+  "filesChanged": [
+    ".env.example",
+    "apps/api/prisma/schema.prisma",
+    "apps/api/prisma/migrations/20260614223000_activation_order_affiliate_attribution_snapshot/migration.sql",
+    "apps/api/src/activation-orders/dto/create-activation-order.dto.ts",
+    "apps/api/src/activation-orders/dto/create-self-service-activation-order.dto.ts",
+    "apps/api/src/activation-orders/activation-orders.service.ts",
+    "apps/api/src/activation-orders/activation-orders.service.spec.ts",
+    "apps/api/src/channel-affiliate/channel-affiliate-migration.integration.spec.ts",
+    "docs/minh-huong-sales-distribution/promt18/*"
+  ],
+  "remainingGaps": [
+    "No mobile install/deferred attribution.",
+    "No CustomerAttribution model or register attribution API.",
+    "No first-click/last-click conflict engine.",
+    "Sale-assisted participant conflicts reject instead of creating a dispute workflow.",
+    "No affiliate report/read endpoint yet.",
+    "No commission policy changes; approve flow remains the existing commission path."
+  ],
+  "nextPrompt": "Prompt 19 should add affiliate order attribution read/report evidence or approve-time snapshot consumption proof, still without mobile/customer attribution, frontend, payment gateway, or manual override unless explicitly scoped."
+}

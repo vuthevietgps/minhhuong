@@ -1,0 +1,164 @@
+{
+  "reportName": "ERP local demo Lead -> Order -> Profit -> Ads Attribution",
+  "generatedFor": "local-demo-lead-order-profit-ads-attribution",
+  "generatedAt": "2026-06-29T00:00:00.000Z",
+  "currency": "VND",
+  "safety": {
+    "fixtureOnly": true,
+    "productionDbUsed": false,
+    "providerApiUsed": false,
+    "liveAdsExecuted": false,
+    "realErpMutationUsed": false
+  },
+  "totals": {
+    "leadCount": 4,
+    "orderCount": 3,
+    "approvedOrderCount": 2,
+    "revenueCents": 570000000,
+    "adCostCents": 137000000,
+    "costOfGoodsCents": 142500000,
+    "variableCostCents": 77000000,
+    "grossProfitCents": 427500000,
+    "contributionProfitCents": 213500000,
+    "clicks": 101,
+    "impressions": 7000
+  },
+  "rows": [
+    {
+      "source": "GOOGLE_ADS",
+      "campaign": "summer-enrollment-2026",
+      "adGroup": "search-parent-intent",
+      "keyword": "english for kids",
+      "leadIds": [
+        "lead-google-001",
+        "lead-google-002"
+      ],
+      "orderIds": [
+        "order-google-001",
+        "order-google-002"
+      ],
+      "approvedOrderIds": [
+        "order-google-001"
+      ],
+      "leadCount": 2,
+      "orderCount": 2,
+      "approvedOrderCount": 1,
+      "revenueCents": 360000000,
+      "adCostCents": 65000000,
+      "costOfGoodsCents": 90000000,
+      "variableCostCents": 48000000,
+      "grossProfitCents": 270000000,
+      "contributionProfitCents": 157000000,
+      "clicks": 42,
+      "impressions": 1800,
+      "costPerLeadCents": 32500000,
+      "revenuePerLeadCents": 180000000,
+      "roas": 5.54,
+      "grossProfitRoas": 4.15
+    },
+    {
+      "source": "FACEBOOK_ADS",
+      "campaign": "retargeting-trial-2026",
+      "adGroup": "video-viewers",
+      "leadIds": [
+        "lead-facebook-001"
+      ],
+      "orderIds": [
+        "order-facebook-001"
+      ],
+      "approvedOrderIds": [
+        "order-facebook-001"
+      ],
+      "leadCount": 1,
+      "orderCount": 1,
+      "approvedOrderCount": 1,
+      "revenueCents": 210000000,
+      "adCostCents": 42000000,
+      "costOfGoodsCents": 52500000,
+      "variableCostCents": 29000000,
+      "grossProfitCents": 157500000,
+      "contributionProfitCents": 86500000,
+      "clicks": 28,
+      "impressions": 2300,
+      "costPerLeadCents": 42000000,
+      "revenuePerLeadCents": 210000000,
+      "roas": 5,
+      "grossProfitRoas": 3.75
+    },
+    {
+      "source": "TIKTOK_ADS",
+      "campaign": "phonics-booster-2026",
+      "adGroup": "lookalike-parents",
+      "keyword": "phonics",
+      "leadIds": [
+        "lead-tiktok-001"
+      ],
+      "orderIds": [],
+      "approvedOrderIds": [],
+      "leadCount": 1,
+      "orderCount": 0,
+      "approvedOrderCount": 0,
+      "revenueCents": 0,
+      "adCostCents": 30000000,
+      "costOfGoodsCents": 0,
+      "variableCostCents": 0,
+      "grossProfitCents": 0,
+      "contributionProfitCents": -30000000,
+      "clicks": 31,
+      "impressions": 2900,
+      "costPerLeadCents": 30000000,
+      "revenuePerLeadCents": 0,
+      "roas": 0,
+      "grossProfitRoas": 0
+    }
+  ],
+  "leadOrderMap": [
+    {
+      "leadId": "lead-google-001",
+      "orderId": "order-google-001",
+      "source": "GOOGLE_ADS",
+      "campaign": "summer-enrollment-2026",
+      "adGroup": "search-parent-intent",
+      "keyword": "english for kids",
+      "status": "APPROVED",
+      "revenueCents": 360000000,
+      "grossProfitCents": 270000000,
+      "contributionBeforeAdCostCents": 222000000
+    },
+    {
+      "leadId": "lead-google-002",
+      "orderId": "order-google-002",
+      "source": "GOOGLE_ADS",
+      "campaign": "summer-enrollment-2026",
+      "adGroup": "search-parent-intent",
+      "keyword": "english for kids",
+      "status": "PENDING_REVIEW",
+      "revenueCents": 0,
+      "grossProfitCents": 0,
+      "contributionBeforeAdCostCents": 0
+    },
+    {
+      "leadId": "lead-facebook-001",
+      "orderId": "order-facebook-001",
+      "source": "FACEBOOK_ADS",
+      "campaign": "retargeting-trial-2026",
+      "adGroup": "video-viewers",
+      "status": "APPROVED",
+      "revenueCents": 210000000,
+      "grossProfitCents": 157500000,
+      "contributionBeforeAdCostCents": 128500000
+    },
+    {
+      "leadId": "lead-tiktok-001",
+      "orderId": null,
+      "source": "TIKTOK_ADS",
+      "campaign": "phonics-booster-2026",
+      "adGroup": "lookalike-parents",
+      "keyword": "phonics",
+      "status": "NO_ORDER",
+      "revenueCents": 0,
+      "grossProfitCents": 0,
+      "contributionBeforeAdCostCents": 0
+    }
+  ]
+}

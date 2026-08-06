@@ -1,0 +1,186 @@
+{
+  "prompt": "Promt_quanly_minhhuong_8",
+  "date": "2026-06-14",
+  "mode": "blocker-fix-test-hardening-migration-history-reconciliation",
+  "verdict": "CONDITIONAL",
+  "conditional_reasons": [
+    "Migration deploy is proven and the DB-backed scope tests pass under migration-created schema, but channel-admin DB-backed scope tests remain deferred."
+  ],
+  "migration_deploy_used": true,
+  "db_push_used_for_final_proof": false,
+  "migration_files_created": [
+    {
+      "file": "apps/api/prisma/migrations/20260614170000_reconcile_channel_scope_history/migration.sql",
+      "summary": "Reconciles channel scope migration history by adding ChannelParticipant hierarchy enum values, columns, indexes, guarded self-FK, deterministic lineage/root/depth backfill, CommissionEarning depth/availability fields, and ActivationOrder.trialEndsAt."
+    }
+  ],
+  "product_source_changed": false,
+  "test_changes": [
+    {
+      "file": "apps/api/src/channel-finance/channel-scope.integration.spec.ts",
+      "summary": "Changed temp DB setup from prisma db push to prisma migrate deploy and added schema assertions for migration-created scope fields, enum values, indexes, and self-FK."
+    }
+  ],
+  "migration_diff_audit": {
+    "missing_before_prompt8": [
+      "ChannelParticipantType enum values DIRECTOR and MANAGER",
+      "ChannelParticipant.parentParticipantId",
+      "ChannelParticipant.rootParticipantId",
+      "ChannelParticipant.lineage",
+      "ChannelParticipant.depth",
+      "ChannelParticipant parent/root/lineage indexes",
+      "ChannelParticipant_parentParticipantId_fkey",
+      "CommissionEarning.depth",
+      "CommissionEarning.availableAt",
+      "CommissionEarning.releasedAt",
+      "CommissionEarning_status_availableAt_idx",
+      "CommissionEarning.status default PENDING",
+      "ActivationOrder.trialEndsAt",
+      "ActivationOrder_trialEndsAt_idx"
+    ],
+    "present_before_prompt8": [
+      "ChannelParticipant table",
+      "ChannelParticipant code/userId/agencyId unique indexes",
+      "ChannelParticipant type/status index",
+      "ActivationOrder.channelParticipantId",
+      "CommissionEarning.participantId",
+      "CommissionLedgerEntry.participantId",
+      "PayoutRequest.participantId",
+      "participant foreign keys for ActivationOrder, CommissionEarning, CommissionLedgerEntry, and PayoutRequest"
+    ]
+  },
+  "migrate_deploy_proof": {
+    "standalone_smoke": {
+      "status": "passed",
+      "migration_finished": "20260614170000_reconcile_channel_scope_history",
+      "columns_verified": [
+        "ActivationOrder.trialEndsAt",
+        "ChannelParticipant.depth",
+        "ChannelParticipant.lineage",
+        "ChannelParticipant.parentParticipantId",
+        "ChannelParticipant.rootParticipantId",
+        "CommissionEarning.availableAt",
+        "CommissionEarning.depth",
+        "CommissionEarning.releasedAt"
+      ],
+      "enum_values_verified": [
+        "SALE",
+        "AGENCY",
+        "DIRECTOR",
+        "MANAGER"
+      ],
+      "indexes_verified": [
+        "ActivationOrder_trialEndsAt_idx",
+        "ChannelParticipant_lineage_idx",
+        "ChannelParticipant_parentParticipantId_idx",
+        "ChannelParticipant_rootParticipantId_idx",
+        "CommissionEarning_status_availableAt_idx"
+      ]
+    },
+    "integration_test": {
+      "file": "apps/api/src/channel-finance/channel-scope.integration.spec.ts",
+      "uses_migrate_deploy_lines": "51-65",
+      "schema_assertion_lines": "264-334",
+      "scope_tests_passed": true
+    }
+  },
+  "scope_regression_coverage": {
+    "activation_order_visibility_by_subtree": "passed_migration_created_db",
+    "channel_finance_report_by_subtree": "passed_migration_created_db",
+    "channel_finance_overview_by_subtree": "passed_migration_created_db",
+    "wallet_ledger_by_subtree": "passed_migration_created_db",
+    "payout_list_by_subtree": "passed_migration_created_db",
+    "csv_export_by_subtree": "passed_migration_created_db",
+    "admin_operations_global_scope": "passed_migration_created_db",
+    "empty_participant_scope": "passed_migration_created_db"
+  },
+  "tests_run": [
+    {
+      "command": "npm --prefix apps/api run prisma:generate",
+      "status": "passed",
+      "summary": "Prisma Client generated successfully."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-scope.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 3 tests. Final harness uses prisma migrate deploy."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts channel-finance.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 22 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand entitlement.service.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 7 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand learning.service.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 12 tests."
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand",
+      "status": "passed",
+      "summary": "Final run passed: 15 suites, 84 tests."
+    },
+    {
+      "command": "npm --prefix apps/api run test:e2e -- --runInBand",
+      "status": "passed",
+      "summary": "2 suites, 4 tests."
+    },
+    {
+      "command": "npm --prefix apps/api run build",
+      "status": "passed",
+      "summary": "Final build passed."
+    },
+    {
+      "command": "standalone migrate deploy temp DB smoke proof",
+      "status": "passed",
+      "summary": "Temp DB migration deploy applied the reconciliation migration and verified required columns, enum values, and indexes."
+    },
+    {
+      "command": "git status --short",
+      "status": "failed_environment",
+      "summary": "fatal: not a git repository (or any of the parent directories): .git"
+    }
+  ],
+  "interim_failures_fixed": [
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-scope.integration.spec.ts",
+      "status": "failed_before_final_fix",
+      "error": "The column ActivationOrder.trialEndsAt does not exist in the current database.",
+      "likely_cause": "ActivationOrder.trialEndsAt was present in current schema and selected by Prisma Client, but absent from migration SQL history.",
+      "source_changed_afterward": true,
+      "fix": "Added ActivationOrder.trialEndsAt and ActivationOrder_trialEndsAt_idx to the reconciliation migration, then reran the DB-backed test successfully."
+    }
+  ],
+  "hard_bans_check": {
+    "affiliate_qr_not_implemented": true,
+    "payment_gateway_not_implemented": true,
+    "frontend_rewrite_not_done": true,
+    "package_entitlement_not_implemented": true,
+    "commission_policy_engine_not_implemented": true,
+    "entitlement_enforcement_not_changed": true,
+    "lead_crm_not_implemented": true,
+    "renewal_opportunity_not_implemented": true,
+    "agency_member_cleanup_not_done": true,
+    "broad_model_rename_not_done": true
+  },
+  "remaining_gaps": [
+    "Channel-admin participant/agency/user DB-backed subtree tests remain missing.",
+    "The ChannelParticipant parent self-FK is added as NOT VALID for safer legacy migration; old invalid parent rows, if any, require a later data-quality validation pass before validating the constraint.",
+    "Prompt 6 sourceOrderId uniqueness remains deferred pending legacy duplicate audit.",
+    "OrderStatusHistory lifecycle expansion beyond approval remains deferred.",
+    "Package entitlement/snapshot and commission policy version/snapshot remain deferred.",
+    "Affiliate/QR remains blocked."
+  ],
+  "recommended_next_prompt": {
+    "name": "Promt_quanly_minhhuong_9.md",
+    "type": "test-hardening",
+    "scope": "DB-backed channel-admin scope tests for participant list, agency list, user list, and sibling/non-descendant action rejection.",
+    "reason": "Prompt 8 makes the migration-deploy scope foundation reliable. The next remaining channel visibility surface is channel-admin."
+  }
+}
+

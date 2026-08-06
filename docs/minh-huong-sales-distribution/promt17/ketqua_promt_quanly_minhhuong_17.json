@@ -1,0 +1,120 @@
+{
+  "date": "2026-06-14",
+  "prompt": "Promt_quanly_minhhuong_17",
+  "mode": "implementation-narrow-slice / affiliate redirect click foundation",
+  "verdict": "CONDITIONAL",
+  "conditionalReasons": [
+    "git status --short cannot run because the workspace is not a git repository.",
+    "AFFILIATE_REDIRECT_BASE_URL and AFFILIATE_HASH_SECRET have safe fallbacks but should be configured in production.",
+    "DB-backed suites still emit the known non-failing pg deprecation warning."
+  ],
+  "implemented": {
+    "schema": [
+      "AffiliateClickEvent"
+    ],
+    "migration": "apps/api/prisma/migrations/20260614213000_affiliate_click_event_redirect/migration.sql",
+    "route": "GET /r/:linkCode",
+    "routeVersioning": "VERSION_NEUTRAL public route",
+    "clickBehavior": [
+      "active link creates AffiliateClickEvent",
+      "valid QR query attaches affiliateQrAssetId",
+      "invalid or inactive QR is not attached to the event",
+      "missing/inactive/out-of-window links redirect deterministically without creating events",
+      "explicit dedupe key prevents double event creation"
+    ],
+    "privacy": [
+      "raw IP is not stored",
+      "raw User-Agent is not stored",
+      "ipHash and userAgentHash use HMAC-SHA256",
+      "deviceHint is sanitized/truncated",
+      "metadata does not store raw request headers, cookies, or Authorization"
+    ],
+    "financialSafety": "Click/scan creates no ActivationOrder, Subscription, Payment, CommissionEarning, CommissionLedgerEntry, or PayoutRequest rows."
+  },
+  "hardBansNotImplemented": [
+    "mobile first-open/deferred attribution",
+    "AppInstallAttribution",
+    "CustomerAttribution",
+    "activation order attribution snapshot",
+    "order create/approve attribution changes",
+    "commission changes",
+    "finance report changes",
+    "frontend/UI",
+    "QR image rendering",
+    "payment gateway/webhook/reconciliation",
+    "coupon/discount",
+    "renewal ownership",
+    "manual attribution override"
+  ],
+  "tests": [
+    {
+      "command": "npm --prefix apps/api run prisma:generate",
+      "status": "passed"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-affiliate",
+      "status": "passed",
+      "summary": "2 suites, 13 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-affiliate-migration.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 7 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts channel-finance.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 29 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand package-entitlement",
+      "status": "passed",
+      "summary": "3 suites, 12 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand entitlement.service.spec.ts learning.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 21 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-participant-fk.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 1 test"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-scope.integration.spec.ts channel-admin-scope.integration.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 7 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand",
+      "status": "passed",
+      "summary": "23 suites, 141 tests"
+    },
+    {
+      "command": "npm --prefix apps/api run test:e2e -- --runInBand",
+      "status": "passed",
+      "summary": "4 suites, 10 tests"
+    },
+    {
+      "command": "npm --prefix apps/api run build",
+      "status": "passed"
+    },
+    {
+      "command": "git status --short",
+      "status": "failed",
+      "summary": "fatal: not a git repository (or any of the parent directories): .git"
+    }
+  ],
+  "filesChanged": [
+    ".env.example",
+    "apps/api/prisma/schema.prisma",
+    "apps/api/prisma/migrations/20260614213000_affiliate_click_event_redirect/migration.sql",
+    "apps/api/src/channel-affiliate/channel-affiliate.controller.ts",
+    "apps/api/src/channel-affiliate/channel-affiliate.module.ts",
+    "apps/api/src/channel-affiliate/channel-affiliate.service.ts",
+    "apps/api/src/channel-affiliate/channel-affiliate-redirect.integration.spec.ts",
+    "docs/minh-huong-sales-distribution/promt17/*"
+  ],
+  "nextPrompt": "Prompt 18 should implement activation order attribution snapshot wiring from affiliate click signal only, without mobile/customer attribution or commission changes."
+}

@@ -1,0 +1,115 @@
+{
+  "prompt": 26,
+  "date": "2026-06-15",
+  "mode": "implementation-narrow-slice / read-only affiliate commission aggregate report",
+  "verdict": "CONDITIONAL",
+  "conditionalReasons": [
+    "git status --short cannot run because the workspace is not a git repository",
+    "DB-backed suites emit the known non-failing pg deprecation warning"
+  ],
+  "implemented": [
+    "Added GET /v1/channel-affiliate/commissions/aggregates",
+    "Added AffiliateCommissionAggregateQueryDto",
+    "Aggregated from CommissionEarning.attributionSnapshotJson",
+    "Supported required groupBy dimensions",
+    "Reused Prompt 25 commission filters and lineage scope",
+    "Added currency-safe totals and deterministic sort/limit behavior",
+    "Audited JSON access with AFFILIATE_COMMISSION_AGGREGATE",
+    "Preserved read-only financial safety"
+  ],
+  "changedFiles": [
+    "apps/api/src/channel-affiliate/channel-affiliate.controller.ts",
+    "apps/api/src/channel-affiliate/channel-affiliate.service.ts",
+    "apps/api/src/channel-affiliate/dto/channel-affiliate.dto.ts",
+    "apps/api/src/channel-affiliate/channel-affiliate-migration.integration.spec.ts",
+    "docs/minh-huong-sales-distribution/promt26/*"
+  ],
+  "tests": [
+    {
+      "command": "npm --prefix apps/api run prisma:generate",
+      "status": "passed"
+    },
+    {
+      "command": "npm --prefix apps/api run build",
+      "status": "passed"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts",
+      "status": "passed",
+      "suites": 1,
+      "tests": 27
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts channel-finance.service.spec.ts",
+      "status": "passed",
+      "suites": 2,
+      "tests": 39
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-affiliate",
+      "status": "passed",
+      "suites": 2,
+      "tests": 29,
+      "warning": "known non-failing pg deprecation warning"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-affiliate-migration.integration.spec.ts",
+      "status": "passed",
+      "suites": 1,
+      "tests": 23,
+      "warning": "known non-failing pg deprecation warning"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand package-entitlement",
+      "status": "passed",
+      "suites": 3,
+      "tests": 12
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand entitlement.service.spec.ts learning.service.spec.ts",
+      "status": "passed",
+      "suites": 2,
+      "tests": 21
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-participant-fk.integration.spec.ts",
+      "status": "passed",
+      "suites": 1,
+      "tests": 1
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-scope.integration.spec.ts channel-admin-scope.integration.spec.ts",
+      "status": "passed",
+      "suites": 2,
+      "tests": 7,
+      "warning": "known non-failing pg deprecation warning"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand",
+      "status": "passed",
+      "suites": 23,
+      "tests": 167,
+      "warning": "known non-failing pg deprecation warning"
+    },
+    {
+      "command": "npm --prefix apps/api run test:e2e -- --runInBand",
+      "status": "passed",
+      "suites": 5,
+      "tests": 12
+    },
+    {
+      "command": "npm --prefix apps/api run build",
+      "status": "passed"
+    },
+    {
+      "command": "git status --short",
+      "status": "failed",
+      "reason": "fatal: not a git repository (or any of the parent directories): .git"
+    }
+  ],
+  "remainingRisks": [
+    "No commission CSV export in Prompt 26",
+    "Legacy rows without chain snapshot remain legacy_missing",
+    "Aggregates are computed in service memory for the narrow slice rather than a materialized read model"
+  ]
+}

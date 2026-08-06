@@ -1,0 +1,175 @@
+{
+  "date": "2026-06-15",
+  "prompt": "Promt_quanly_minhhuong_22",
+  "mode": "implementation-narrow-slice / operational audit for affiliate report and export access",
+  "verdict": "CONDITIONAL",
+  "conditionalReasons": [
+    "git status --short cannot run because the workspace is not a git repository.",
+    "DB-backed suites still emit the known non-failing pg deprecation warning."
+  ],
+  "implemented": {
+    "auditStorage": {
+      "reused": "AuditLog",
+      "migrationAdded": false,
+      "action": "channel_affiliate.report_access",
+      "entityType": "AffiliateReportAccessAudit"
+    },
+    "auditedAccessPaths": [
+      {
+        "route": "GET /v1/channel-affiliate/order-attributions",
+        "reportType": "ORDER_ATTRIBUTION_LIST",
+        "format": "JSON"
+      },
+      {
+        "route": "GET /v1/channel-affiliate/order-attributions/aggregates",
+        "reportType": "ORDER_ATTRIBUTION_AGGREGATE",
+        "format": "JSON"
+      },
+      {
+        "route": "GET /v1/channel-affiliate/order-attributions/export.csv",
+        "reportType": "ORDER_ATTRIBUTION_LIST",
+        "format": "CSV"
+      },
+      {
+        "route": "GET /v1/channel-affiliate/order-attributions/aggregates/export.csv",
+        "reportType": "ORDER_ATTRIBUTION_AGGREGATE",
+        "format": "CSV"
+      }
+    ],
+    "auditReadEndpoint": "GET /v1/channel-affiliate/report-access-audits",
+    "auditReadRoles": [
+      "ADMIN",
+      "OPERATIONS"
+    ],
+    "safeFilterSummaryAllowlist": [
+      "participantId",
+      "agencyId",
+      "agencyMemberId",
+      "affiliateLinkId",
+      "affiliateQrAssetId",
+      "clickId",
+      "campaign",
+      "channel",
+      "placement",
+      "packageCode",
+      "createdFrom",
+      "createdTo",
+      "clickFrom",
+      "clickTo",
+      "orderStatus",
+      "groupBy",
+      "sortBy",
+      "sortDirection",
+      "limit"
+    ],
+    "privacySafety": [
+      "no raw headers",
+      "no cookie",
+      "no Authorization",
+      "no raw IP",
+      "no raw User-Agent",
+      "no ipHash or userAgentHash",
+      "no deviceHint",
+      "no customer email or phone",
+      "no payment proof fields",
+      "no CSV body"
+    ],
+    "sourceOfTruthPreserved": "ActivationOrder.affiliateAttributionSnapshotJson",
+    "financialSafety": "Prompt 22 writes only AuditLog rows. Tests verify ActivationOrder, AffiliateClickEvent, Payment, Subscription, WalletLedgerEntry, CommissionEarning, CommissionLedgerEntry, and PayoutRequest counters are unchanged after report/export access plus audit read."
+  },
+  "hardBansNotImplemented": [
+    "commission policy changes",
+    "commission calculation redesign",
+    "payout/payment gateway/webhook/reconciliation",
+    "frontend/UI",
+    "mobile first-open/deferred attribution",
+    "AppInstallAttribution",
+    "CustomerAttribution",
+    "customer/register attribution API",
+    "first-click/last-click attribution engine",
+    "attribution ownership changes",
+    "manual override/dispute workflow",
+    "coupon/discount",
+    "renewal ownership",
+    "fraud/risk scoring",
+    "broad channel hierarchy redesign",
+    "QR image rendering",
+    "async export job/object storage",
+    "report materialized view/read model table unrelated to audit"
+  ],
+  "tests": [
+    {
+      "command": "npm --prefix apps/api run prisma:generate",
+      "status": "passed"
+    },
+    {
+      "command": "npm --prefix apps/api run build",
+      "status": "passed",
+      "summary": "before focused tests and final"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-affiliate",
+      "status": "passed",
+      "summary": "2 suites, 25 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-affiliate-migration.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 19 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts channel-finance.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 33 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand package-entitlement",
+      "status": "passed",
+      "summary": "3 suites, 12 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand entitlement.service.spec.ts learning.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 21 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-participant-fk.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 1 test"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-scope.integration.spec.ts channel-admin-scope.integration.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 7 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand",
+      "status": "passed",
+      "summary": "23 suites, 157 tests"
+    },
+    {
+      "command": "npm --prefix apps/api run test:e2e -- --runInBand",
+      "status": "passed",
+      "summary": "5 suites, 12 tests"
+    },
+    {
+      "command": "git status --short",
+      "status": "failed",
+      "summary": "fatal: not a git repository (or any of the parent directories): .git"
+    }
+  ],
+  "filesChanged": [
+    "apps/api/src/channel-affiliate/channel-affiliate.controller.ts",
+    "apps/api/src/channel-affiliate/channel-affiliate.service.ts",
+    "apps/api/src/channel-affiliate/dto/channel-affiliate.dto.ts",
+    "apps/api/src/channel-affiliate/channel-affiliate-migration.integration.spec.ts",
+    "docs/minh-huong-sales-distribution/promt22/*"
+  ],
+  "remainingGaps": [
+    "Audit read is intentionally narrow and only covers affiliate report/export access.",
+    "Audit rows reuse generic AuditLog metadata JSON rather than a dedicated typed table.",
+    "No request id is stored because no existing safe request-id pattern was found.",
+    "High-volume audit reads may need additional indexes or a dedicated table later."
+  ],
+  "nextPrompt": "Prompt 23 should start narrow commission proof/policy wiring from immutable order attribution snapshots while preserving audit/privacy/scope safety and excluding payment gateway, payout execution, frontend, mobile/customer attribution, first-click/last-click engine, and manual override/dispute."
+}

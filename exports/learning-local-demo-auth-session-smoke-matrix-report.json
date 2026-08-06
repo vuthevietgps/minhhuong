@@ -1,0 +1,335 @@
+{
+  "reportName": "Learning Local Demo Auth Session Smoke Matrix",
+  "generatedFor": "local-demo-auth-session-smoke-matrix",
+  "generatedAt": "2026-07-01T01:30:00.000Z",
+  "productionReady": false,
+  "fixtureOnly": true,
+  "endpointPath": "/v1/learning-local-demo/auth-session-smoke-matrix-report",
+  "dashboardEvidencePath": "/admin/learning-local-demo#auth-session-smoke-matrix",
+  "jsonExportPath": "exports/learning-local-demo-auth-session-smoke-matrix-report.json",
+  "markdownExportPath": "exports/learning-local-demo-auth-session-smoke-matrix-report.md",
+  "safety": {
+    "fixtureOnly": true,
+    "productionDbUsed": false,
+    "noProductionDbRead": true,
+    "providerApiUsed": false,
+    "paymentProviderUsed": false,
+    "notificationProviderUsed": false,
+    "aiProviderExecutionUsed": false,
+    "liveAdsExecuted": false,
+    "realAuthMutationUsed": false,
+    "realSessionMutationUsed": false,
+    "realLearningMutationUsed": false,
+    "realErpMutationUsed": false,
+    "secretsRequired": false
+  },
+  "currentStatus": {
+    "status": "LOCAL_DEMO_READY_WITH_NOTES",
+    "summary": "Auth/session smoke matrix covers login success, logout/session end, expired token denial, revoked device/session denial, wrong-role denial, and student/parent/teacher/admin/support demo roles.",
+    "remainingLocalDemoNotes": [
+      "Production persistence for session revocation remains out of scope for this fixture-only slice.",
+      "Production readiness remains false until external security review, persistent session storage, and deploy gates are approved."
+    ]
+  },
+  "totals": {
+    "smokeCaseCount": 9,
+    "roleCoverageCount": 5,
+    "requiredRoleCoverageCount": 5,
+    "scenarioCoverageCount": 5,
+    "requiredScenarioCoverageCount": 5,
+    "loginSuccessCount": 5,
+    "logoutSessionEndCount": 1,
+    "expiredTokenDeniedCount": 1,
+    "revokedSessionDeviceDeniedCount": 1,
+    "wrongRoleAccessDeniedCount": 1,
+    "allowedCaseCount": 5,
+    "deniedCaseCount": 4,
+    "negativePermissionCaseCount": 1,
+    "evidenceRowCount": 7,
+    "localDemoNoteCount": 2,
+    "productionReadyClaimCount": 0,
+    "safetyGateCount": 10,
+    "closedSafetyGateCount": 10,
+    "openSafetyGateCount": 0
+  },
+  "statusCounts": {
+    "role": {
+      "STUDENT": 2,
+      "PARENT": 2,
+      "TEACHER": 2,
+      "ADMIN": 1,
+      "SUPPORT": 2
+    },
+    "scenario": {
+      "LOGIN_SUCCESS": 5,
+      "LOGOUT_SESSION_END": 1,
+      "EXPIRED_TOKEN_DENIAL": 1,
+      "REVOKED_SESSION_DEVICE_DENIAL": 1,
+      "WRONG_ROLE_ACCESS_DENIAL": 1
+    },
+    "decision": {
+      "ALLOWED": 5,
+      "DENIED": 4
+    }
+  },
+  "smokeCaseRows": [
+    {
+      "smokeCaseId": "auth-smoke-student-login-success",
+      "actorId": "demo-student",
+      "actorEmail": "student@demo.local",
+      "role": "STUDENT",
+      "scenario": "LOGIN_SUCCESS",
+      "targetSurface": "/me/dashboard",
+      "expectedHttpStatus": 200,
+      "authDecision": "ALLOWED",
+      "tokenState": "VALID",
+      "sessionState": "ACTIVE",
+      "deviceId": "local-demo-web-student",
+      "denialReason": null,
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Student demo login issues a valid bearer token and active local session for dashboard access."
+    },
+    {
+      "smokeCaseId": "auth-smoke-parent-login-success",
+      "actorId": "demo-parent",
+      "actorEmail": "parent@demo.local",
+      "role": "PARENT",
+      "scenario": "LOGIN_SUCCESS",
+      "targetSurface": "/me/dashboard",
+      "expectedHttpStatus": 200,
+      "authDecision": "ALLOWED",
+      "tokenState": "VALID",
+      "sessionState": "ACTIVE",
+      "deviceId": "local-demo-web-parent",
+      "denialReason": null,
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Parent demo login issues a valid bearer token and active local session for guardian dashboard access."
+    },
+    {
+      "smokeCaseId": "auth-smoke-teacher-login-success",
+      "actorId": "demo-teacher",
+      "actorEmail": "teacher@demo.local",
+      "role": "TEACHER",
+      "scenario": "LOGIN_SUCCESS",
+      "targetSurface": "/me/dashboard",
+      "expectedHttpStatus": 200,
+      "authDecision": "ALLOWED",
+      "tokenState": "VALID",
+      "sessionState": "ACTIVE",
+      "deviceId": "local-demo-web-teacher",
+      "denialReason": null,
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Teacher demo login issues a valid bearer token and active local session for teacher dashboard access."
+    },
+    {
+      "smokeCaseId": "auth-smoke-admin-login-success",
+      "actorId": "demo-admin",
+      "actorEmail": "admin@demo.local",
+      "role": "ADMIN",
+      "scenario": "LOGIN_SUCCESS",
+      "targetSurface": "/me/admin-surface",
+      "expectedHttpStatus": 200,
+      "authDecision": "ALLOWED",
+      "tokenState": "VALID",
+      "sessionState": "ACTIVE",
+      "deviceId": "local-demo-web-admin",
+      "denialReason": null,
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Admin demo login issues a valid bearer token and passes the admin/director role guard surface."
+    },
+    {
+      "smokeCaseId": "auth-smoke-support-login-success",
+      "actorId": "demo-support",
+      "actorEmail": "support@demo.local",
+      "role": "SUPPORT",
+      "scenario": "LOGIN_SUCCESS",
+      "targetSurface": "/me/dashboard",
+      "expectedHttpStatus": 200,
+      "authDecision": "ALLOWED",
+      "tokenState": "VALID",
+      "sessionState": "ACTIVE",
+      "deviceId": "local-demo-web-support",
+      "denialReason": null,
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Support demo login issues a valid bearer token for support dashboard access without admin privileges."
+    },
+    {
+      "smokeCaseId": "auth-smoke-teacher-logout-session-end-denied",
+      "actorId": "demo-teacher",
+      "actorEmail": "teacher@demo.local",
+      "role": "TEACHER",
+      "scenario": "LOGOUT_SESSION_END",
+      "targetSurface": "/me/dashboard",
+      "expectedHttpStatus": 401,
+      "authDecision": "DENIED",
+      "tokenState": "ENDED",
+      "sessionState": "ENDED",
+      "deviceId": "local-demo-web-teacher",
+      "denialReason": "Session has ended",
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Teacher token is denied after logout ends the local auth session."
+    },
+    {
+      "smokeCaseId": "auth-smoke-student-expired-token-denied",
+      "actorId": "demo-student",
+      "actorEmail": "student@demo.local",
+      "role": "STUDENT",
+      "scenario": "EXPIRED_TOKEN_DENIAL",
+      "targetSurface": "/me/dashboard",
+      "expectedHttpStatus": 401,
+      "authDecision": "DENIED",
+      "tokenState": "EXPIRED",
+      "sessionState": "ACTIVE",
+      "deviceId": "local-demo-web-student",
+      "denialReason": "Invalid or expired token",
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Expired student bearer token is rejected before dashboard access."
+    },
+    {
+      "smokeCaseId": "auth-smoke-parent-revoked-device-denied",
+      "actorId": "demo-parent",
+      "actorEmail": "parent@demo.local",
+      "role": "PARENT",
+      "scenario": "REVOKED_SESSION_DEVICE_DENIAL",
+      "targetSurface": "/me/dashboard",
+      "expectedHttpStatus": 401,
+      "authDecision": "DENIED",
+      "tokenState": "REVOKED",
+      "sessionState": "REVOKED",
+      "deviceId": "local-demo-web-parent-revoked",
+      "denialReason": "Session has been revoked",
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Parent token is denied after the local demo device/session is revoked."
+    },
+    {
+      "smokeCaseId": "auth-smoke-support-wrong-role-admin-surface-denied",
+      "actorId": "demo-support",
+      "actorEmail": "support@demo.local",
+      "role": "SUPPORT",
+      "scenario": "WRONG_ROLE_ACCESS_DENIAL",
+      "targetSurface": "/me/admin-surface",
+      "expectedHttpStatus": 403,
+      "authDecision": "DENIED",
+      "tokenState": "VALID",
+      "sessionState": "ACTIVE",
+      "deviceId": "local-demo-web-support",
+      "denialReason": "Insufficient role",
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Support role is authenticated but denied on admin/director-only surface."
+    }
+  ],
+  "evidenceRows": [
+    {
+      "evidenceKind": "LOGIN_SUCCESS",
+      "evidenceCount": 5,
+      "stableFixtureIds": [
+        "auth-smoke-student-login-success",
+        "auth-smoke-parent-login-success",
+        "auth-smoke-teacher-login-success",
+        "auth-smoke-admin-login-success",
+        "auth-smoke-support-login-success"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "5 fixture-only login_success smoke case(s)."
+    },
+    {
+      "evidenceKind": "LOGOUT_SESSION_END",
+      "evidenceCount": 1,
+      "stableFixtureIds": [
+        "auth-smoke-teacher-logout-session-end-denied"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "1 fixture-only logout_session_end smoke case(s)."
+    },
+    {
+      "evidenceKind": "EXPIRED_TOKEN_DENIAL",
+      "evidenceCount": 1,
+      "stableFixtureIds": [
+        "auth-smoke-student-expired-token-denied"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "1 fixture-only expired_token_denial smoke case(s)."
+    },
+    {
+      "evidenceKind": "REVOKED_SESSION_DEVICE_DENIAL",
+      "evidenceCount": 1,
+      "stableFixtureIds": [
+        "auth-smoke-parent-revoked-device-denied"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "1 fixture-only revoked_session_device_denial smoke case(s)."
+    },
+    {
+      "evidenceKind": "WRONG_ROLE_ACCESS_DENIAL",
+      "evidenceCount": 1,
+      "stableFixtureIds": [
+        "auth-smoke-support-wrong-role-admin-surface-denied"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "1 fixture-only wrong_role_access_denial smoke case(s)."
+    },
+    {
+      "evidenceKind": "ROLE_COVERAGE",
+      "evidenceCount": 5,
+      "stableFixtureIds": [
+        "STUDENT",
+        "PARENT",
+        "TEACHER",
+        "ADMIN",
+        "SUPPORT"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Student, parent, teacher, admin, and support demo roles are covered by the auth smoke matrix."
+    },
+    {
+      "evidenceKind": "SAFETY_GATE",
+      "evidenceCount": 10,
+      "stableFixtureIds": [
+        "productionDbUsed=false",
+        "noProductionDbRead=true",
+        "providerApiUsed=false",
+        "paymentProviderUsed=false",
+        "notificationProviderUsed=false",
+        "aiProviderExecutionUsed=false",
+        "realAuthMutationUsed=false",
+        "realSessionMutationUsed=false",
+        "realLearningMutationUsed=false",
+        "secretsRequired=false"
+      ],
+      "fixtureOnly": true,
+      "providerUsed": false,
+      "mutationUsed": false,
+      "evidenceSummary": "Auth/session smoke evidence uses local demo fixtures and in-process test state only."
+    }
+  ]
+}

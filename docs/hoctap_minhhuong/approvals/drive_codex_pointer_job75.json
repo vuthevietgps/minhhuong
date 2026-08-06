@@ -1,0 +1,126 @@
+{
+  "protocol_version": "1.0",
+  "direction": "chatgptweb_to_codex",
+  "source_job_id": "manual_gate_minhhuong_release_candidate_v4_final_release_evidence_review",
+  "project_key": "minh_huong_learning",
+  "repo_key": "minhhuong_monorepo",
+  "job_id": "codex_job_minhhuong_00075_hosted_staging_deployment_engineering_foundation",
+  "status": "CODEX_READY_NEXT",
+  "allow_codex_execute": true,
+  "updated_at": "2026-07-10T23:25:32+07:00",
+  "prompt_file": {
+    "role": "codex_prompt",
+    "filename": "NEXT_CODEX_PROMPT__codex_job_minhhuong_00075_hosted_staging_deployment_engineering_foundation.md",
+    "drive_url": "https://drive.google.com/file/d/14O8a4tjxzAMzd4t8XK3ZJdi5vZD8uPEo/view?usp=drivesdk"
+  },
+  "source_files": [
+    {
+      "role": "user_directive_approval",
+      "filename": "2026-07-10_auto_coding_hosted_staging_foundation_approval.json",
+      "drive_url": "https://drive.google.com/file/d/1YOwwaYYAzFJpRG3ABCx60HVZRIiNtet0/view?usp=drivesdk"
+    },
+    {
+      "role": "chatgpt_review_bundle",
+      "filename": "codex_job_minhhuong_00074_learning_core_production_hardening_go_live_gate_CHATGPT_REVIEW_BUNDLE.md",
+      "drive_url": "https://drive.google.com/file/d/1Xqxq6shT-9Y5xXJiNW0Okl9HT0vL8ui9/view?usp=drivesdk"
+    },
+    {
+      "role": "result",
+      "filename": "codex_job_minhhuong_00074_learning_core_production_hardening_go_live_gate_RESULT.json",
+      "drive_url": "https://drive.google.com/file/d/1xnMg7PKamSm1tCtsXMfhfuBi58H9uqDt/view?usp=drivesdk"
+    },
+    {
+      "role": "production_hardening_plan",
+      "filename": "codex_job_minhhuong_00074_learning_core_production_hardening_go_live_gate_PRODUCTION_HARDENING_PLAN.md",
+      "drive_url": "https://drive.google.com/file/d/1Xib873fG7pjj9D2EyDr5sf5GyYQcuRVb/view?usp=drivesdk"
+    },
+    {
+      "role": "deploy_readiness_gaps",
+      "filename": "codex_job_minhhuong_00074_learning_core_production_hardening_go_live_gate_DEPLOY_READINESS_GAPS.md",
+      "drive_url": "https://drive.google.com/file/d/1JvCGIJezDAM1RuR8kaKBOJtqDfOfl1dJ/view?usp=drivesdk"
+    },
+    {
+      "role": "go_live_gate_report",
+      "filename": "codex_job_minhhuong_00074_learning_core_production_hardening_go_live_gate_GO_LIVE_GATE_REPORT.md",
+      "drive_url": "https://drive.google.com/file/d/1wv5wRGQtEOfp8bWfTMtZxcgTXXWnbeAV/view?usp=drivesdk"
+    },
+    {
+      "role": "tests_run",
+      "filename": "codex_job_minhhuong_00074_learning_core_production_hardening_go_live_gate_TESTS_RUN.md",
+      "drive_url": "https://drive.google.com/file/d/1D6fOgN_339zJgOD8oCbvWosKgJrm1HVD/view?usp=drivesdk"
+    },
+    {
+      "role": "next_context_packet",
+      "filename": "codex_job_minhhuong_00074_learning_core_production_hardening_go_live_gate_NEXT_CONTEXT_PACKET.md",
+      "drive_url": "https://drive.google.com/file/d/14pyG7MljDivaO3LerjMeg8qMzhBPssu0/view?usp=drivesdk"
+    }
+  ],
+  "target": {
+    "repo_path": "C:\\Users\\PC\\Documents\\code\\minhhuong",
+    "area": "Dockerfiles, deployment topology, runtime safety, health/readiness, migration, CI verification, hosted staging runbook",
+    "objective": "Create and locally verify a provider-neutral hosted-staging deployment engineering package without external deployment or production enablement."
+  },
+  "expected_outputs": [
+    "CHATGPT_REVIEW_BUNDLE.md",
+    "RESULT.md",
+    "RESULT.json",
+    "REVIEW_PACKET.md",
+    "MANIFEST.json",
+    "FILES_CHANGED.md",
+    "TESTS_RUN.md",
+    "RISKS_AND_GAPS.md",
+    "NEXT_CONTEXT_PACKET.md",
+    "NEXT_CONTEXT_INDEX.json",
+    "CONTEXT_DELTA.md",
+    "DEPLOYMENT_ENGINEERING_REPORT.md",
+    "HOSTED_STAGING_RUNBOOK.md",
+    "CONTAINER_SMOKE_REPORT.md",
+    "DEPLOY_READINESS_GAPS.md",
+    "GO_LIVE_GATE_REPORT.md"
+  ],
+  "chatgpt_recommended_status": "CODEX_READY_NEXT",
+  "human_approved": true,
+  "approval_code": "MH_RC_V4_AUTO_CODING_DEPLOY_FOUNDATION_20260710_01",
+  "approval_scope": "repo_local_only",
+  "scope": "repo_local_only",
+  "test_strategy": "Run deployment contract tests, Prisma generate/validate, local container builds and isolated smoke when supported, seed/report, learning-local tests, full build, image secret scan, and exact cleanup. Keep production_ready=false.",
+  "review_decision": {
+    "decision": "APPROVED_FOR_REPO_LOCAL_DEPLOYMENT_ENGINEERING",
+    "source": "user_directive_in_codex_task",
+    "authority": "Minh Huong workspace/project owner",
+    "updated_at": "2026-07-10T23:25:32+07:00",
+    "human_approved": true,
+    "approval_code": "MH_RC_V4_AUTO_CODING_DEPLOY_FOUNDATION_20260710_01",
+    "scope": "repo_local_only",
+    "production_approved": false,
+    "runner_may_continue": true
+  },
+  "safety": {
+    "human_approval_required": true,
+    "human_approved": true,
+    "approval_id": "MH_RC_V4_AUTO_CODING_DEPLOY_FOUNDATION_20260710_01",
+    "database_connection_allowed": true,
+    "database_scope": "local_demo",
+    "production_ready": false,
+    "production_enabled": false,
+    "production_db_used_in_tests": false,
+    "provider_api_used": false,
+    "payment_mutation_used": false,
+    "refund_mutation_used": false,
+    "payout_mutation_used": false,
+    "order_mutation_used": false,
+    "student_data_mutation_used": false,
+    "live_notification_used": false,
+    "ai_provider_used": false,
+    "plaintext_secrets_allowed": false,
+    "no_payment_mutation": true,
+    "no_provider_mutation": true,
+    "no_live_ads_execution": true,
+    "no_production_db_access": true,
+    "no_external_deploy": true,
+    "no_source_push": true,
+    "no_image_publication": true,
+    "synthetic_data_only": true,
+    "production_ready_requires_separate_final_release_approval": true
+  }
+}

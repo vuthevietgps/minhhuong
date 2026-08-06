@@ -1,0 +1,127 @@
+{
+  "protocol_version": "1.0",
+  "direction": "chatgptweb_to_codex",
+  "source_job_id": "manual_gate_minhhuong_release_candidate_v3_approval_evidence_review",
+  "project_key": "minh_huong_learning",
+  "repo_key": "minhhuong_monorepo",
+  "job_id": "codex_job_minhhuong_00073_staging_rehearsal_conditional_approval",
+  "status": "CODEX_READY_NEXT",
+  "allow_codex_execute": true,
+  "updated_at": "2026-07-10T20:30:22+07:00",
+  "prompt_file": {
+    "role": "codex_prompt",
+    "filename": "NEXT_CODEX_PROMPT__codex_job_minhhuong_00073_staging_rehearsal_conditional_approval.md",
+    "drive_url": "https://drive.google.com/file/d/1-T04CZ2kq-CPzk7Y7fkz7ZeyxGSfzwg2/view?usp=drivesdk"
+  },
+  "source_files": [
+    {
+      "role": "user_delegated_conditional_approval",
+      "filename": "2026-07-10_staging_conditional_approval.json",
+      "drive_url": "https://drive.google.com/file/d/15xyU7fCNKaQfL0WWXziLxF7jZlQ575rp/view?usp=drivesdk"
+    },
+    {
+      "role": "chatgpt_review_bundle",
+      "filename": "codex_job_minhhuong_00072_learning_core_production_hardening_go_live_gate_CHATGPT_REVIEW_BUNDLE.md",
+      "drive_url": "https://drive.google.com/file/d/1UD0boVUR-J_TAqrE_QmbGojnSIaLugDT/view?usp=drivesdk"
+    },
+    {
+      "role": "result",
+      "filename": "codex_job_minhhuong_00072_learning_core_production_hardening_go_live_gate_RESULT.json",
+      "drive_url": "https://drive.google.com/file/d/1TzM1PczpKxhw1tY1R2JTge4KYnHIgGxW/view?usp=drivesdk"
+    },
+    {
+      "role": "production_hardening_plan",
+      "filename": "codex_job_minhhuong_00072_learning_core_production_hardening_go_live_gate_PRODUCTION_HARDENING_PLAN.md",
+      "drive_url": "https://drive.google.com/file/d/1dhG-gP7VNcLbJrI_T1ZWQHRmH4IQe5qe/view?usp=drivesdk"
+    },
+    {
+      "role": "deploy_readiness_gaps",
+      "filename": "codex_job_minhhuong_00072_learning_core_production_hardening_go_live_gate_DEPLOY_READINESS_GAPS.md",
+      "drive_url": "https://drive.google.com/file/d/1niuIhlVeyN70Jxjoq0GxPkPvkfCrGKvk/view?usp=drivesdk"
+    },
+    {
+      "role": "go_live_gate_report",
+      "filename": "codex_job_minhhuong_00072_learning_core_production_hardening_go_live_gate_GO_LIVE_GATE_REPORT.md",
+      "drive_url": "https://drive.google.com/file/d/1OxmhoSeo2Qj9Zkmccs832W0IwIL1qG7C/view?usp=drivesdk"
+    },
+    {
+      "role": "e2e_smoke_test_matrix",
+      "filename": "codex_job_minhhuong_00072_learning_core_production_hardening_go_live_gate_E2E_SMOKE_TEST_MATRIX.md",
+      "drive_url": "https://drive.google.com/file/d/1VOhWf7IA_iexxWoeC73gJDodyhJifjOY/view?usp=drivesdk"
+    },
+    {
+      "role": "next_context_packet",
+      "filename": "codex_job_minhhuong_00072_learning_core_production_hardening_go_live_gate_NEXT_CONTEXT_PACKET.md",
+      "drive_url": "https://drive.google.com/file/d/1Q5kWPiVCD4QE1b1fM7wHNjEAKhNfWkgM/view?usp=drivesdk"
+    }
+  ],
+  "target": {
+    "repo_path": "C:\\Users\\PC\\Documents\\code\\minhhuong",
+    "area": "apps/api, scripts, prisma, docs/hoctap_minhhuong, non-production staging rehearsal",
+    "objective": "Execute the conditionally approved isolated staging rehearsal and update truthful release-candidate evidence without enabling production."
+  },
+  "expected_outputs": [
+    "CHATGPT_REVIEW_BUNDLE.md",
+    "RESULT.md",
+    "RESULT.json",
+    "REVIEW_PACKET.md",
+    "MANIFEST.json",
+    "FILES_CHANGED.md",
+    "TESTS_RUN.md",
+    "RISKS_AND_GAPS.md",
+    "NEXT_CONTEXT_PACKET.md",
+    "NEXT_CONTEXT_INDEX.json",
+    "CONTEXT_DELTA.md",
+    "PRODUCTION_HARDENING_PLAN.md",
+    "DEMO_DATA_MATRIX.md",
+    "ROLE_PERMISSION_TEST_MATRIX.md",
+    "E2E_SMOKE_TEST_MATRIX.md",
+    "DEPLOY_READINESS_GAPS.md",
+    "GO_LIVE_GATE_REPORT.md",
+    "APPROVAL_EVIDENCE_MATRIX.md",
+    "STAGING_REHEARSAL_REPORT.md"
+  ],
+  "chatgpt_recommended_status": "CODEX_READY_NEXT",
+  "human_approved": true,
+  "approval_code": "MH_RC_V3_USER_DELEGATED_STAGING_CONDITIONAL_20260710_01",
+  "approval_scope": "staging_dry_run",
+  "scope": "staging_dry_run",
+  "test_strategy": "Run isolated migration/backup/restore/forward-repair and two-process smoke contracts, timed incident drill, privacy cleanup checks, npm run seed:demo, npm run report:demo, npm run test:learning-local, and npm run build. Keep production_ready=false.",
+  "review_decision": {
+    "decision": "APPROVED_WITH_CONDITIONS",
+    "source": "user_directive_in_codex_task",
+    "authority": "Minh Huong workspace/project owner",
+    "updated_at": "2026-07-10T20:30:22+07:00",
+    "human_approved": true,
+    "approval_code": "MH_RC_V3_USER_DELEGATED_STAGING_CONDITIONAL_20260710_01",
+    "scope": "staging_dry_run",
+    "production_approved": false,
+    "runner_may_continue": true
+  },
+  "safety": {
+    "human_approval_required": true,
+    "human_approved": true,
+    "approval_id": "MH_RC_V3_USER_DELEGATED_STAGING_CONDITIONAL_20260710_01",
+    "database_connection_allowed": true,
+    "database_scope": "staging_dry_run",
+    "production_ready": false,
+    "production_enabled": false,
+    "production_db_used_in_tests": false,
+    "provider_api_used": false,
+    "payment_mutation_used": false,
+    "refund_mutation_used": false,
+    "payout_mutation_used": false,
+    "order_mutation_used": false,
+    "student_data_mutation_used": false,
+    "live_notification_used": false,
+    "ai_provider_used": false,
+    "plaintext_secrets_allowed": false,
+    "no_payment_mutation": true,
+    "no_provider_mutation": true,
+    "no_live_ads_execution": true,
+    "no_production_db_access": true,
+    "sandbox_or_mock_provider_only": true,
+    "synthetic_data_only": true,
+    "production_ready_requires_separate_final_release_approval": true
+  }
+}

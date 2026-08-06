@@ -1,0 +1,201 @@
+{
+  "date": "2026-06-15",
+  "prompt": "Promt_quanly_minhhuong_21",
+  "mode": "implementation-narrow-slice / read-only affiliate attribution CSV export",
+  "verdict": "CONDITIONAL",
+  "conditionalReasons": [
+    "git status --short cannot run because the workspace is not a git repository.",
+    "DB-backed suites still emit the known non-failing pg deprecation warning.",
+    "The first DB-backed test attempt hit ECONNREFUSED because Docker/Postgres was not running; after Docker was started and minhhuong-postgres became healthy, the same tests passed."
+  ],
+  "implemented": {
+    "endpoints": [
+      "GET /v1/channel-affiliate/order-attributions/export.csv",
+      "GET /v1/channel-affiliate/order-attributions/aggregates/export.csv"
+    ],
+    "sourceOfTruth": "ActivationOrder.affiliateAttributionSnapshotJson",
+    "listExport": {
+      "filters": [
+        "participantId",
+        "agencyId",
+        "agencyMemberId",
+        "affiliateLinkId",
+        "affiliateQrAssetId",
+        "clickId",
+        "campaign",
+        "channel",
+        "placement",
+        "packageCode",
+        "orderStatus",
+        "createdFrom",
+        "createdTo",
+        "clickFrom",
+        "clickTo"
+      ],
+      "limit": {
+        "default": 500,
+        "max": 1000,
+        "behavior": "reject invalid values"
+      },
+      "headers": [
+        "orderId",
+        "orderStatus",
+        "orderCreatedAt",
+        "approvedAmountCents",
+        "approvedCurrency",
+        "clickId",
+        "affiliateLinkId",
+        "affiliateQrAssetId",
+        "participantId",
+        "agencyId",
+        "agencyMemberId",
+        "referralCode",
+        "campaign",
+        "channel",
+        "placement",
+        "packageCode",
+        "clickCreatedAt",
+        "orderSnapshottedAt",
+        "attributionModel",
+        "matchConfidence",
+        "attributionWindowDays"
+      ]
+    },
+    "aggregateExport": {
+      "contract": "reuses Prompt 20 groupBy/filter/sort/limit contract",
+      "headers": [
+        "groupBy",
+        "snapshotField",
+        "key",
+        "totalAttributedOrders",
+        "approvedOrders",
+        "countByStatus",
+        "approvedAmountCentsByCurrency",
+        "approvedAmountCents",
+        "firstOrderCreatedAt",
+        "lastOrderCreatedAt"
+      ]
+    },
+    "csvSafety": [
+      "fixed deterministic headers",
+      "escapes comma",
+      "escapes quote by doubling",
+      "escapes CR and LF by quoting",
+      "uses text/csv; charset=utf-8",
+      "sets Content-Disposition attachment"
+    ],
+    "privacySafety": [
+      "list CSV excludes customer email",
+      "aggregate CSV excludes customer email",
+      "exports exclude raw IP",
+      "exports exclude raw User-Agent",
+      "exports exclude ipHash and userAgentHash",
+      "exports exclude deviceHint",
+      "exports exclude cookie and Authorization",
+      "exports exclude payment proof fields",
+      "exports exclude financial ledger rows"
+    ],
+    "currencySafety": [
+      "list export outputs approved amount and currency per approved row only",
+      "aggregate export always outputs approvedAmountCentsByCurrency",
+      "aggregate export outputs approvedAmountCents as null for multi-currency groups"
+    ],
+    "readOnlyFinancialSafety": "Exports use read-only query paths and tests verify ActivationOrder, AffiliateClickEvent, Payment, Subscription, WalletLedgerEntry, CommissionEarning, CommissionLedgerEntry, and PayoutRequest counters are unchanged after export."
+  },
+  "hardBansNotImplemented": [
+    "commission policy changes",
+    "commission calculation redesign",
+    "payout/payment gateway/webhook/reconciliation",
+    "finance report redesign outside affiliate attribution export",
+    "frontend/UI",
+    "mobile first-open/deferred attribution",
+    "AppInstallAttribution",
+    "CustomerAttribution",
+    "customer/register attribution API",
+    "first-click/last-click attribution engine",
+    "manual override/dispute workflow",
+    "coupon/discount",
+    "renewal ownership",
+    "fraud/risk scoring",
+    "broad channel hierarchy redesign",
+    "QR image rendering",
+    "schema migration"
+  ],
+  "tests": [
+    {
+      "command": "npm --prefix apps/api run prisma:generate",
+      "status": "passed"
+    },
+    {
+      "command": "npm --prefix apps/api run build",
+      "status": "passed",
+      "summary": "before focused tests and final"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-affiliate",
+      "status": "passed",
+      "summary": "2 suites, 23 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-affiliate-migration.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 17 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand activation-orders.service.spec.ts channel-finance.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 33 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand package-entitlement",
+      "status": "passed",
+      "summary": "3 suites, 12 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand entitlement.service.spec.ts learning.service.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 21 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-participant-fk.integration.spec.ts",
+      "status": "passed",
+      "summary": "1 suite, 1 test"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand channel-scope.integration.spec.ts channel-admin-scope.integration.spec.ts",
+      "status": "passed",
+      "summary": "2 suites, 7 tests"
+    },
+    {
+      "command": "npm --prefix apps/api test -- --runInBand",
+      "status": "passed",
+      "summary": "23 suites, 155 tests"
+    },
+    {
+      "command": "npm --prefix apps/api run test:e2e -- --runInBand",
+      "status": "passed",
+      "summary": "5 suites, 12 tests"
+    },
+    {
+      "command": "git status --short",
+      "status": "failed",
+      "summary": "fatal: not a git repository (or any of the parent directories): .git"
+    }
+  ],
+  "filesChanged": [
+    "apps/api/src/channel-affiliate/channel-affiliate.controller.ts",
+    "apps/api/src/channel-affiliate/channel-affiliate.service.ts",
+    "apps/api/src/channel-affiliate/dto/channel-affiliate.dto.ts",
+    "apps/api/src/channel-affiliate/channel-affiliate-migration.integration.spec.ts",
+    "docs/minh-huong-sales-distribution/promt21/*"
+  ],
+  "remainingGaps": [
+    "No async export job.",
+    "No object storage for large exports.",
+    "No frontend report UI.",
+    "No dedicated report read model table.",
+    "List CSV export is sync and capped at 1000 rows.",
+    "Aggregate export reuses in-memory aggregation from Prompt 20."
+  ],
+  "nextPrompt": "Prompt 22 should add narrow operational audit/read tracking for affiliate report/export access while preserving immutable snapshots, privacy, scope, and read-only financial safety."
+}
