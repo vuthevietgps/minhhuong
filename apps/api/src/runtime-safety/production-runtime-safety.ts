@@ -280,6 +280,7 @@ export const inspectProductionRuntimeSafety = (
       environment.NOTIFICATION_PROVIDER,
       environment.PAYMENT_PROVIDER,
       environment.AI_PROVIDER,
+      environment.AI_CONTEXT_PROVIDER?.trim() || environment.AI_PROVIDER,
       environment.VIDEO_PROVIDER,
     ];
     if (
@@ -290,7 +291,7 @@ export const inspectProductionRuntimeSafety = (
       violations.push({
         code: 'HOSTED_STAGING_PROVIDER_NOT_DISABLED',
         variable:
-          'NOTIFICATION_PROVIDER,PAYMENT_PROVIDER,AI_PROVIDER,VIDEO_PROVIDER',
+          'NOTIFICATION_PROVIDER,PAYMENT_PROVIDER,AI_PROVIDER,AI_CONTEXT_PROVIDER,VIDEO_PROVIDER',
         message: 'All live provider lanes must be disabled in hosted staging.',
       });
     }

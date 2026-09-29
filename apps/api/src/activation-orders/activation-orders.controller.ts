@@ -28,6 +28,7 @@ import { ActivationOrdersService } from './activation-orders.service';
 import { ApproveActivationOrderDto } from './dto/approve-activation-order.dto';
 import { CreateActivationOrderDto } from './dto/create-activation-order.dto';
 import {
+  CreateParentSelfServiceOrderDto,
   CreateSelfServiceActivationOrderDto,
   UploadSelfServicePaymentProofDto,
 } from './dto/create-self-service-activation-order.dto';
@@ -39,6 +40,8 @@ import {
 import { RejectActivationOrderDto } from './dto/reject-activation-order.dto';
 import { ResubmitActivationOrderDto } from './dto/resubmit-activation-order.dto';
 import { RevokeActivationOrderDto } from './dto/revoke-activation-order.dto';
+import { ExtendFreeTrialDto } from './dto/extend-free-trial.dto';
+import { StartFreeTrialDto } from './dto/start-free-trial.dto';
 
 const allowedInvoiceMimeTypes = new Set([
   'application/pdf',
@@ -79,6 +82,31 @@ export class ActivationOrdersController {
   @Roles(...activationOrderCreateRoles)
   listMyCustomers(@CurrentUser() user: AuthenticatedUser) {
     return this.ordersService.listMyCustomers(user);
+  }
+
+  @Get('trials')
+  @Roles('ADMIN', 'DIRECTOR', 'OPERATIONS')
+  listFreeTrials() {
+    return this.ordersService.listFreeTrials();
+  }
+
+  @Get('trials/:childProfileId')
+  @Roles('PARENT', 'ADMIN', 'DIRECTOR', 'OPERATIONS')
+  getFreeTrial(
+    @Param('childProfileId') childProfileId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.ordersService.getFreeTrialForUser(childProfileId, user);
+  }
+
+  @Post('trials/:subscriptionId/extend')
+  @Roles('ADMIN', 'DIRECTOR', 'OPERATIONS')
+  extendFreeTrial(
+    @Param('subscriptionId') subscriptionId: string,
+    @Body() dto: ExtendFreeTrialDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.ordersService.extendFreeTrial(subscriptionId, dto, user);
   }
 
   @Get(':orderId/status-history')
@@ -206,6 +234,33 @@ export class SelfServiceActivationOrdersController {
   @Post()
   createSelfServiceOrder(@Body() dto: CreateSelfServiceActivationOrderDto) {
     return this.ordersService.createSelfServiceOrder(dto);
+  }
+
+  @Post('parent')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('PARENT')
+  createParentOrder(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateParentSelfServiceOrderDto,
+  ) {
+    return this.ordersService.createParentSelfServiceOrder(user, dto);
+  }
+
+  @Post('parent/:orderId/payment-proof')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('PARENT')
+  @UseInterceptors(FileInterceptor('paymentProof', invoiceUploadOptions))
+  uploadParentPaymentProof(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('orderId') orderId: string,
+    @UploadedFile() paymentProof: Express.Multer.File | undefined,
+  ) {
+    return this.ordersService.uploadParentPaymentProof(user, orderId, paymentProof);
+  }
+
+  @Post('trial')
+  startFreeTrial(@Body() dto: StartFreeTrialDto) {
+    return this.ordersService.startFreeTrial(dto);
   }
 
   @Post(':orderId/payment-proof')

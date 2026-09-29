@@ -1,0 +1,114 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #f4f7f5;
+  color: #173e35;
+  font:
+    16px/1.6 system-ui,
+    sans-serif;
+}
+main {
+  max-width: 700px;
+  margin: 8vh auto;
+  padding: 32px;
+  background: white;
+  border-radius: 24px;
+  border: 1px solid #dbe7df;
+}
+h1 {
+  margin: 8px 0 10px;
+  line-height: 1.2;
+}
+#lead {
+  margin-top: 0;
+}
+h2 {
+  font-size: 18px;
+}
+label {
+  display: block;
+  margin: 12px 0;
+}
+input {
+  width: 100%;
+  padding: 11px;
+  border: 1px solid #abc7b7;
+  border-radius: 10px;
+}
+button,
+a.button {
+  display: inline-block;
+  border: 0;
+  border-radius: 10px;
+  background: #176b51;
+  color: white;
+  padding: 11px 16px;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  margin: 5px 5px 5px 0;
+}
+button:disabled {
+  opacity: 0.5;
+}
+p {
+  color: #51645c;
+}
+.step {
+  margin: 8px 0 14px;
+  color: #4b7b62;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+}
+.advanced {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border: 1px solid #dbe7df;
+  border-radius: 10px;
+  background: #fbfdfb;
+}
+.advanced summary {
+  cursor: pointer;
+  color: #3f6d57;
+  font-size: 13px;
+  font-weight: 700;
+}
+.advanced[open] summary {
+  margin-bottom: 10px;
+}
+.advanced label {
+  margin-bottom: 4px;
+}
+.badge {
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #28765b;
+}
+.card {
+  padding: 16px;
+  border: 1px solid #dbe7df;
+  border-radius: 12px;
+  margin: 12px 0;
+}
+.item-status {
+  margin: 4px 0 10px;
+  font-size: 14px;
+  color: #28765b;
+}
+#status {
+  white-space: pre-wrap;
+}
+body.popup {
+  width: 360px;
+}
+.popup main {
+  margin: 0;
+  border: 0;
+  padding: 24px;
+}
+small {
+  color: #67776e;
+}

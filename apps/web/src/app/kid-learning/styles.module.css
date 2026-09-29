@@ -1,0 +1,158 @@
+.root {
+  min-height: 100vh;
+  padding: 40px 20px;
+  background: #fbf7ec;
+  color: #443c30;
+  font-family: Arial, sans-serif;
+}
+.container {
+  max-width: 1040px;
+  margin: auto;
+}
+.root header {
+  text-align: center;
+  max-width: 650px;
+  margin: 0 auto 30px;
+}
+.badge {
+  font-size: 11px;
+  letter-spacing: 2px;
+  font-weight: bold;
+  color: #8b7148;
+}
+.root h1 {
+  font-size: clamp(30px, 4vw, 44px);
+  font-weight: 750;
+  letter-spacing: -1px;
+  margin: 8px 0;
+}
+.root h2 {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 14px 0;
+}
+.root p {
+  font-size: 16px;
+  line-height: 1.7;
+  color: #7c705c;
+}
+.star {
+  font-size: 60px;
+  color: #dba949;
+  margin: 18px 0 4px;
+}
+.columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.card {
+  background: white;
+  border: 1px solid #e8e0cc;
+  border-radius: 24px;
+  padding: 28px;
+}
+.root fieldset {
+  border: 0;
+  margin: 28px 0;
+}
+.root legend {
+  font-weight: bold;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+.option {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border: 2px solid #ece5d5;
+  padding: 14px;
+  border-radius: 12px;
+  margin: 9px 0;
+  cursor: pointer;
+  font-size: 17px;
+}
+.selected {
+  background: #eaf1e0;
+  border-color: #7d9961;
+}
+.root button {
+  background: #526f40;
+  border: 0;
+  border-radius: 12px;
+  padding: 14px 22px;
+  font-weight: bold;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+.root button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.root button:focus-visible {
+  outline: 3px solid #e3bc54;
+  outline-offset: 3px;
+}
+.root textarea {
+  width: 100%;
+  border: 1px solid #d8d8c3;
+  border-radius: 12px;
+  padding: 14px;
+  margin: 10px 0;
+  font-size: 17px;
+}
+.messages {
+  max-height: 450px;
+  overflow: auto;
+  margin: 20px 0;
+}
+.bubble {
+  background: #f4f2e8;
+  padding: 14px;
+  border-radius: 14px;
+  margin: 10px 0;
+  white-space: pre-wrap;
+}
+.bubble strong {
+  font-size: 12px;
+  color: #788266;
+}
+.bubble p {
+  margin: 4px 0;
+}
+.mine {
+  background: #eaf2e2;
+  margin-left: 24px;
+}
+.result {
+  background: #f3ecd3;
+  padding: 20px;
+  border-radius: 14px;
+}
+.result strong {
+  font-size: 23px;
+  color: #836825;
+}
+.status {
+  text-align: center;
+  min-height: 26px;
+}
+.root footer {
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #938772;
+  padding: 35px 0;
+}
+@media (max-width: 760px) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+  .card {
+    padding: 22px;
+  }
+  .root {
+    padding: 24px 14px;
+  }
+}

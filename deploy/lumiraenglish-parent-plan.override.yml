@@ -1,0 +1,9 @@
+services:
+  migrate:
+    image: vutheviet/lumiraenglish-migrate:lumiraenglish-20260813-parent-plan
+
+  api:
+    image: vutheviet/lumiraenglish-api:lumiraenglish-20260813-gogo-default-free
+
+  web:
+    image: vutheviet/lumiraenglish-web:lumiraenglish-20260813-parent-plan

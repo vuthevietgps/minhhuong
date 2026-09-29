@@ -1,0 +1,15 @@
+CREATE TABLE "BrowserPolicy" ("childId" TEXT PRIMARY KEY, "config" JSONB NOT NULL, "revision" INTEGER NOT NULL DEFAULT 1, "updatedAt" TIMESTAMP(3) NOT NULL);
+CREATE TABLE "BrowserPairing" ("id" TEXT PRIMARY KEY, "childId" TEXT NOT NULL, "codeHash" TEXT NOT NULL UNIQUE, "expiresAt" TIMESTAMP(3) NOT NULL, "usedAt" TIMESTAMP(3));
+CREATE TABLE "BrowserDevice" ("id" TEXT PRIMARY KEY, "childId" TEXT NOT NULL, "name" TEXT NOT NULL, "tokenHash" TEXT NOT NULL UNIQUE, "revokedAt" TIMESTAMP(3), "lastSeenAt" TIMESTAMP(3), "aiNextAt" TIMESTAMP(3), "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE "BrowserUsage" ("id" TEXT PRIMARY KEY, "deviceId" TEXT NOT NULL, "day" TEXT NOT NULL, "itemId" TEXT NOT NULL, "seconds" INTEGER NOT NULL CHECK ("seconds" >= 0), UNIQUE ("deviceId", "day", "itemId"));
+CREATE TABLE "BrowserEvent" ("id" TEXT PRIMARY KEY, "deviceId" TEXT NOT NULL, "eventId" TEXT NOT NULL, "kind" TEXT NOT NULL, "itemId" TEXT, "detail" JSONB, "occurredAt" TIMESTAMP(3) NOT NULL, "receivedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, UNIQUE ("deviceId", "eventId"));
+CREATE TABLE "BrowserMessage" ("id" TEXT PRIMARY KEY, "deviceId" TEXT NOT NULL, "itemId" TEXT NOT NULL, "role" TEXT NOT NULL, "content" TEXT NOT NULL, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP);
+ALTER TABLE "BrowserPolicy" ADD FOREIGN KEY ("childId") REFERENCES "ChildProfile"("id") ON DELETE CASCADE;
+ALTER TABLE "BrowserPairing" ADD FOREIGN KEY ("childId") REFERENCES "ChildProfile"("id") ON DELETE CASCADE;
+ALTER TABLE "BrowserDevice" ADD FOREIGN KEY ("childId") REFERENCES "ChildProfile"("id") ON DELETE CASCADE;
+ALTER TABLE "BrowserUsage" ADD FOREIGN KEY ("deviceId") REFERENCES "BrowserDevice"("id") ON DELETE CASCADE;
+ALTER TABLE "BrowserEvent" ADD FOREIGN KEY ("deviceId") REFERENCES "BrowserDevice"("id") ON DELETE CASCADE;
+ALTER TABLE "BrowserMessage" ADD FOREIGN KEY ("deviceId") REFERENCES "BrowserDevice"("id") ON DELETE CASCADE;
+CREATE INDEX "BrowserDevice_childId_idx" ON "BrowserDevice"("childId");
+CREATE INDEX "BrowserEvent_deviceId_occurredAt_idx" ON "BrowserEvent"("deviceId", "occurredAt");
+CREATE INDEX "BrowserMessage_deviceId_itemId_createdAt_idx" ON "BrowserMessage"("deviceId", "itemId", "createdAt");

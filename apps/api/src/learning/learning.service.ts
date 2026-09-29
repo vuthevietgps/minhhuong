@@ -20,6 +20,8 @@ import {
 import { ChildAccessService } from '../learning-access/child-access.service';
 import { LearningPathService } from '../learning-path/learning-path.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { ScreenTimeService } from '../screen-time/screen-time.service';
+import { AppHeartbeatDto } from '../screen-time/dto/app-heartbeat.dto';
 import {
   SubmitActivityAttemptDto,
   SubmitQuestionResponseDto,
@@ -45,7 +47,23 @@ export class LearningService {
     private readonly entitlement: EntitlementService,
     private readonly learningPath: LearningPathService,
     private readonly dailyPlan: DailyPlanService,
+    private readonly screenTime: ScreenTimeService,
   ) {}
+
+  async heartbeat(
+    user: AuthenticatedUser,
+    childProfileId: string,
+    dto: AppHeartbeatDto,
+  ) {
+    await this.childAccess.assertCanAccessChild(user, childProfileId, {
+      purpose: 'learning:app-heartbeat',
+    });
+    return this.screenTime.heartbeat(
+      childProfileId,
+      dto.deviceKey,
+      dto.sessionId,
+    );
+  }
 
   async getTodayUsage(
     user: AuthenticatedUser,
@@ -64,14 +82,32 @@ export class LearningService {
   ) {
     await this.assertLearningAccess(user, childProfileId);
 
-    const [usage, lessonSource, weeklyUsageRows, streak, persistentDailyPlan] =
-      await Promise.all([
-        this.getUsageStatus(user, childProfileId, userAgent),
-        this.getLearningLessonSource(childProfileId),
-        this.getWeeklyUsageRows(childProfileId),
-        this.getLearningStreak(childProfileId),
-        this.dailyPlan.getOrGenerateTodayPlan(user, childProfileId),
-      ]);
+    const [
+      usage,
+      rawLessonSource,
+      weeklyUsageRows,
+      streak,
+      persistentDailyPlan,
+    ] = await Promise.all([
+      this.getUsageStatus(user, childProfileId, userAgent),
+      this.getLearningLessonSource(childProfileId),
+      this.getWeeklyUsageRows(childProfileId),
+      this.getLearningStreak(childProfileId),
+      this.dailyPlan.getOrGenerateTodayPlan(user, childProfileId),
+    ]);
+    const allowedTrialLessons =
+      await this.entitlement.allowedFreeTrialLessonIds(
+        childProfileId,
+        rawLessonSource.lessons.map((lesson) => lesson.id),
+      );
+    const lessonSource = allowedTrialLessons
+      ? {
+          ...rawLessonSource,
+          lessons: rawLessonSource.lessons.filter((lesson) =>
+            allowedTrialLessons.has(lesson.id),
+          ),
+        }
+      : rawLessonSource;
     const lessonCards = lessonSource.lessons.map((lesson) =>
       this.toLearningHomeLesson(lesson),
     );
@@ -123,12 +159,23 @@ export class LearningService {
     await this.assertLearningAccess(user, childProfileId, 'video');
     await this.assertDailyDeviceTimeAvailable(user, childProfileId, userAgent);
 
-    const lessonSource = await this.getLearningLessonSource(childProfileId);
-    if (lessonSource.contentSource.mode === 'ASSIGNED_PATH') {
+    const rawLessonSource = await this.getLearningLessonSource(childProfileId);
+    if (rawLessonSource.contentSource.mode === 'ASSIGNED_PATH') {
+      const allowedTrialLessons =
+        await this.entitlement.allowedFreeTrialLessonIds(
+          childProfileId,
+          rawLessonSource.lessons.map((lesson) => lesson.id),
+        );
       return {
         deviceUsage: await this.getUsageStatus(user, childProfileId, userAgent),
-        contentSource: lessonSource.contentSource,
-        courses: this.toVideoFeedCourses(lessonSource.lessons),
+        contentSource: rawLessonSource.contentSource,
+        courses: this.toVideoFeedCourses(
+          allowedTrialLessons
+            ? rawLessonSource.lessons.filter((lesson) =>
+                allowedTrialLessons.has(lesson.id),
+              )
+            : rawLessonSource.lessons,
+        ),
       };
     }
 
@@ -220,6 +267,11 @@ export class LearningService {
     const lessonIds = courses.flatMap((course) =>
       course.units.flatMap((unit) => unit.lessons.map((lesson) => lesson.id)),
     );
+    const allowedTrialLessons =
+      await this.entitlement.allowedFreeTrialLessonIds(
+        childProfileId,
+        lessonIds,
+      );
     const progressItems =
       lessonIds.length > 0
         ? await this.prisma.lessonProgress.findMany({
@@ -243,37 +295,42 @@ export class LearningService {
 
     return {
       deviceUsage: await this.getUsageStatus(user, childProfileId, userAgent),
-      contentSource: lessonSource.contentSource,
+      contentSource: rawLessonSource.contentSource,
       courses: courses.map((course) => ({
         ...course,
         units: course.units
           .map((unit) => ({
             ...unit,
-            lessons: unit.lessons.map((lesson) => {
-              const progress = progressByLessonId.get(lesson.id);
+            lessons: unit.lessons
+              .filter(
+                (lesson) =>
+                  !allowedTrialLessons || allowedTrialLessons.has(lesson.id),
+              )
+              .map((lesson) => {
+                const progress = progressByLessonId.get(lesson.id);
 
-              return {
-                ...lesson,
-                hasPractice: lesson.activities.length > 0,
-                activities: undefined,
-                tags: lesson.tags.map((item) => item.tag),
-                progress: progress
-                  ? {
-                      status: progress.status,
-                      lastPositionSec: progress.lastPositionSec,
-                      watchCount: progress.watchCount,
-                      lastWatchedAt: progress.lastWatchedAt,
-                      isFavorite: progress.isFavorite,
-                    }
-                  : {
-                      status: 'NOT_STARTED',
-                      lastPositionSec: 0,
-                      watchCount: 0,
-                      lastWatchedAt: null,
-                      isFavorite: false,
-                    },
-              };
-            }),
+                return {
+                  ...lesson,
+                  hasPractice: lesson.activities.length > 0,
+                  activities: undefined,
+                  tags: lesson.tags.map((item) => item.tag),
+                  progress: progress
+                    ? {
+                        status: progress.status,
+                        lastPositionSec: progress.lastPositionSec,
+                        watchCount: progress.watchCount,
+                        lastWatchedAt: progress.lastWatchedAt,
+                        isFavorite: progress.isFavorite,
+                      }
+                    : {
+                        status: 'NOT_STARTED',
+                        lastPositionSec: 0,
+                        watchCount: 0,
+                        lastWatchedAt: null,
+                        isFavorite: false,
+                      },
+                };
+              }),
           }))
           .filter((unit) => unit.lessons.length > 0),
       })),
@@ -294,6 +351,7 @@ export class LearningService {
       lessonId,
     );
     const lesson = await this.assertPublishedVideoLesson(lessonId);
+    await this.entitlement.assertTrialLessonAccess(childProfileId, lessonId);
     const minWatchPercent = await this.getRequiredWatchPercent(
       childProfileId,
       lessonId,
@@ -472,6 +530,7 @@ export class LearningService {
       childProfileId,
       lessonId,
     );
+    await this.entitlement.assertTrialLessonAccess(childProfileId, lessonId);
 
     const lesson = await this.prisma.lesson.findUnique({
       where: { id: lessonId },
@@ -556,6 +615,10 @@ export class LearningService {
       childProfileId,
       activity.lessonId,
     );
+    await this.entitlement.assertTrialLessonAccess(
+      childProfileId,
+      activity.lessonId,
+    );
 
     this.validateResponsesBelongToActivity(
       dto.responses,
@@ -577,6 +640,8 @@ export class LearningService {
       (sum, response) => sum + response.score,
       0,
     );
+
+    await this.entitlement.consumeTrialInitialAssessment(childProfileId);
 
     const attempt = await this.prisma.activityAttempt.create({
       data: {
@@ -810,7 +875,6 @@ export class LearningService {
         videos: {
           where: { processingStatus: 'READY' },
           orderBy: { sortOrder: 'asc' },
-          take: 1,
           select: {
             id: true,
             title: true,
@@ -1531,6 +1595,8 @@ export class LearningService {
     await this.childAccess.assertCanAccessChild(user, childProfileId, {
       purpose: capability ? `learning:${capability}` : 'learning:active',
     });
+
+    await this.screenTime.assertNotOnBreak(childProfileId);
 
     if (capability) {
       await this.entitlement.assertCapability(childProfileId, capability);

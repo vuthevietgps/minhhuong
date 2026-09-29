@@ -31,6 +31,9 @@ describe('ParentService', () => {
     deviceTimeGrant: {
       create: jest.fn(),
     },
+    subscription: {
+      findFirst: jest.fn(),
+    },
   };
   const childAccess = {
     assertCanAccessChild: jest.fn(),
@@ -53,6 +56,7 @@ describe('ParentService', () => {
     prisma.dailyLearningPlan.findMany.mockResolvedValue([]);
     prisma.videoExposureLog.findMany.mockResolvedValue([]);
     prisma.activityAttempt.findMany.mockResolvedValue([]);
+    prisma.subscription.findFirst.mockResolvedValue(null);
   });
 
   afterEach(() => {
@@ -145,6 +149,8 @@ describe('ParentService', () => {
       childProfileId: 'child-1',
       isEnabled: true,
       dailyLimitMinutes: 60,
+      sessionLimitMinutes: 30,
+      breakMinutes: 10,
       updatedAt: now,
     });
 
@@ -157,6 +163,8 @@ describe('ParentService', () => {
     ).resolves.toEqual({
       isEnabled: true,
       dailyLimitMinutes: 60,
+      sessionLimitMinutes: 30,
+      breakMinutes: 10,
       updatedAt: now,
     });
     expect(prisma.childScreenTimeSetting.upsert).toHaveBeenCalledWith({
@@ -169,6 +177,8 @@ describe('ParentService', () => {
         childProfileId: 'child-1',
         isEnabled: true,
         dailyLimitMinutes: 60,
+        sessionLimitMinutes: 30,
+        breakMinutes: 10,
       },
     });
   });

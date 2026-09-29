@@ -15,6 +15,10 @@
     "lint:fix:api": "npm --prefix apps/api run lint:fix",
     "lint:web": "npm --prefix apps/web run lint",
     "test": "npm --prefix apps/api run test",
+    "test:extension": "npm --prefix minhhuongextension test",
+    "test:browser-control": "npm --prefix apps/api run test:browser-control",
+    "smoke:browser-control": "node scripts/smoke-browser-control.mjs",
+    "package:extension": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Package-MinhhuongExtension.ps1",
     "seed:demo": "npm --prefix apps/api run seed:demo",
     "test:erp-local": "npm --prefix apps/api run test:erp-local",
     "test:learning-local": "npm --prefix apps/api run test:learning-local",
@@ -41,5 +45,8 @@
     "english-learning"
   ],
   "author": "",
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
 }

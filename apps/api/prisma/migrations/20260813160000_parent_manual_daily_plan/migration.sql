@@ -1,0 +1,1 @@
+ALTER TYPE "DailyLearningPlanGeneratedBy" ADD VALUE IF NOT EXISTS 'PARENT_MANUAL';

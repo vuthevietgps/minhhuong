@@ -20,11 +20,25 @@ describe('AiChatService', () => {
   };
   const entitlement = {
     assertCapability: jest.fn(),
+    consumeTrialAiResponse: jest.fn(),
+  };
+  const tutor = {
+    getStatus: jest.fn(),
+    reply: jest.fn(),
+  };
+  const contexts = {
+    getChatContext: jest.fn(),
+  };
+  const screenTime = {
+    assertNotOnBreak: jest.fn(),
   };
   const service = new AiChatService(
     prisma as any,
     childAccess as any,
     entitlement as any,
+    tutor as any,
+    contexts as any,
+    screenTime as any,
   );
   const parent = {
     sub: 'parent-1',
@@ -39,6 +53,21 @@ describe('AiChatService', () => {
       parentId: 'parent-1',
     });
     entitlement.assertCapability.mockResolvedValue({});
+    entitlement.consumeTrialAiResponse.mockResolvedValue(undefined);
+    contexts.getChatContext.mockResolvedValue([]);
+    screenTime.assertNotOnBreak.mockResolvedValue(undefined);
+    tutor.getStatus.mockReturnValue({
+      provider: 'mock',
+      model: null,
+      mode: 'MOCK_DEV_ONLY',
+    });
+    tutor.reply.mockResolvedValue({
+      text: 'Great try! Please say it again.',
+      provider: 'mock',
+      model: null,
+      mode: 'MOCK_DEV_ONLY',
+      moderation: 'NOT_RUN',
+    });
   });
 
   it('requires a childProfileId before creating a message', async () => {
@@ -76,10 +105,11 @@ describe('AiChatService', () => {
     expect(prisma.aiChatSession.create).not.toHaveBeenCalled();
   });
 
-  it('persists only mock/dev-only messages when guarded access is allowed', async () => {
+  it('persists an AI tutor reply and its provider/safety metadata', async () => {
     prisma.aiChatSession.create.mockResolvedValue({
       id: 'session-1',
       childProfileId: 'child-1',
+      messages: [],
     });
     prisma.aiChatMessage.createMany.mockResolvedValue({ count: 2 });
 
@@ -101,7 +131,42 @@ describe('AiChatService', () => {
           expect.objectContaining({ role: 'USER' }),
           expect.objectContaining({
             role: 'ASSISTANT',
-            metadata: { provider: 'mock' },
+            metadata: expect.objectContaining({
+              provider: 'mock',
+              moderation: 'NOT_RUN',
+            }),
+          }),
+        ]),
+      }),
+    );
+    expect(entitlement.consumeTrialAiResponse).toHaveBeenCalledWith('child-1');
+  });
+
+  it('does not retain unsafe child input verbatim', async () => {
+    prisma.aiChatSession.create.mockResolvedValue({
+      id: 'session-1',
+      childProfileId: 'child-1',
+      messages: [],
+    });
+    tutor.reply.mockResolvedValue({
+      text: 'Let us talk about colors in English.',
+      provider: 'openai',
+      model: 'gpt-5-mini',
+      mode: 'LIVE',
+      moderation: 'BLOCKED_INPUT',
+    });
+
+    await service.createMessage(parent, {
+      childProfileId: 'child-1',
+      message: 'unsafe input',
+    });
+
+    expect(prisma.aiChatMessage.createMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.arrayContaining([
+          expect.objectContaining({
+            role: 'USER',
+            content: '[Message blocked by child-safety filter]',
           }),
         ]),
       }),

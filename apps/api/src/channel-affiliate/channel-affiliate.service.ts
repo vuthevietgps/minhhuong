@@ -1156,9 +1156,21 @@ export class ChannelAffiliateService {
 
   async createLink(dto: CreateAffiliateLinkDto, user: AuthenticatedUser) {
     const createdById = this.requiredDbUserId(user);
+    const codeParticipant = dto.participantCode
+      ? await this.prisma.channelParticipant.findUnique({
+          where: { code: dto.participantCode.trim().toUpperCase() },
+          select: { id: true },
+        })
+      : null;
+    if (dto.participantCode && !codeParticipant) {
+      throw new BadRequestException('Channel participant code not found');
+    }
+    if (dto.participantId && codeParticipant && dto.participantId !== codeParticipant.id) {
+      throw new BadRequestException('Participant id and code do not match');
+    }
     const participant = await this.resolveTargetParticipant(
       user,
-      dto.participantId,
+      codeParticipant?.id ?? dto.participantId,
     );
     const agencyMember = await this.findParticipantAgencyMember(participant);
     const startsAt = this.parseDate(dto.startsAt, 'startsAt');
@@ -1188,7 +1200,7 @@ export class ChannelAffiliateService {
       metadataJson: this.jsonObject(dto.metadataJson, 'metadataJson'),
     };
 
-    const link = await this.createLinkWithUniqueCode(data);
+    const link = await this.createLinkWithUniqueCode(data, dto.linkCode);
     await this.audit(
       user,
       'channel_affiliate.link.create',
@@ -2727,7 +2739,21 @@ export class ChannelAffiliateService {
 
   private async createLinkWithUniqueCode(
     data: Omit<Prisma.AffiliateLinkUncheckedCreateInput, 'id' | 'linkCode'>,
+    requestedCode?: string,
   ) {
+    if (requestedCode) {
+      try {
+        return await this.prisma.affiliateLink.create({
+          data: { ...data, linkCode: requestedCode },
+          include: affiliateLinkInclude,
+        });
+      } catch (error) {
+        if (this.isUniqueConflict(error)) {
+          throw new ConflictException('Affiliate link code is already in use');
+        }
+        throw error;
+      }
+    }
     for (let attempt = 0; attempt < 5; attempt += 1) {
       try {
         return await this.prisma.affiliateLink.create({

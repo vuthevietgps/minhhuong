@@ -311,12 +311,12 @@ export default function AdminPage() {
         : "Cần quyền tài chính",
     },
     {
-      label: "Chờ xét duyệt",
+      label: "Đơn chờ gần nhất",
       value: String(pendingOrders.length),
       note:
         pendingOrders.length > 0
-          ? "Đơn đang chờ vận hành"
-          : "Danh sách đã xử lý hết",
+          ? "Trong 6 đơn được tải gần nhất"
+          : "Không có đơn trong danh sách được tải",
     },
   ];
 

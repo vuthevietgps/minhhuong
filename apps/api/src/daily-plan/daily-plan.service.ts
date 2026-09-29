@@ -19,6 +19,7 @@ import {
 } from '../entitlement/entitlement.service';
 import { ChildAccessService } from '../learning-access/child-access.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { SetParentDailyPlanDto } from './dto/set-parent-daily-plan.dto';
 
 type PlanWithItems = Prisma.DailyLearningPlanGetPayload<{
   include: ReturnType<DailyPlanService['planInclude']>;
@@ -27,6 +28,13 @@ type PlanWithItems = Prisma.DailyLearningPlanGetPayload<{
 type AssignmentForPlan = NonNullable<
   Awaited<ReturnType<DailyPlanService['findActivePublishedAssignment']>>
 >;
+
+type DefaultPackageForPlan = NonNullable<
+  Awaited<ReturnType<DailyPlanService['findDefaultPublishedPackage']>>
+>;
+
+type PlanPathItem =
+  AssignmentForPlan['contentPackage']['learningPath']['items'][number];
 
 type PlannedItem = {
   sequence: number;
@@ -42,6 +50,7 @@ type PlannedItem = {
 
 const timezone = 'Asia/Bangkok';
 const DEFAULT_MIN_WATCH_PERCENT = 80;
+const DEFAULT_STARTER_PACKAGE_CODE = 'GOGO-BEGINNER-FOUNDATION-V1';
 
 @Injectable()
 export class DailyPlanService {
@@ -85,7 +94,14 @@ export class DailyPlanService {
 
     const assignment = await this.findActivePublishedAssignment(childProfileId);
     if (!assignment) {
-      return this.fallbackResponse(planDate);
+      const defaultPackage = await this.findDefaultPublishedPackage();
+      return defaultPackage
+        ? this.createDefaultRecommendationPlan(
+            childProfileId,
+            planDate,
+            defaultPackage,
+          )
+        : this.fallbackResponse(planDate);
     }
 
     return this.createAssignedPlan(childProfileId, planDate, assignment);
@@ -182,12 +198,211 @@ export class DailyPlanService {
     return this.requirePlanResponse(planId);
   }
 
+  async listParentDailyPlanCandidates(
+    user: AuthenticatedUser,
+    childProfileId: string,
+    query: string,
+  ) {
+    await this.assertPlanAccess(user, childProfileId);
+    const normalizedQuery = query.trim();
+    const assignment = await this.findActivePublishedAssignment(childProfileId);
+    const pathLessons = assignment
+      ? assignment.contentPackage.learningPath.items
+          .filter(
+            (item) =>
+              item.lesson.status === 'PUBLISHED' &&
+              item.lesson.videos.length > 0 &&
+              (!normalizedQuery ||
+                item.lesson.title
+                  .toLocaleLowerCase('vi')
+                  .includes(normalizedQuery.toLocaleLowerCase('vi'))),
+          )
+          .map((item) => ({
+            id: item.lesson.id,
+            title: item.lesson.title,
+            description: item.lesson.description,
+            durationSec: item.lesson.durationSec ?? item.lesson.videos[0]?.durationSec ?? null,
+            courseTitle: assignment.contentPackage.title,
+            source: 'ASSIGNED_PATH' as const,
+          }))
+      : [];
+    // When a child has an assigned path, a parent should only choose from that
+    // path.  Falling back to the whole catalog after an empty search would make
+    // an assignment that the child cannot subsequently open in their feed.
+    if (assignment) return pathLessons.slice(0, 30);
+
+    const lessons = await this.prisma.lesson.findMany({
+      where: {
+        status: 'PUBLISHED',
+        ...(normalizedQuery
+          ? { title: { contains: normalizedQuery, mode: 'insensitive' } }
+          : {}),
+        videos: { some: { processingStatus: 'READY' } },
+      },
+      orderBy: [{ updatedAt: 'desc' }, { title: 'asc' }],
+      take: 30,
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        durationSec: true,
+        videos: {
+          where: { processingStatus: 'READY' },
+          orderBy: { sortOrder: 'asc' },
+          take: 1,
+          select: { durationSec: true },
+        },
+        unit: { select: { course: { select: { title: true } } } },
+      },
+    });
+    return lessons.map((lesson) => ({
+      id: lesson.id,
+      title: lesson.title,
+      description: lesson.description,
+      durationSec: lesson.durationSec ?? lesson.videos[0]?.durationSec ?? null,
+      courseTitle: lesson.unit.course.title,
+      source: 'CATALOG' as const,
+    }));
+  }
+
+  async setParentTodayPlan(
+    childProfileId: string,
+    dto: SetParentDailyPlanDto,
+    user: AuthenticatedUser,
+  ) {
+    await this.assertPlanAccess(user, childProfileId);
+    const lessonIds = [...new Set(dto.lessonIds.map((id) => id.trim()))].filter(Boolean);
+    if (!lessonIds.length) throw new BadRequestException('Choose at least one lesson');
+
+    const assignment = await this.findActivePublishedAssignment(childProfileId);
+    if (assignment) {
+      const assignedLessonIds = new Set(
+        assignment.contentPackage.learningPath.items.map((item) => item.lessonId),
+      );
+      if (lessonIds.some((lessonId) => !assignedLessonIds.has(lessonId))) {
+        throw new BadRequestException(
+          "Selected lessons must belong to the child's assigned learning path",
+        );
+      }
+    }
+
+    const lessons = await this.prisma.lesson.findMany({
+      where: {
+        id: { in: lessonIds },
+        status: 'PUBLISHED',
+        videos: { some: { processingStatus: 'READY' } },
+      },
+      select: {
+        id: true,
+        durationSec: true,
+        videos: {
+          where: { processingStatus: 'READY' },
+          orderBy: { sortOrder: 'asc' },
+          take: 1,
+          select: { durationSec: true },
+        },
+      },
+    });
+    if (lessons.length !== lessonIds.length) {
+      throw new BadRequestException('One or more selected lessons are unavailable');
+    }
+
+    const planDate = this.todayInBangkok();
+    const existing = await this.prisma.dailyLearningPlan.findUnique({
+      where: { childProfileId_planDate: { childProfileId, planDate } },
+      include: { items: { select: { status: true } } },
+    });
+    if (
+      existing?.items.some(
+        (item) =>
+          item.status === DailyLearningPlanItemStatus.STARTED ||
+          item.status === DailyLearningPlanItemStatus.COMPLETED,
+      )
+    ) {
+      throw new BadRequestException(
+        'The child has already started today’s plan. Keep the current plan to preserve progress.',
+      );
+    }
+
+    const byId = new Map(lessons.map((lesson) => [lesson.id, lesson]));
+    const items = lessonIds.map((lessonId, index) => {
+      const lesson = byId.get(lessonId)!;
+      return {
+        sequence: index + 1,
+        itemType: DailyLearningPlanItemType.VIDEO,
+        lessonId,
+        required: true,
+        status: DailyLearningPlanItemStatus.READY,
+        minWatchPercent: DEFAULT_MIN_WATCH_PERCENT,
+        minScore: null,
+        learningPathItemId:
+          assignment?.contentPackage.learningPath.items.find(
+            (item) => item.lessonId === lessonId,
+          )?.id ?? null,
+      };
+    });
+    const targetMinutes = lessonIds.reduce((total, lessonId) => {
+      const lesson = byId.get(lessonId)!;
+      return total + Math.max(5, Math.ceil((lesson.durationSec ?? lesson.videos[0]?.durationSec ?? 600) / 60));
+    }, 0);
+
+    const plan = await this.prisma.$transaction(async (tx) => {
+      if (existing) {
+        await tx.dailyLearningPlanItem.deleteMany({ where: { planId: existing.id } });
+        return tx.dailyLearningPlan.update({
+          where: { id: existing.id },
+          data: {
+            status: DailyLearningPlanStatus.ACTIVE,
+            contentSourceMode: assignment
+              ? DailyLearningPlanContentSourceMode.ASSIGNED_PATH
+              : DailyLearningPlanContentSourceMode.UNASSIGNED_FALLBACK,
+            contentPackageId: assignment?.contentPackageId ?? null,
+            learningPathId: assignment?.contentPackage.learningPathId ?? null,
+            targetMinutes,
+            generatedBy: DailyLearningPlanGeneratedBy.PARENT_MANUAL,
+            items: { create: items },
+          },
+          include: this.planInclude(),
+        });
+      }
+      return tx.dailyLearningPlan.create({
+        data: {
+          childProfileId,
+          planDate,
+          status: DailyLearningPlanStatus.ACTIVE,
+          contentSourceMode: assignment
+            ? DailyLearningPlanContentSourceMode.ASSIGNED_PATH
+            : DailyLearningPlanContentSourceMode.UNASSIGNED_FALLBACK,
+          contentPackageId: assignment?.contentPackageId ?? null,
+          learningPathId: assignment?.contentPackage.learningPathId ?? null,
+          targetMinutes,
+          generatedBy: DailyLearningPlanGeneratedBy.PARENT_MANUAL,
+          items: { create: items },
+        },
+        include: this.planInclude(),
+      });
+    });
+    await this.prisma.auditLog.create({
+      data: {
+        userId: user.sub,
+        action: 'daily_plan.parent_set',
+        entityType: 'DailyLearningPlan',
+        entityId: plan.id,
+        metadata: { childProfileId, lessonIds, planDate },
+      },
+    });
+    return this.toResponse(plan, false);
+  }
+
   private async createAssignedPlan(
     childProfileId: string,
     planDate: string,
     assignment: AssignmentForPlan,
   ) {
-    const candidate = await this.pickNextPathItem(childProfileId, assignment);
+    const candidate = await this.pickNextPathItem(
+      childProfileId,
+      assignment.contentPackage.learningPath.items,
+    );
     const plannedItems = candidate ? this.buildPlannedItems(candidate) : [];
     const targetMinutes = plannedItems.reduce(
       (sum, item) => sum + this.estimateMinutesForItem(item, candidate),
@@ -235,11 +450,65 @@ export class DailyPlanService {
     }
   }
 
+  /**
+   * A starter package makes the first visit feel guided, while the video feed
+   * remains open for free exploration because there is no child assignment.
+   */
+  private async createDefaultRecommendationPlan(
+    childProfileId: string,
+    planDate: string,
+    contentPackage: DefaultPackageForPlan,
+  ) {
+    const candidate = await this.pickNextPathItem(
+      childProfileId,
+      contentPackage.learningPath.items,
+    );
+    const plannedItems = candidate ? this.buildPlannedItems(candidate) : [];
+    const targetMinutes = plannedItems.reduce(
+      (sum, item) => sum + this.estimateMinutesForItem(item, candidate),
+      0,
+    );
+
+    try {
+      const plan = await this.prisma.dailyLearningPlan.create({
+        data: {
+          childProfileId,
+          planDate,
+          status:
+            plannedItems.length > 0
+              ? DailyLearningPlanStatus.ACTIVE
+              : DailyLearningPlanStatus.COMPLETED,
+          // This is a recommendation, not a restrictive child assignment.
+          contentSourceMode:
+            DailyLearningPlanContentSourceMode.UNASSIGNED_FALLBACK,
+          contentPackageId: contentPackage.id,
+          learningPathId: contentPackage.learningPathId,
+          targetMinutes,
+          generatedBy: DailyLearningPlanGeneratedBy.SYSTEM_RULE,
+          items: { create: plannedItems },
+        },
+        include: this.planInclude(),
+      });
+      return this.toResponse(plan, true);
+    } catch (error) {
+      if (this.isUniqueConflict(error)) {
+        const existing = await this.prisma.dailyLearningPlan.findUnique({
+          where: {
+            childProfileId_planDate: { childProfileId, planDate },
+          },
+          include: this.planInclude(),
+        });
+        if (existing) return this.toResponse(existing, false);
+      }
+      throw error;
+    }
+  }
+
   private async pickNextPathItem(
     childProfileId: string,
-    assignment: AssignmentForPlan,
+    pathItems: PlanPathItem[],
   ) {
-    const publishedItems = assignment.contentPackage.learningPath.items.filter(
+    const publishedItems = pathItems.filter(
       (item) => item.lesson.status === 'PUBLISHED',
     );
     const lessonIds = publishedItems.map((item) => item.lessonId);
@@ -276,7 +545,7 @@ export class DailyPlanService {
   }
 
   private buildPlannedItems(
-    pathItem: AssignmentForPlan['contentPackage']['learningPath']['items'][number],
+    pathItem: PlanPathItem,
   ): PlannedItem[] {
     const items: PlannedItem[] = [];
     let sequence = 1;
@@ -546,6 +815,53 @@ export class DailyPlanService {
                             type: true,
                           },
                         },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  private async findDefaultPublishedPackage() {
+    return this.prisma.contentPackage.findFirst({
+      where: {
+        code: DEFAULT_STARTER_PACKAGE_CODE,
+        status: 'PUBLISHED',
+        learningPath: { status: 'PUBLISHED' },
+      },
+      include: {
+        learningPath: {
+          include: {
+            items: {
+              orderBy: { sequence: 'asc' },
+              include: {
+                lesson: {
+                  select: {
+                    id: true,
+                    slug: true,
+                    title: true,
+                    description: true,
+                    durationSec: true,
+                    status: true,
+                    videos: {
+                      where: { processingStatus: 'READY' },
+                      orderBy: { sortOrder: 'asc' },
+                      select: {
+                        id: true,
+                        durationSec: true,
+                      },
+                    },
+                    activities: {
+                      orderBy: { sortOrder: 'asc' },
+                      select: {
+                        id: true,
+                        title: true,
+                        type: true,
                       },
                     },
                   },

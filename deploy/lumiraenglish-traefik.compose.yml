@@ -1,0 +1,53 @@
+services:
+  migrate:
+    image: minhhuong-migrate:lumiraenglish-20260812
+
+  api:
+    image: minhhuong-api:lumiraenglish-20260812
+    environment:
+      UPLOAD_STORAGE_PROVIDER: filesystem
+      UPLOAD_STORAGE_TOPOLOGY: single-instance
+      UPLOAD_HOSTED_FILESYSTEM_EMERGENCY_OVERRIDE: "true"
+      UPLOADS_PATH: /app/uploads
+      API_REPLICA_COUNT: "1"
+    volumes:
+      - ./uploads:/app/uploads
+    networks:
+      - traefik-network
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: traefik-network
+      traefik.http.routers.minhhuong-lumira-api.rule: "(Host(`lumiraenglish.com`) || Host(`www.lumiraenglish.com`)) && PathPrefix(`/api`)"
+      traefik.http.routers.minhhuong-lumira-api-http.rule: "(Host(`lumiraenglish.com`) || Host(`www.lumiraenglish.com`)) && PathPrefix(`/api`)"
+      traefik.http.routers.minhhuong-lumira-api-http.entrypoints: web
+      traefik.http.routers.minhhuong-lumira-api-http.priority: "300"
+      traefik.http.routers.minhhuong-lumira-api-http.service: minhhuong-lumira-api
+      traefik.http.routers.minhhuong-lumira-api-http.middlewares: minhhuong-lumira-api-strip
+      traefik.http.routers.minhhuong-lumira-api.entrypoints: websecure
+      traefik.http.routers.minhhuong-lumira-api.tls: "true"
+      traefik.http.routers.minhhuong-lumira-api.priority: "300"
+      traefik.http.routers.minhhuong-lumira-api.service: minhhuong-lumira-api
+      traefik.http.routers.minhhuong-lumira-api.middlewares: minhhuong-lumira-api-strip
+      traefik.http.services.minhhuong-lumira-api.loadbalancer.server.port: "4000"
+      traefik.http.middlewares.minhhuong-lumira-api-strip.stripprefix.prefixes: /api
+
+  web:
+    image: vutheviet/lumiraenglish-web:lumiraenglish-20260813-fullscreen-toggle
+    networks:
+      - traefik-network
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: traefik-network
+      traefik.http.routers.minhhuong-lumira.rule: "Host(`lumiraenglish.com`) || Host(`www.lumiraenglish.com`)"
+      traefik.http.routers.minhhuong-lumira-http.rule: "Host(`lumiraenglish.com`) || Host(`www.lumiraenglish.com`)"
+      traefik.http.routers.minhhuong-lumira-http.entrypoints: web
+      traefik.http.routers.minhhuong-lumira-http.priority: "100"
+      traefik.http.routers.minhhuong-lumira-http.service: minhhuong-lumira
+      traefik.http.routers.minhhuong-lumira.entrypoints: websecure
+      traefik.http.routers.minhhuong-lumira.tls: "true"
+      traefik.http.routers.minhhuong-lumira.priority: "100"
+      traefik.http.services.minhhuong-lumira.loadbalancer.server.port: "3000"
+
+networks:
+  traefik-network:
+    external: true

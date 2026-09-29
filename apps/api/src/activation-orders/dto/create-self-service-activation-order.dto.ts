@@ -45,6 +45,30 @@ export class CreateSelfServiceActivationOrderDto {
   notes?: string;
 }
 
+export class CreateParentSelfServiceOrderDto {
+  @IsString()
+  childProfileId!: string;
+
+  @IsString()
+  @MaxLength(40)
+  packageCode!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  referralCode?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^clk_[a-f0-9]{24}$/i)
+  affiliateClickId?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  notes?: string;
+}
+
 export class UploadSelfServicePaymentProofDto {
   @IsEmail()
   @Type(() => String)

@@ -140,6 +140,12 @@ enum AgencyStatus {
   SUSPENDED
 }
 
+enum AgencyApplicationStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
 enum AgencyMemberRole {
   OWNER
   MANAGER
@@ -209,6 +215,23 @@ enum AiMessageRole {
   ASSISTANT
 }
 
+enum AiContextSourceKind {
+  YOUTUBE
+  MANUAL_SCRIPT
+}
+
+enum AiContextProcessingStatus {
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum LearningAppSessionStatus {
+  ACTIVE
+  BREAK_REQUIRED
+  ENDED
+}
+
 enum AuthSessionState {
   ACTIVE
   ENDED
@@ -267,6 +290,7 @@ enum DailyLearningPlanContentSourceMode {
 
 enum DailyLearningPlanGeneratedBy {
   SYSTEM_RULE
+  PARENT_MANUAL
 }
 
 enum DailyLearningPlanItemType {
@@ -332,6 +356,8 @@ model User {
   passwordResetTokens      PasswordResetToken[]
   authSessions             AuthSession[]
   authRefreshTokens        AuthRefreshToken[]
+  grantedTrialExtensions   TrialExtensionAudit[]   @relation("TrialExtensionGrantedBy")
+  createdAiContextSources  AiContextSource[]       @relation("AiContextSourceCreator")
 
   @@index([status])
   @@index([createdAt, id])
@@ -357,8 +383,103 @@ model ChildProfile {
   contentAssignments ChildContentAssignment[]
   dailyLearningPlans DailyLearningPlan[]
   videoExposureLogs  VideoExposureLog[]
+  trialAccess        TrialAccess?
+  trialExtensions    TrialExtensionAudit[]
+  appUsageSessions   LearningAppSession[]
+  browserPolicy      BrowserPolicy?
+  browserDevices     BrowserDevice[]
+  browserPairings    BrowserPairing[]
+  browserPreparations BrowserPreparation[]
 
   @@index([parentId])
+}
+
+model BrowserPolicy {
+  childId   String       @id
+  child     ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+  config    Json
+  revision  Int          @default(1)
+  updatedAt DateTime     @updatedAt
+}
+
+model BrowserPreparation {
+  id          String       @id @default(uuid())
+  childId     String
+  child       ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+  sourceId    String?
+  source      AiContextSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  url         String
+  title       String
+  minutes     Int          @default(10)
+  status      String       @default("WAITING_CONTEXT")
+  result      Json?
+  error       String?
+  lease       String?
+  startedAt   DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  @@unique([childId, url])
+  @@index([status, startedAt])
+}
+
+model BrowserPairing {
+  id        String       @id @default(cuid())
+  childId   String
+  child     ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+  codeHash  String       @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+}
+
+model BrowserDevice {
+  id          String         @id @default(cuid())
+  childId     String
+  child       ChildProfile   @relation(fields: [childId], references: [id], onDelete: Cascade)
+  name        String
+  tokenHash   String         @unique
+  revokedAt   DateTime?
+  lastSeenAt  DateTime?
+  aiNextAt    DateTime?
+  createdAt   DateTime       @default(now())
+  usage       BrowserUsage[]
+  events      BrowserEvent[]
+  messages    BrowserMessage[]
+  @@index([childId])
+}
+
+model BrowserUsage {
+  id        String        @id @default(cuid())
+  deviceId  String
+  device    BrowserDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  day       String
+  itemId    String
+  seconds   Int
+  @@unique([deviceId, day, itemId])
+}
+
+model BrowserEvent {
+  id         String        @id @default(cuid())
+  deviceId   String
+  device     BrowserDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  eventId    String
+  kind       String
+  itemId     String?
+  detail     Json?
+  occurredAt DateTime
+  receivedAt DateTime      @default(now())
+  @@unique([deviceId, eventId])
+  @@index([deviceId, occurredAt])
+}
+
+model BrowserMessage {
+  id        String        @id @default(cuid())
+  deviceId  String
+  device    BrowserDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  itemId    String
+  role      String
+  content   String
+  createdAt DateTime      @default(now())
+  @@index([deviceId, itemId, createdAt])
 }
 
 model Profile {
@@ -391,12 +512,32 @@ model UserRole {
 }
 
 model ChildScreenTimeSetting {
-  id                String       @id @default(cuid())
-  childProfileId    String       @unique
-  isEnabled         Boolean      @default(false)
-  dailyLimitMinutes Int          @default(45)
-  updatedAt         DateTime     @updatedAt
-  childProfile      ChildProfile @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  id                  String       @id @default(cuid())
+  childProfileId      String       @unique
+  isEnabled           Boolean      @default(false)
+  dailyLimitMinutes   Int          @default(45)
+  sessionLimitMinutes Int          @default(30)
+  breakMinutes        Int          @default(10)
+  updatedAt           DateTime     @updatedAt
+  childProfile        ChildProfile @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+}
+
+model LearningAppSession {
+  id              String                   @id @default(cuid())
+  childProfileId  String
+  deviceKey       String
+  status          LearningAppSessionStatus @default(ACTIVE)
+  activeSeconds   Int                      @default(0)
+  startedAt       DateTime                 @default(now())
+  lastHeartbeatAt DateTime                 @default(now())
+  breakUntil      DateTime?
+  endedAt         DateTime?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  childProfile    ChildProfile             @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+
+  @@index([childProfileId, status, lastHeartbeatAt])
+  @@index([childProfileId, deviceKey, createdAt])
 }
 
 model LearningUsageDay {
@@ -805,28 +946,74 @@ model Plan {
 }
 
 model Subscription {
-  id                      String             @id @default(cuid())
+  id                      String                @id @default(cuid())
   childProfileId          String
   planId                  String
   sourceOrderId           String?
   activationPackageId     String?
   entitlementSnapshotJson Json?
-  status                  SubscriptionStatus @default(TRIALING)
+  status                  SubscriptionStatus    @default(TRIALING)
   currentPeriodStart      DateTime
   currentPeriodEnd        DateTime
-  cancelAtPeriodEnd       Boolean            @default(false)
+  cancelAtPeriodEnd       Boolean               @default(false)
   providerRef             String?
-  createdAt               DateTime           @default(now())
-  updatedAt               DateTime           @updatedAt
-  childProfile            ChildProfile       @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
-  plan                    Plan               @relation(fields: [planId], references: [id])
-  sourceOrder             ActivationOrder?   @relation("SubscriptionSourceOrder", fields: [sourceOrderId], references: [id], onDelete: SetNull)
-  activationPackage       ActivationPackage? @relation("SubscriptionActivationPackage", fields: [activationPackageId], references: [id], onDelete: SetNull)
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+  childProfile            ChildProfile          @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  plan                    Plan                  @relation(fields: [planId], references: [id])
+  sourceOrder             ActivationOrder?      @relation("SubscriptionSourceOrder", fields: [sourceOrderId], references: [id], onDelete: SetNull)
+  activationPackage       ActivationPackage?    @relation("SubscriptionActivationPackage", fields: [activationPackageId], references: [id], onDelete: SetNull)
   payments                Payment[]
+  trialExtensions         TrialExtensionAudit[]
 
   @@index([childProfileId, status])
   @@index([sourceOrderId])
   @@index([activationPackageId])
+}
+
+model TrialAccess {
+  id                     String        @id @default(cuid())
+  childProfileId         String        @unique
+  initialAssessmentCount Int           @default(0)
+  lessonCount            Int           @default(0)
+  aiResponseCount        Int           @default(0)
+  reportAvailableAt      DateTime
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+  childProfile           ChildProfile  @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  lessons                TrialLesson[]
+
+  @@index([reportAvailableAt])
+}
+
+model TrialLesson {
+  id             String      @id @default(cuid())
+  childProfileId String
+  lessonId       String
+  createdAt      DateTime    @default(now())
+  trialAccess    TrialAccess @relation(fields: [childProfileId], references: [childProfileId], onDelete: Cascade)
+
+  @@unique([childProfileId, lessonId])
+  @@index([lessonId])
+}
+
+model TrialExtensionAudit {
+  id                String       @id @default(cuid())
+  subscriptionId    String
+  childProfileId    String
+  actorUserId       String?
+  previousPeriodEnd DateTime
+  nextPeriodEnd     DateTime
+  requestedDays     Int
+  note              String?
+  createdAt         DateTime     @default(now())
+  subscription      Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  childProfile      ChildProfile @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  actor             User?        @relation("TrialExtensionGrantedBy", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([subscriptionId, createdAt])
+  @@index([childProfileId, createdAt])
+  @@index([actorUserId, createdAt])
 }
 
 model Payment {
@@ -863,6 +1050,25 @@ model Agency {
   affiliateClickEvents AffiliateClickEvent[]
 
   @@index([status])
+}
+
+model AgencyApplication {
+  id            String                  @id @default(cuid())
+  email         String                  @unique
+  passwordHash  String?
+  agencyName    String
+  requestedCode String
+  contactPhone  String?
+  notes         String?
+  status        AgencyApplicationStatus @default(PENDING_REVIEW)
+  reviewNotes   String?
+  reviewedById  String?
+  agencyId      String?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+
+  @@index([status, createdAt])
+  @@index([requestedCode])
 }
 
 model AgencyMember {
@@ -1273,6 +1479,81 @@ model AiChatSession {
   updatedAt      DateTime        @updatedAt
   childProfile   ChildProfile    @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
   messages       AiChatMessage[]
+}
+
+model AiContextSource {
+  id                String                    @id @default(cuid())
+  kind              AiContextSourceKind
+  canonicalKey      String                    @unique
+  youtubeVideoId    String?
+  sourceUrl         String?
+  title             String
+  language          String                    @default("vi")
+  /// Temporary uploaded script while queued; cleared when processing starts or ends.
+  rawTranscript     String
+  transcriptHash    String?
+  /// Legacy captions; no longer written. Cleared by the context-only migration.
+  transcriptSegments Json?
+  processingLease   String?
+  processingStartedAt DateTime?
+  structuredContent String?
+  processingStatus  AiContextProcessingStatus @default(PROCESSING)
+  processingVersion String                    @default("context-v1")
+  errorMessage      String?
+  rightsBasis       String
+  rightsConfirmedAt DateTime
+  createdById       String
+  processedAt       DateTime?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  createdBy         User                      @relation("AiContextSourceCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  audiences         AiContextAudience[]
+  documents         AiContextDocumentSource[]
+  browserPreparations BrowserPreparation[]
+
+  @@index([processingStatus, createdAt])
+  @@index([youtubeVideoId])
+  @@index([transcriptHash])
+  @@index([processingStatus, processingStartedAt])
+}
+
+model AiContextDocument {
+  id                  String                    @id @default(cuid())
+  cacheKey            String                    @unique
+  kind                String
+  title               String
+  topic               String                    @default("")
+  content             String?
+  processingStatus    AiContextProcessingStatus @default(PROCESSING)
+  processingLease     String?
+  processingStartedAt DateTime?
+  errorMessage        String?
+  createdById         String
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+  sources             AiContextDocumentSource[]
+
+  @@index([processingStatus, processingStartedAt])
+}
+
+model AiContextDocumentSource {
+  documentId String
+  sourceId   String
+  document   AiContextDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  source     AiContextSource   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@id([documentId, sourceId])
+  @@index([sourceId])
+}
+
+model AiContextAudience {
+  sourceId    String
+  accountRole String
+  createdAt   DateTime        @default(now())
+  source      AiContextSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@id([sourceId, accountRole])
+  @@index([accountRole, sourceId])
 }
 
 model AiChatMessage {

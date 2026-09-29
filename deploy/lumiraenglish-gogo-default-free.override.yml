@@ -1,0 +1,3 @@
+services:
+  api:
+    image: vutheviet/lumiraenglish-api:lumiraenglish-20260813-gogo-default-free

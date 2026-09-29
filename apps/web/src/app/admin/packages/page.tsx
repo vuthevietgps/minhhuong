@@ -13,6 +13,7 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import { getStoredAccessToken } from "../../session-storage";
 import {
   adminPackagesRoles,
+  adminPackageManageRoles,
   hasAllowedRole,
   useStoredAdminSession,
 } from "../_lib/admin-session";
@@ -103,6 +104,7 @@ export default function PackagesPage() {
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const canViewPackages = hasAllowedRole(roles, adminPackagesRoles);
+  const canManagePackages = hasAllowedRole(roles, adminPackageManageRoles);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -250,13 +252,13 @@ export default function PackagesPage() {
             Quản lý gói tự phục vụ. Thay đổi có hiệu lực ngay lập tức.
           </p>
         </div>
-        <button
+        {canManagePackages && <button
           onClick={openCreate}
           className="flex items-center gap-2 px-4 py-2 bg-slate-950 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
         >
           <Plus size={16} />
           Gói mới
-        </button>
+        </button>}
       </div>
 
       {/* Error */}
@@ -280,7 +282,7 @@ export default function PackagesPage() {
         <div className="text-center py-16 text-slate-500">
           <Package size={36} className="mx-auto mb-3 text-slate-300" />
           <p className="font-medium">Chưa có gói nào</p>
-          <p className="text-sm mt-1">Tạo gói đầu tiên</p>
+          <p className="text-sm mt-1">{canManagePackages ? "Tạo gói đầu tiên" : "Chưa có gói để xem"}</p>
         </div>
       ) : (
         <div className="grid gap-3">
@@ -332,7 +334,7 @@ export default function PackagesPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 flex-shrink-0">
+                {canManagePackages && <div className="flex items-center gap-2 flex-shrink-0">
                   <button
                     onClick={() => toggleActive(pkg)}
                     disabled={togglingId === pkg.id}
@@ -352,7 +354,7 @@ export default function PackagesPage() {
                     <Edit2 size={13} />
                     Chỉnh sửa
                   </button>
-                </div>
+                </div>}
               </div>
             </div>
           ))}

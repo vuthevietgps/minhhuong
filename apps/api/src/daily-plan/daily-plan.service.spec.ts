@@ -23,6 +23,9 @@ describe('DailyPlanService', () => {
     childContentAssignment: {
       findFirst: jest.fn(),
     },
+    contentPackage: {
+      findFirst: jest.fn(),
+    },
     lessonProgress: {
       findMany: jest.fn(),
       findUnique: jest.fn(),
@@ -64,6 +67,7 @@ describe('DailyPlanService', () => {
     prisma.childContentAssignment.findFirst.mockResolvedValue(
       activeAssignment(),
     );
+    prisma.contentPackage.findFirst.mockResolvedValue(null);
     prisma.lessonProgress.findMany.mockResolvedValue([]);
     prisma.lessonProgress.findUnique.mockResolvedValue({
       status: 'COMPLETED',
@@ -170,6 +174,46 @@ describe('DailyPlanService', () => {
       },
     });
     expect(prisma.dailyLearningPlan.create).not.toHaveBeenCalled();
+  });
+
+  it('suggests GOGO first without creating a restrictive child assignment', async () => {
+    prisma.childContentAssignment.findFirst.mockResolvedValue(null);
+    prisma.contentPackage.findFirst.mockResolvedValue(
+      activeAssignment().contentPackage,
+    );
+    prisma.dailyLearningPlan.create.mockResolvedValue(
+      planWithItems({
+        contentSourceMode:
+          DailyLearningPlanContentSourceMode.UNASSIGNED_FALLBACK,
+      }),
+    );
+
+    const result = await service.getOrGeneratePlanForDate(
+      parent,
+      'child-1',
+      '2026-06-14',
+    );
+
+    expect(prisma.contentPackage.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          code: 'GOGO-BEGINNER-FOUNDATION-V1',
+          status: 'PUBLISHED',
+        }),
+      }),
+    );
+    expect(prisma.dailyLearningPlan.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          contentSourceMode:
+            DailyLearningPlanContentSourceMode.UNASSIGNED_FALLBACK,
+          contentPackageId: 'package-1',
+          learningPathId: 'path-1',
+        }),
+      }),
+    );
+    expect(result.generated).toBe(true);
+    expect(prisma.childContentAssignment.findFirst).toHaveBeenCalledTimes(1);
   });
 
   it('returns an existing plan idempotently for the same child and date', async () => {

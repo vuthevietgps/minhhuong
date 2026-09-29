@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { static as serveStatic } from 'express';
 import { AppModule } from './app.module';
@@ -13,9 +14,11 @@ import { assertProductionRuntimeSafety } from './runtime-safety/production-runti
 import { resolveFilesystemUploadsRoot } from './upload-storage/filesystem-upload-storage';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: new ConsoleLogger({ json: true, colors: false, compact: true }),
   });
+  // UTF-8 transcripts can exceed Express's default 100 KB JSON limit.
+  app.useBodyParser('json', { limit: '4mb' });
   const config = app.get(ConfigService);
   const runtimeSafety = assertProductionRuntimeSafety({
     NODE_ENV: config.get<string>('NODE_ENV'),
@@ -45,6 +48,7 @@ async function bootstrap() {
     NOTIFICATION_PROVIDER: config.get<string>('NOTIFICATION_PROVIDER'),
     PAYMENT_PROVIDER: config.get<string>('PAYMENT_PROVIDER'),
     AI_PROVIDER: config.get<string>('AI_PROVIDER'),
+    AI_CONTEXT_PROVIDER: config.get<string>('AI_CONTEXT_PROVIDER'),
     VIDEO_PROVIDER: config.get<string>('VIDEO_PROVIDER'),
     UPLOAD_STORAGE_PROVIDER: config.get<string>('UPLOAD_STORAGE_PROVIDER'),
     UPLOADS_PATH: config.get<string>('UPLOADS_PATH'),

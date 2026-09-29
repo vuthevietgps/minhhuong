@@ -1,7 +1,9 @@
 # syntax=docker/dockerfile:1.7
 
 FROM node:22-alpine AS web-deps
-WORKDIR /app
+WORKDIR /workspace/apps/web
+COPY package.json /workspace/package.json
+COPY package-lock.json /workspace/package-lock.json
 COPY apps/web/package.json ./package.json
 COPY apps/web/package-lock.json ./package-lock.json
 RUN test -s package-lock.json && npm ci
@@ -21,9 +23,9 @@ WORKDIR /app
 ENV NODE_ENV=production \
     PORT=3000 \
     HOSTNAME=0.0.0.0
-COPY --from=web-build --chown=node:node /app/public ./public
-COPY --from=web-build --chown=node:node /app/.next/standalone ./
-COPY --from=web-build --chown=node:node /app/.next/static ./.next/static
+COPY --from=web-build --chown=node:node /workspace/apps/web/public ./public
+COPY --from=web-build --chown=node:node /workspace/apps/web/.next/standalone/apps/web ./
+COPY --from=web-build --chown=node:node /workspace/apps/web/.next/static ./.next/static
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=5 \

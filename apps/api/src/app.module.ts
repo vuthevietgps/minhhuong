@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AiChatModule } from './ai-chat/ai-chat.module';
+import { AiContextModule } from './ai-context/ai-context.module';
 import { ActivationOrdersModule } from './activation-orders/activation-orders.module';
 import { AdminContentModule } from './admin-content/admin-content.module';
 import { AppController } from './app.controller';
@@ -25,6 +26,8 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ProgressModule } from './progress/progress.module';
 import { TeacherContentModule } from './teacher-content/teacher-content.module';
 import { UploadStorageModule } from './upload-storage/upload-storage.module';
+import { ScreenTimeModule } from './screen-time/screen-time.module';
+import { BrowserControlModule } from './browser-control/browser-control.module';
 
 @Module({
   imports: [
@@ -34,6 +37,8 @@ import { UploadStorageModule } from './upload-storage/upload-storage.module';
     }),
     ScheduleModule.forRoot(),
     PrismaModule,
+    BrowserControlModule,
+    ScreenTimeModule,
     HealthModule,
     AuthModule,
     ActivationOrdersModule,
@@ -53,6 +58,7 @@ import { UploadStorageModule } from './upload-storage/upload-storage.module';
     ChannelAdminModule,
     ChannelFinanceModule,
     AiChatModule,
+    AiContextModule,
     TeacherContentModule,
     UploadStorageModule,
   ],

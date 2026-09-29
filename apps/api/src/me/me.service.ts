@@ -81,6 +81,8 @@ export class MeService {
     const dashboard =
       primaryRole === 'SALE'
         ? await this.saleDashboardFor(user)
+        : primaryRole === 'PARENT'
+          ? await this.parentDashboardFor(user)
         : this.dashboardFor(primaryRole);
 
     return {
@@ -115,6 +117,49 @@ export class MeService {
       .filter(Boolean)
       .map((part) => `${part[0]?.toUpperCase() ?? ''}${part.slice(1)}`)
       .join(' ');
+  }
+
+  private async parentDashboardFor(user: AuthenticatedUser) {
+    if (user.sub.startsWith('demo-')) {
+      return this.dashboardFor('PARENT');
+    }
+
+    const now = new Date();
+    const [children, pendingOrders] = await Promise.all([
+      this.prisma.childProfile.findMany({
+        where: { parentId: user.sub },
+        select: {
+          id: true,
+          screenTime: { select: { isEnabled: true } },
+          subscriptions: {
+            where: {
+              status: { in: ['TRIALING', 'ACTIVE'] },
+              currentPeriodStart: { lte: now },
+              currentPeriodEnd: { gt: now },
+            },
+            select: { id: true },
+            take: 1,
+          },
+        },
+      }),
+      this.prisma.activationOrder.count({
+        where: {
+          userId: user.sub,
+          status: { in: ['WAITING_PAYMENT', 'PENDING_REVIEW'] },
+        },
+      }),
+    ]);
+
+    return {
+      title: 'Parent dashboard',
+      metrics: [
+        { label: 'Hồ sơ con', value: String(children.length), delta: 'đã tạo' },
+        { label: 'Gói học còn hiệu lực', value: String(children.filter((child) => child.subscriptions.length > 0).length), delta: 'hồ sơ con' },
+        { label: 'Đơn cần theo dõi', value: String(pendingOrders), delta: 'chờ thanh toán hoặc duyệt' },
+        { label: 'Giới hạn học đã bật', value: String(children.filter((child) => child.screenTime?.isEnabled).length), delta: 'hồ sơ con' },
+      ],
+      actions: [],
+    };
   }
 
   private async saleDashboardFor(user: AuthenticatedUser) {
@@ -251,162 +296,20 @@ export class MeService {
   }
 
   private dashboardFor(role: AccountRole) {
-    switch (role) {
-      case 'DIRECTOR':
-        return {
-          title: 'Director dashboard',
-          metrics: [
-            { label: 'Revenue MTD', value: '218.4M VND', delta: '+12.8%' },
-            { label: 'Active subscriptions', value: '1,284', delta: '+9.4%' },
-            { label: 'Trial conversion', value: '24%', delta: '-1.2%' },
-            { label: 'AI cost ratio', value: '6.1%', delta: '+0.4%' },
-          ],
-          actions: [
-            'Review revenue',
-            'Approve annual plan',
-            'Open risk report',
-          ],
-        };
-      case 'ADMIN':
-        return {
-          title: 'Admin dashboard',
-          metrics: [
-            { label: 'Users pending support', value: '42', delta: '+6' },
-            { label: 'Published lessons', value: '318', delta: '+12' },
-            { label: 'Payment failures', value: '18', delta: '-3' },
-            { label: 'System health', value: '99.96%', delta: 'stable' },
-          ],
-          actions: ['Manage users', 'Configure plans', 'Review audit log'],
-        };
-      case 'OPERATIONS':
-        return {
-          title: 'Operations dashboard',
-          metrics: [
-            { label: 'Pending orders', value: '18', delta: '+4 today' },
-            { label: 'Approved revenue', value: '94.8M VND', delta: '+11%' },
-            { label: 'Invoice mismatches', value: '3', delta: 'review' },
-            { label: 'Expiring accounts', value: '27', delta: '7 days' },
-          ],
-          actions: [
-            'Review pending orders',
-            'Upload counter invoice',
-            'Approve account access',
-          ],
-        };
-      case 'SALE':
-        return {
-          title: 'Sales dashboard',
-          metrics: [
-            { label: 'Orders created', value: '42', delta: '+8 today' },
-            { label: 'Pending approval', value: '15', delta: 'waiting ops' },
-            { label: 'New learners', value: '38', delta: '+12%' },
-            { label: 'Revenue submitted', value: '128.5M VND', delta: '+9%' },
-          ],
-          actions: [
-            'Create activation order',
-            'Upload customer invoice',
-            'Check approval status',
-          ],
-        };
-      case 'AGENCY_OWNER':
-        return {
-          title: 'Agency owner dashboard',
-          metrics: [
-            {
-              label: 'Agency revenue',
-              value: '0 VND',
-              delta: 'current period',
-            },
-            { label: 'Agency sales', value: '1', delta: 'active' },
-            { label: 'Pending payouts', value: '0 VND', delta: 'review queue' },
-            { label: 'Referral codes', value: '2', delta: 'ready' },
-          ],
-          actions: [
-            'Create learner order',
-            'Invite sale member',
-            'Review agency report',
-          ],
-        };
-      case 'AGENCY_MANAGER':
-        return {
-          title: 'Agency manager dashboard',
-          metrics: [
-            { label: 'Managed sales', value: '0', delta: 'assigned' },
-            { label: 'Submitted orders', value: '0', delta: 'current period' },
-            {
-              label: 'Agency commission',
-              value: '0 VND',
-              delta: 'pending approval',
-            },
-            { label: 'Payout status', value: 'Ready', delta: 'no holds' },
-          ],
-          actions: [
-            'Create learner order',
-            'Check sale performance',
-            'Open payout queue',
-          ],
-        };
-      case 'CONTENT_EDITOR':
-        return {
-          title: 'Content editor dashboard',
-          metrics: [
-            { label: 'Draft lessons', value: '27', delta: '+5' },
-            { label: 'Need review', value: '9', delta: '+2' },
-            { label: 'Video processing', value: '4', delta: '-1' },
-            { label: 'Question bank', value: '2,430', delta: '+184' },
-          ],
-          actions: ['Create lesson', 'Upload video', 'Submit for review'],
-        };
-      case 'TEACHER':
-        return {
-          title: 'Teacher dashboard',
-          metrics: [
-            { label: 'Classes', value: '7', delta: '+1' },
-            { label: 'Students at risk', value: '23', delta: '-4' },
-            { label: 'Assignments to grade', value: '64', delta: '+11' },
-            { label: 'Avg completion', value: '78%', delta: '+4.1%' },
-          ],
-          actions: ['Open class report', 'Grade speaking', 'Message learners'],
-        };
-      case 'SUPPORT':
-        return {
-          title: 'Support dashboard',
-          metrics: [
-            { label: 'Open tickets', value: '31', delta: '-8' },
-            { label: 'Billing issues', value: '12', delta: '+3' },
-            { label: 'Avg response', value: '6m', delta: '-2m' },
-            { label: 'Refund requests', value: '5', delta: '+1' },
-          ],
-          actions: ['Find account', 'Check wallet', 'Escalate payment'],
-        };
-      case 'PARENT':
-        return {
-          title: 'Parent dashboard',
-          metrics: [
-            { label: 'Children', value: '2', delta: 'active' },
-            { label: 'Weekly study', value: '4h 20m', delta: '+35m' },
-            { label: 'Device limit', value: '45m/day', delta: 'enabled' },
-            { label: 'Subscription left', value: '214 days', delta: 'annual' },
-          ],
-          actions: [
-            'View progress',
-            'Review screen time',
-            'Manage subscription',
-          ],
-        };
-      case 'STUDENT':
-      default:
-        return {
-          title: 'Student dashboard',
-          metrics: [
-            { label: 'Current level', value: 'A1', delta: 'Unit 04' },
-            { label: 'Weekly goal', value: '82%', delta: '+12%' },
-            { label: 'Lessons done', value: '36', delta: '+3' },
-            { label: 'AI messages left', value: '184', delta: 'Premium' },
-          ],
-          actions: ['Resume lesson', 'Start practice', 'Open AI coach'],
-        };
-    }
+    const titles: Record<AccountRole, string> = {
+      STUDENT: 'Student dashboard',
+      PARENT: 'Parent dashboard',
+      TEACHER: 'Teacher dashboard',
+      CONTENT_EDITOR: 'Content editor dashboard',
+      ADMIN: 'Admin dashboard',
+      DIRECTOR: 'Director dashboard',
+      SUPPORT: 'Support dashboard',
+      SALE: 'Sales dashboard',
+      AGENCY_OWNER: 'Agency owner dashboard',
+      AGENCY_MANAGER: 'Agency manager dashboard',
+      OPERATIONS: 'Operations dashboard',
+    };
+    return { title: titles[role], metrics: [], actions: [] };
   }
 
   async getMyOrders(user: AuthenticatedUser) {
@@ -422,6 +325,7 @@ export class MeService {
         status: true,
         source: true,
         packageName: true,
+        childProfile: { select: { id: true, displayName: true } },
         amountCents: true,
         currency: true,
         bankName: true,

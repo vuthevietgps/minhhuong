@@ -17,6 +17,7 @@ import {
   SetLessonFavoriteDto,
 } from './dto/video-immersion.dto';
 import { LearningService } from './learning.service';
+import { AppHeartbeatDto } from '../screen-time/dto/app-heartbeat.dto';
 
 @Controller('learning')
 @UseGuards(JwtAuthGuard)
@@ -52,6 +53,15 @@ export class LearningController {
     @Headers('user-agent') userAgent?: string,
   ) {
     return this.learningService.getTodayUsage(user, childProfileId, userAgent);
+  }
+
+  @Post('usage/heartbeat')
+  heartbeat(
+    @Body() dto: AppHeartbeatDto,
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('childProfileId') childProfileId: string = '',
+  ) {
+    return this.learningService.heartbeat(user, childProfileId, dto);
   }
 
   @Post('lessons/:lessonId/watch')

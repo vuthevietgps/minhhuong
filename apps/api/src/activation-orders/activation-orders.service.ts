@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { randomBytes, randomUUID, scryptSync } from 'node:crypto';
+import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from 'node:crypto';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import {
   addDays as addIdempotencyDays,
@@ -15,9 +15,20 @@ import {
 } from '../commercial-idempotency';
 import { NotificationService } from '../notifications/notification.service';
 import { PrismaService } from '../prisma/prisma.service';
+import {
+  addTrialDays,
+  FREE_TRIAL_DEFAULT_DAYS,
+  FREE_TRIAL_MAX_AI_RESPONSES,
+  FREE_TRIAL_MAX_INITIAL_ASSESSMENTS,
+  FREE_TRIAL_MAX_LESSONS,
+  FREE_TRIAL_MAX_TOTAL_DAYS,
+  FREE_TRIAL_PROVIDER_REF,
+  FREE_TRIAL_REPORT_DELAY_DAYS,
+} from '../entitlement/trial-policy';
 import { ApproveActivationOrderDto } from './dto/approve-activation-order.dto';
 import { CreateActivationOrderDto } from './dto/create-activation-order.dto';
 import {
+  CreateParentSelfServiceOrderDto,
   CreateSelfServiceActivationOrderDto,
   UploadSelfServicePaymentProofDto,
 } from './dto/create-self-service-activation-order.dto';
@@ -37,6 +48,8 @@ import {
 import { RejectActivationOrderDto } from './dto/reject-activation-order.dto';
 import { ResubmitActivationOrderDto } from './dto/resubmit-activation-order.dto';
 import { RevokeActivationOrderDto } from './dto/revoke-activation-order.dto';
+import { ExtendFreeTrialDto } from './dto/extend-free-trial.dto';
+import { StartFreeTrialDto } from './dto/start-free-trial.dto';
 
 const invoiceUrl = (file: Express.Multer.File) =>
   `/uploads/invoices/${file.filename}`;
@@ -721,7 +734,53 @@ export class ActivationOrdersService {
     return updated;
   }
 
-  async createSelfServiceOrder(dto: CreateSelfServiceActivationOrderDto) {
+  async createParentSelfServiceOrder(
+    user: AuthenticatedUser,
+    dto: CreateParentSelfServiceOrderDto,
+  ) {
+    const parent = await this.prisma.user.findUnique({
+      where: { id: user.sub },
+      select: { id: true, email: true, status: true },
+    });
+    if (!parent || parent.status !== 'ACTIVE') {
+      throw new BadRequestException('Parent account is unavailable');
+    }
+    const child = await this.prisma.childProfile.findFirst({
+      where: { id: dto.childProfileId, parentId: parent.id },
+      select: { id: true },
+    });
+    if (!child) throw new NotFoundException('Child profile not found');
+    return this.createSelfServiceOrder(
+      {
+        ...dto,
+        email: parent.email,
+        password: '',
+      },
+      { parentId: parent.id, childProfileId: child.id },
+    );
+  }
+
+  async uploadParentPaymentProof(
+    user: AuthenticatedUser,
+    orderId: string,
+    paymentProof: Express.Multer.File | undefined,
+  ) {
+    const order = await this.prisma.activationOrder.findFirst({
+      where: { id: orderId, userId: user.sub, source: 'SELF_SERVICE' },
+      select: { customerEmail: true },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    return this.uploadSelfServicePaymentProof(
+      orderId,
+      { email: order.customerEmail },
+      paymentProof,
+    );
+  }
+
+  async createSelfServiceOrder(
+    dto: CreateSelfServiceActivationOrderDto,
+    authenticated?: { parentId: string; childProfileId: string },
+  ) {
     // Check DB packages first, fall back to hardcoded list
     const dbPackages: (SelfServicePackage & SnapshotActivationPackage)[] =
       await this.prisma.activationPackage
@@ -773,14 +832,15 @@ export class ActivationOrdersService {
         : null;
 
     const email = dto.email.trim().toLowerCase();
-    const parent = await this.upsertParentAccount(
-      { password: dto.password },
-      email,
-    );
+    const parent = authenticated
+      ? { id: authenticated.parentId }
+      : await this.upsertParentAccount({ password: dto.password }, email);
 
     // Create or find a child profile for this parent
     const childName = dto.displayName?.trim() || 'Con';
-    const childProfile = await this.prisma.childProfile.upsert({
+    const childProfile = authenticated
+      ? { id: authenticated.childProfileId }
+      : await this.prisma.childProfile.upsert({
       where: {
         id:
           (
@@ -793,7 +853,7 @@ export class ActivationOrdersService {
       },
       update: {},
       create: { parentId: parent.id, displayName: childName },
-    });
+        });
 
     const bankTransfer = this.bankTransferInfo();
     const transferContent = await this.uniqueTransferContent();
@@ -878,6 +938,245 @@ export class ActivationOrdersService {
       order,
       bankTransfer,
     };
+  }
+
+  /**
+   * Public, no-payment entry point. The parent account stays ACTIVE after the
+   * learning entitlement expires so progress and reports remain readable.
+   */
+  async startFreeTrial(dto: StartFreeTrialDto) {
+    const now = new Date();
+    const email = dto.email.trim().toLowerCase();
+    const parent = await this.upsertParentAccount(
+      { password: dto.password },
+      email,
+    );
+    if (parent.status !== 'ACTIVE') {
+      throw new BadRequestException(
+        'This account is suspended. Please contact support before starting a trial.',
+      );
+    }
+
+    const existingChild = await this.prisma.childProfile.findFirst({
+      where: { parentId: parent.id },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true, displayName: true },
+    });
+    const childProfile =
+      existingChild ??
+      (await this.prisma.childProfile.create({
+        data: {
+          parentId: parent.id,
+          displayName: dto.displayName?.trim() || 'Con',
+        },
+        select: { id: true, displayName: true },
+      }));
+
+    const priorTrial = await this.prisma.trialAccess.findFirst({
+      where: { childProfile: { parentId: parent.id } },
+      select: { id: true },
+    });
+    if (priorTrial) {
+      throw new BadRequestException(
+        'This account has already used its free trial. Please choose a study package.',
+      );
+    }
+
+    const activeSubscription = await this.prisma.subscription.findFirst({
+      where: {
+        childProfile: { parentId: parent.id },
+        status: { in: ['TRIALING', 'ACTIVE'] },
+        currentPeriodStart: { lte: now },
+        currentPeriodEnd: { gt: now },
+      },
+      select: { id: true },
+    });
+    if (activeSubscription) {
+      throw new BadRequestException(
+        'This account already has an active learning entitlement.',
+      );
+    }
+
+    const plan = await this.ensureManualPlan();
+    const periodEnd = addTrialDays(now, FREE_TRIAL_DEFAULT_DAYS);
+    const reportAvailableAt = addTrialDays(now, FREE_TRIAL_REPORT_DELAY_DAYS);
+
+    let subscription: {
+      id: string;
+      currentPeriodStart: Date;
+      currentPeriodEnd: Date;
+    };
+    try {
+      subscription = await this.prisma.$transaction(async (tx) => {
+        await tx.trialAccess.create({
+          data: {
+            childProfileId: childProfile.id,
+            reportAvailableAt,
+          },
+        });
+
+        return tx.subscription.create({
+          data: {
+            childProfileId: childProfile.id,
+            planId: plan.id,
+            status: 'TRIALING',
+            currentPeriodStart: now,
+            currentPeriodEnd: periodEnd,
+            providerRef: FREE_TRIAL_PROVIDER_REF,
+          },
+          select: {
+            id: true,
+            currentPeriodStart: true,
+            currentPeriodEnd: true,
+          },
+        });
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new BadRequestException(
+          'This account has already used its free trial. Please choose a study package.',
+        );
+      }
+      throw error;
+    }
+
+    await this.auditSystem('trial.start', subscription.id, {
+      childProfileId: childProfile.id,
+      parentEmail: email,
+      periodEnd: subscription.currentPeriodEnd.toISOString(),
+    });
+
+    return {
+      childProfile: childProfile,
+      trial: {
+        subscriptionId: subscription.id,
+        status: 'TRIALING' as const,
+        startsAt: subscription.currentPeriodStart,
+        endsAt: subscription.currentPeriodEnd,
+        reportAvailableAt,
+        limits: this.freeTrialLimits(),
+      },
+      login: { email },
+      paymentRequiredBeforeTrial: false,
+    };
+  }
+
+  async listFreeTrials() {
+    const now = new Date();
+    const trials = await this.prisma.subscription.findMany({
+      where: { providerRef: FREE_TRIAL_PROVIDER_REF },
+      orderBy: { currentPeriodEnd: 'desc' },
+      take: 200,
+      select: this.freeTrialSelect(),
+    });
+
+    return trials.map((trial) => this.toFreeTrialView(trial, now));
+  }
+
+  async getFreeTrialForUser(childProfileId: string, user: AuthenticatedUser) {
+    const canManageTrials = user.roles.some((role) =>
+      ['ADMIN', 'DIRECTOR', 'OPERATIONS'].includes(role),
+    );
+    const userId = this.dbUserId(user);
+    const trial = await this.prisma.subscription.findFirst({
+      where: {
+        childProfileId,
+        providerRef: FREE_TRIAL_PROVIDER_REF,
+        ...(canManageTrials
+          ? {}
+          : userId
+            ? { childProfile: { parentId: userId } }
+            : { id: '__none__' }),
+      },
+      orderBy: { currentPeriodEnd: 'desc' },
+      select: this.freeTrialSelect(),
+    });
+    if (!trial) {
+      throw new NotFoundException('Free trial not found');
+    }
+
+    return this.toFreeTrialView(trial, new Date());
+  }
+
+  async extendFreeTrial(
+    subscriptionId: string,
+    dto: ExtendFreeTrialDto,
+    user: AuthenticatedUser,
+  ) {
+    if (
+      !user.roles.some((role) =>
+        ['ADMIN', 'DIRECTOR', 'OPERATIONS'].includes(role),
+      )
+    ) {
+      throw new BadRequestException(
+        'Only operations or director can extend a free trial',
+      );
+    }
+
+    const trial = await this.prisma.subscription.findFirst({
+      where: { id: subscriptionId, providerRef: FREE_TRIAL_PROVIDER_REF },
+      select: {
+        id: true,
+        childProfileId: true,
+        currentPeriodStart: true,
+        currentPeriodEnd: true,
+      },
+    });
+    if (!trial) {
+      throw new NotFoundException('Free trial not found');
+    }
+
+    const now = new Date();
+    const maximumEnd = addTrialDays(
+      trial.currentPeriodStart,
+      FREE_TRIAL_MAX_TOTAL_DAYS,
+    );
+    const extensionBase =
+      trial.currentPeriodEnd > now ? trial.currentPeriodEnd : now;
+    const requestedEnd = addTrialDays(extensionBase, dto.days);
+    const nextPeriodEnd = requestedEnd > maximumEnd ? maximumEnd : requestedEnd;
+
+    if (nextPeriodEnd <= extensionBase) {
+      throw new BadRequestException(
+        `Free trial cannot exceed ${FREE_TRIAL_MAX_TOTAL_DAYS} days from its start.`,
+      );
+    }
+
+    const actorUserId = this.dbUserId(user) ?? null;
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const subscription = await tx.subscription.update({
+        where: { id: trial.id },
+        data: {
+          status: 'TRIALING',
+          currentPeriodEnd: nextPeriodEnd,
+        },
+        select: this.freeTrialSelect(),
+      });
+      await tx.trialExtensionAudit.create({
+        data: {
+          subscriptionId: trial.id,
+          childProfileId: trial.childProfileId,
+          actorUserId,
+          previousPeriodEnd: trial.currentPeriodEnd,
+          nextPeriodEnd,
+          requestedDays: dto.days,
+          note: dto.note?.trim() || null,
+        },
+      });
+      return subscription;
+    });
+
+    await this.audit(user, 'trial.extend', trial.id, {
+      childProfileId: trial.childProfileId,
+      previousPeriodEnd: trial.currentPeriodEnd.toISOString(),
+      nextPeriodEnd: nextPeriodEnd.toISOString(),
+      requestedDays: dto.days,
+    });
+
+    return this.toFreeTrialView(updated, now);
   }
 
   async uploadSelfServicePaymentProof(
@@ -1992,6 +2291,15 @@ export class ActivationOrdersService {
     });
 
     if (existing) {
+      const [salt, hash] = existing.passwordHash?.split(':') ?? [];
+      if (!args.password || !salt || !hash) {
+        throw new BadRequestException('Invalid account credentials');
+      }
+      const actual = Buffer.from(scryptSync(args.password, salt, 64).toString('hex'));
+      const expected = Buffer.from(hash);
+      if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) {
+        throw new BadRequestException('Invalid account credentials');
+      }
       const roleNames = existing.roles.map((item) => item.role.name);
       const isParent = roleNames.some((role) =>
         ['STUDENT', 'PARENT'].includes(role),
@@ -3331,6 +3639,98 @@ export class ActivationOrdersService {
     const salt = randomUUID();
     const hash = scryptSync(password, salt, 64).toString('hex');
     return `${salt}:${hash}`;
+  }
+
+  private freeTrialLimits() {
+    return {
+      initialAssessments: FREE_TRIAL_MAX_INITIAL_ASSESSMENTS,
+      lessons: FREE_TRIAL_MAX_LESSONS,
+      aiResponses: FREE_TRIAL_MAX_AI_RESPONSES,
+    };
+  }
+
+  private freeTrialSelect() {
+    return {
+      id: true,
+      status: true,
+      currentPeriodStart: true,
+      currentPeriodEnd: true,
+      childProfile: {
+        select: {
+          id: true,
+          displayName: true,
+          parent: {
+            select: {
+              email: true,
+              profile: { select: { displayName: true } },
+            },
+          },
+          trialAccess: {
+            select: {
+              initialAssessmentCount: true,
+              lessonCount: true,
+              aiResponseCount: true,
+              reportAvailableAt: true,
+            },
+          },
+        },
+      },
+    } satisfies Prisma.SubscriptionSelect;
+  }
+
+  private toFreeTrialView(
+    trial: {
+      id: string;
+      status: string;
+      currentPeriodStart: Date;
+      currentPeriodEnd: Date;
+      childProfile: {
+        id: string;
+        displayName: string;
+        parent: {
+          email: string;
+          profile: { displayName: string | null } | null;
+        };
+        trialAccess: {
+          initialAssessmentCount: number;
+          lessonCount: number;
+          aiResponseCount: number;
+          reportAvailableAt: Date;
+        } | null;
+      };
+    },
+    now: Date,
+  ) {
+    const access = trial.childProfile.trialAccess;
+    const maximumEnd = addTrialDays(
+      trial.currentPeriodStart,
+      FREE_TRIAL_MAX_TOTAL_DAYS,
+    );
+
+    return {
+      id: trial.id,
+      childProfileId: trial.childProfile.id,
+      childName: trial.childProfile.displayName,
+      parent: {
+        email: trial.childProfile.parent.email,
+        displayName: trial.childProfile.parent.profile?.displayName ?? null,
+      },
+      status: trial.currentPeriodEnd > now ? 'TRIALING' : 'EXPIRED',
+      startsAt: trial.currentPeriodStart,
+      endsAt: trial.currentPeriodEnd,
+      maximumEnd,
+      canExtend: maximumEnd > now,
+      report: {
+        available: Boolean(access && access.reportAvailableAt <= now),
+        availableAt: access?.reportAvailableAt ?? null,
+      },
+      usage: {
+        initialAssessments: access?.initialAssessmentCount ?? 0,
+        lessons: access?.lessonCount ?? 0,
+        aiResponses: access?.aiResponseCount ?? 0,
+      },
+      limits: this.freeTrialLimits(),
+    };
   }
 
   private addDays(date: Date, days: number) {

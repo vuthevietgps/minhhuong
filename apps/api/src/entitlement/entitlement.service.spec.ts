@@ -12,10 +12,14 @@ describe('EntitlementService', () => {
   };
   const service = new EntitlementService(prisma as any);
   const originalAiChatFlag = process.env.AI_CHAT_MOCK_ENABLED;
+  const originalAiProvider = process.env.AI_PROVIDER;
+  const originalOpenAiKey = process.env.OPENAI_API_KEY;
 
   beforeEach(() => {
     jest.resetAllMocks();
     delete process.env.AI_CHAT_MOCK_ENABLED;
+    delete process.env.AI_PROVIDER;
+    delete process.env.OPENAI_API_KEY;
     prisma.childProfile.findUnique.mockResolvedValue({
       screenTime: {
         isEnabled: true,
@@ -29,6 +33,16 @@ describe('EntitlementService', () => {
       delete process.env.AI_CHAT_MOCK_ENABLED;
     } else {
       process.env.AI_CHAT_MOCK_ENABLED = originalAiChatFlag;
+    }
+    if (originalAiProvider === undefined) {
+      delete process.env.AI_PROVIDER;
+    } else {
+      process.env.AI_PROVIDER = originalAiProvider;
+    }
+    if (originalOpenAiKey === undefined) {
+      delete process.env.OPENAI_API_KEY;
+    } else {
+      process.env.OPENAI_API_KEY = originalOpenAiKey;
     }
   });
 
@@ -154,6 +168,20 @@ describe('EntitlementService', () => {
         capabilities: expect.objectContaining({
           aiChat: true,
         }),
+      }),
+    );
+  });
+
+  it('allows aiChat when OpenAI is explicitly configured server-side', async () => {
+    process.env.AI_PROVIDER = 'openai';
+    process.env.OPENAI_API_KEY = 'server-only-key';
+    prisma.subscription.findFirst.mockResolvedValue(activeSubscription());
+
+    await expect(
+      service.assertCapability('child-1', 'aiChat'),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        capabilities: expect.objectContaining({ aiChat: true }),
       }),
     );
   });

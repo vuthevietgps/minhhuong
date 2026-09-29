@@ -42,6 +42,9 @@ describe('LearningService', () => {
   const entitlement = {
     assertActiveSubscription: jest.fn(),
     assertCapability: jest.fn(),
+    assertTrialLessonAccess: jest.fn(),
+    allowedFreeTrialLessonIds: jest.fn(),
+    consumeTrialInitialAssessment: jest.fn(),
   };
   const learningPath = {
     getActiveAssignedLessonIds: jest.fn(),
@@ -50,12 +53,17 @@ describe('LearningService', () => {
   const dailyPlan = {
     getOrGenerateTodayPlan: jest.fn(),
   };
+  const screenTime = {
+    heartbeat: jest.fn(),
+    assertNotOnBreak: jest.fn(),
+  };
   const service = new LearningService(
     prisma as any,
     childAccess as any,
     entitlement as any,
     learningPath as any,
     dailyPlan as any,
+    screenTime as any,
   );
   const parent = {
     sub: 'parent-1',
@@ -71,6 +79,10 @@ describe('LearningService', () => {
     });
     entitlement.assertActiveSubscription.mockResolvedValue({});
     entitlement.assertCapability.mockResolvedValue({});
+    entitlement.assertTrialLessonAccess.mockResolvedValue(undefined);
+    entitlement.allowedFreeTrialLessonIds.mockResolvedValue(null);
+    entitlement.consumeTrialInitialAssessment.mockResolvedValue(undefined);
+    screenTime.assertNotOnBreak.mockResolvedValue(undefined);
     prisma.childProfile.findUnique.mockResolvedValue({
       screenTime: null,
       deviceTimeGrants: [],

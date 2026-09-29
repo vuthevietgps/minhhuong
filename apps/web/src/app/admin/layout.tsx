@@ -2,6 +2,7 @@
 
 import {
   BarChart3,
+  Link2,
   BookOpen,
   Box,
   ChevronRight,
@@ -32,6 +33,15 @@ import {
 const adminContentRoles = ["ADMIN", "CONTENT_EDITOR"] as const;
 const adminUsersRoles = ["ADMIN", "OPERATIONS", "DIRECTOR", "SUPPORT"] as const;
 const adminAuditRoles = ["ADMIN", "DIRECTOR", "OPERATIONS"] as const;
+const affiliateRoles = [
+  "ADMIN",
+  "DIRECTOR",
+  "OPERATIONS",
+  "SALE",
+  "AGENCY_OWNER",
+  "AGENCY_MANAGER",
+] as const;
+const agencyReviewRoles = ["ADMIN", "OPERATIONS"] as const;
 
 const navItems = [
   {
@@ -64,6 +74,18 @@ const navItems = [
     label: "Vận hành kênh",
     icon: Users,
     roles: adminChannelRoles,
+  },
+  {
+    href: "/admin/affiliate",
+    label: "Link affiliate",
+    icon: Link2,
+    roles: affiliateRoles,
+  },
+  {
+    href: "/admin/agency-applications",
+    label: "Duyệt đại lý",
+    icon: ShieldCheck,
+    roles: agencyReviewRoles,
   },
   {
     href: "/admin/finance",

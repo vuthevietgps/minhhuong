@@ -1,0 +1,3 @@
+services:
+  web:
+    image: vutheviet/lumiraenglish-web:lumiraenglish-20260813-fullscreen-toggle

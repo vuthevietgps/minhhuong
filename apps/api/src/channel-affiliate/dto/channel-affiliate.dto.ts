@@ -6,6 +6,7 @@ import {
   IsObject,
   IsOptional,
   IsString,
+  Matches,
   Max,
   MaxLength,
   Min,
@@ -544,8 +545,18 @@ export class AffiliateCommissionAggregateQueryDto {
 export class CreateAffiliateLinkDto {
   @IsOptional()
   @IsString()
+  @Matches(/^af_[a-z0-9-]{3,48}$/)
+  linkCode?: string;
+
+  @IsOptional()
+  @IsString()
   @MaxLength(64)
   participantId?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  participantCode?: string;
 
   @IsString()
   @MinLength(2)

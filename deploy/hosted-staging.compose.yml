@@ -70,6 +70,7 @@ services:
       NOTIFICATION_PROVIDER: disabled
       PAYMENT_PROVIDER: disabled
       AI_PROVIDER: disabled
+      AI_CONTEXT_PROVIDER: disabled
       VIDEO_PROVIDER: disabled
       UPLOAD_STORAGE_PROVIDER: s3
       UPLOAD_STORAGE_TOPOLOGY: shared-object

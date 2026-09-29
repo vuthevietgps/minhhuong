@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="vi">
+  <meta charset="utf-8" /><title>Minhhuong</title
+  ><link rel="stylesheet" href="style.css" />
+  <body class="popup">
+    <main>
+      <span class="badge">MINH HƯƠNG · MÁY HỌC CỦA CON</span>
+      <p class="step">BƯỚC CUỐI · KẾT NỐI MÁY</p>
+      <h1>Kết nối máy của con</h1>
+      <p id="lead">Phụ huynh tạo mã kích hoạt trên trang quản lý trình duyệt, rồi nhập mã đó tại đây.</p>
+      <form id="pair">
+        <label
+          >Tên thiết bị<input
+            name="name"
+            maxlength="80"
+            value="Máy của con"
+            required /></label
+        ><label
+          >Mã kích hoạt plugin<input
+            name="code"
+            pattern="[a-fA-F0-9]{32}"
+            inputmode="text"
+            placeholder="Dán mã phụ huynh đã tạo"
+            required
+            autocomplete="one-time-code" /></label
+        ><details class="advanced">
+          <summary>Dành cho người hỗ trợ</summary>
+          <label
+            >Địa chỉ máy chủ<input
+              name="api"
+              type="url"
+              value="http://localhost:4000"
+              required /></label
+          ><small>Chỉ đổi mục này khi người cài đặt yêu cầu.</small>
+        </details>
+        <button>Kết nối máy</button
+        ><small
+          >Mã chỉ dùng một lần. Sau khi kết nối, máy sẽ tự nhận các thay đổi của
+          phụ huynh.</small
+        >
+      </form>
+      <p id="status" role="status"></p>
+      <button id="sync" hidden>Kiểm tra thay đổi</button
+      ><a class="button" href="blocked.html" target="_blank">Góc học của con</a>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

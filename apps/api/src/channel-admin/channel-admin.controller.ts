@@ -20,6 +20,10 @@ import { RolesGuard } from '../auth/roles.guard';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { ChannelAdminService } from './channel-admin.service';
 import {
+  ApplyForAgencyDto,
+  ReviewAgencyApplicationDto,
+} from './dto/agency-application.dto';
+import {
   AddAgencyMemberDto,
   CreateActivationPackageDto,
   CreateAgencyDto,
@@ -40,6 +44,31 @@ import {
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ChannelAdminController {
   constructor(private readonly channelAdminService: ChannelAdminService) {}
+
+  @Get('agency-applications')
+  @Roles('ADMIN', 'OPERATIONS')
+  listAgencyApplications() {
+    return this.channelAdminService.listAgencyApplications();
+  }
+
+  @Post('agency-applications/:id/approve')
+  @Roles('ADMIN', 'OPERATIONS')
+  approveAgencyApplication(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.channelAdminService.approveAgencyApplication(id, user);
+  }
+
+  @Post('agency-applications/:id/reject')
+  @Roles('ADMIN', 'OPERATIONS')
+  rejectAgencyApplication(
+    @Param('id') id: string,
+    @Body() dto: ReviewAgencyApplicationDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.channelAdminService.rejectAgencyApplication(id, dto, user);
+  }
 
   @Get('summary')
   @Roles(...channelAdminViewRoles)
@@ -254,5 +283,15 @@ export class ChannelAdminController {
       dto,
       user,
     );
+  }
+}
+
+@Controller('agency-applications')
+export class AgencyApplicationPublicController {
+  constructor(private readonly channelAdminService: ChannelAdminService) {}
+
+  @Post()
+  apply(@Body() dto: ApplyForAgencyDto) {
+    return this.channelAdminService.applyForAgency(dto);
   }
 }

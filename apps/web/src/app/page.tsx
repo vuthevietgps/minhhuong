@@ -2,9 +2,12 @@
 
 import {
   ArrowDown,
+  ArrowLeft,
+  ArrowRight,
   ArrowUp,
   BarChart3,
   Bell,
+  Bookmark,
   Bot,
   Building2,
   CheckCircle2,
@@ -24,6 +27,9 @@ import {
   LockKeyhole,
   LogIn,
   LogOut,
+  Maximize2,
+  Mic,
+  Minimize2,
   PenTool,
   Play,
   RotateCcw,
@@ -35,7 +41,9 @@ import {
   UploadCloud,
   Users,
   Video,
+  Volume2,
   WalletCards,
+  X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
@@ -48,6 +56,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import {
   clearStoredSession,
   readStoredSession,
@@ -74,6 +83,39 @@ type Metric = {
   delta: string;
 };
 
+type VoiceRecognition = {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+  onresult:
+    | ((event: {
+        results: ArrayLike<ArrayLike<{ transcript: string }>>;
+      }) => void)
+    | null;
+  onerror: ((event: { error: string }) => void) | null;
+  onend: (() => void) | null;
+};
+
+type VoiceRecognitionConstructor = new () => VoiceRecognition;
+
+type BuddyPet = "mimi" | "bo" | "pipi" | "kiki" | "nova";
+
+const buddyPets: Array<{
+  id: BuddyPet;
+  name: string;
+  animal: string;
+  emoji: string;
+}> = [
+  { id: "mimi", name: "Mimi", animal: "Thỏ tinh nghịch", emoji: "🐰" },
+  { id: "bo", name: "Bo", animal: "Gấu ấm áp", emoji: "🐻" },
+  { id: "pipi", name: "Pipi", animal: "Chim cánh cụt", emoji: "🐧" },
+  { id: "kiki", name: "Kiki", animal: "Mèo lanh lợi", emoji: "🐱" },
+  { id: "nova", name: "Nova", animal: "Siêu nhân nhí", emoji: "🦸" },
+];
+
 type DashboardPayload = {
   role: Role;
   title: string;
@@ -84,6 +126,7 @@ type DashboardPayload = {
     email: string;
     displayName?: string;
     roles: Role[];
+    status?: string;
   };
 };
 
@@ -103,13 +146,6 @@ type LearningProfilePayload = {
     displayName: string;
     avatarUrl?: string | null;
   } | null;
-};
-
-type DemoAccount = {
-  role: Role;
-  label: string;
-  email: string;
-  icon: LucideIcon;
 };
 
 type AdminVideo = {
@@ -271,6 +307,20 @@ type LearningUsageStatus = {
     usedSeconds: number;
     usedMinutes: number;
   }>;
+};
+
+type AppSessionStatus = {
+  isEnabled: boolean;
+  allowed: boolean;
+  sessionId: string | null;
+  sessionLimitMinutes: number | null;
+  dailyLimitMinutes: number | null;
+  breakMinutes: number | null;
+  activeSeconds: number;
+  remainingSessionSeconds: number | null;
+  warning: "FIVE_MINUTES" | "THREE_MINUTES" | null;
+  breakUntil: string | null;
+  breakRemainingSeconds: number;
 };
 
 type LearningHomeLesson = {
@@ -482,6 +532,8 @@ type ParentChild = {
   screenTime: {
     isEnabled: boolean;
     dailyLimitMinutes: number;
+    sessionLimitMinutes: number;
+    breakMinutes: number;
     updatedAt?: string | null;
   };
   deviceUsage: LearningUsageStatus;
@@ -510,6 +562,15 @@ type ParentChild = {
 
 type ParentChildrenPayload = {
   children: ParentChild[];
+};
+
+type ParentDailyPlanCandidate = {
+  id: string;
+  title: string;
+  description?: string | null;
+  durationSec?: number | null;
+  courseTitle: string;
+  source: "ASSIGNED_PATH" | "CATALOG";
 };
 
 type ParentContentAssignment = {
@@ -636,6 +697,41 @@ type BankTransferInfo = {
 type SelfServiceOptions = {
   packages: ActivationPackage[];
   bankTransfer: BankTransferInfo;
+};
+
+type FreeTrial = {
+  childProfile: {
+    id: string;
+    displayName: string;
+  };
+  trial: {
+    subscriptionId: string;
+    status: "TRIALING";
+    startsAt: string;
+    endsAt: string;
+    reportAvailableAt: string;
+    limits: {
+      initialAssessments: number;
+      lessons: number;
+      aiResponses: number;
+    };
+  };
+  login: { email: string };
+};
+
+type FreeTrialRecord = {
+  id: string;
+  childProfileId: string;
+  childName: string;
+  parent: { email: string; displayName: string | null };
+  status: "TRIALING" | "EXPIRED";
+  startsAt: string;
+  endsAt: string;
+  maximumEnd: string;
+  canExtend: boolean;
+  report: { available: boolean; availableAt: string | null };
+  usage: { initialAssessments: number; lessons: number; aiResponses: number };
+  limits: { initialAssessments: number; lessons: number; aiResponses: number };
 };
 
 type CommissionSummary = {
@@ -917,8 +1013,6 @@ type ChannelAdminSummary = {
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
-const demoPassword = "Demo@12345";
-
 const apiErrorMessagesVi: Record<string, string> = {
   "Invalid or expired token": "Phiên đăng nhập không hợp lệ hoặc đã hết hạn.",
   Unauthorized: "Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn.",
@@ -983,6 +1077,37 @@ function formatStudyMinutes(minutes: number) {
   }
 
   return `${hours}h ${remainingMinutes}m`;
+}
+
+function formatVideoDuration(durationSec?: number | null) {
+  if (!durationSec || durationSec <= 0) return null;
+
+  const totalSeconds = Math.floor(durationSec);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function toInAppYouTubeEmbedUrl(embedUrl: string) {
+  try {
+    const url = new URL(embedUrl);
+    const supportedHosts = new Set([
+      "www.youtube.com",
+      "youtube.com",
+      "www.youtube-nocookie.com",
+      "youtube-nocookie.com",
+    ]);
+
+    if (!supportedHosts.has(url.hostname)) {
+      return embedUrl;
+    }
+
+    url.searchParams.set("playsinline", "1");
+    return url.toString();
+  } catch {
+    return embedUrl;
+  }
 }
 
 function dateInputValue(date: Date) {
@@ -1090,69 +1215,6 @@ function orderSearchText(order: ActivationOrder) {
     .toLowerCase();
 }
 
-const demoAccounts: DemoAccount[] = [
-  {
-    role: "STUDENT",
-    label: "Học sinh",
-    email: "student@demo.local",
-    icon: GraduationCap,
-  },
-  {
-    role: "PARENT",
-    label: "Phụ huynh",
-    email: "parent@demo.local",
-    icon: Users,
-  },
-  {
-    role: "TEACHER",
-    label: "Giáo viên",
-    email: "teacher@demo.local",
-    icon: ClipboardCheck,
-  },
-  {
-    role: "CONTENT_EDITOR",
-    label: "Nội dung",
-    email: "content@demo.local",
-    icon: UploadCloud,
-  },
-  {
-    role: "ADMIN",
-    label: "Quản trị viên",
-    email: "admin@demo.local",
-    icon: ShieldCheck,
-  },
-  {
-    role: "DIRECTOR",
-    label: "Giám đốc",
-    email: "director@demo.local",
-    icon: Building2,
-  },
-  {
-    role: "SUPPORT",
-    label: "Hỗ trợ",
-    email: "support@demo.local",
-    icon: LifeBuoy,
-  },
-  {
-    role: "SALE",
-    label: "Kinh doanh",
-    email: "sale@demo.local",
-    icon: CircleDollarSign,
-  },
-  {
-    role: "AGENCY_OWNER",
-    label: "Chủ đại lý",
-    email: "agency@demo.local",
-    icon: Building2,
-  },
-  {
-    role: "OPERATIONS",
-    label: "Vận hành",
-    email: "operations@demo.local",
-    icon: WalletCards,
-  },
-];
-
 const roleLabels: Record<Role, string> = {
   STUDENT: "Không gian học sinh",
   PARENT: "Cổng phụ huynh",
@@ -1221,15 +1283,15 @@ const navByRole: Record<Role, [string, LucideIcon][]> = {
     ["Tổng quan", LayoutDashboard],
     ["Bài học", Video],
     ["Luyện tập", Gamepad2],
-    ["Trợ lý AI", Bot],
+    ["Bạn học", Bot],
     ["Gói học", Crown],
   ],
   PARENT: [
-    ["Học sinh", Users],
-    ["Học hôm nay", Video],
-    ["Báo cáo", BarChart3],
-    ["Thanh toán", WalletCards],
-    ["Hồ sơ con", GraduationCap],
+    ["Tổng quan", Users],
+    ["Cùng con học", Video],
+    ["Kết quả", BarChart3],
+    ["Gói học", WalletCards],
+    ["Các con", GraduationCap],
   ],
   TEACHER: [
     ["Tổng quan", LayoutDashboard],
@@ -1317,7 +1379,7 @@ const dashboardRouteByRole: Partial<Record<Role, Record<string, string>>> = {
   DIRECTOR: {
     "Điều hành": "/admin",
     "Doanh thu": "/admin/finance",
-    "Tăng trưởng": "/admin/performance",
+    "Tăng trưởng": "/admin/finance",
     "Rủi ro": "/admin/audit",
     "Chiến lược": "/admin/channel",
   },
@@ -1356,20 +1418,20 @@ const dashboardTargetByRole: Partial<Record<Role, Record<string, string>>> = {
     "Tổng quan": "dashboard-overview",
     "Bài học": "student-video-panel",
     "Luyện tập": "student-practice-panel",
-    "Trợ lý AI": "dashboard-ai-panel",
+    "Bạn học": "dashboard-ai-panel",
     "Gói học": "dashboard-access-panel",
   },
   TEACHER: {
     "Tổng quan": "dashboard-overview",
-    "Việc ưu tiên": "dashboard-priority-actions",
-    "Quy trình": "dashboard-secondary-panel",
+    "Việc ưu tiên": "dashboard-workspace-hub",
+    "Quy trình": "dashboard-workspace-hub",
     "Tài khoản": "dashboard-access-panel",
   },
   SUPPORT: {
     "Tổng quan": "dashboard-overview",
-    "Công việc": "dashboard-primary-workspace",
-    "Việc ưu tiên": "dashboard-priority-actions",
-    "Quy trình": "dashboard-secondary-panel",
+    "Công việc": "dashboard-workspace-hub",
+    "Việc ưu tiên": "dashboard-workspace-hub",
+    "Quy trình": "dashboard-workspace-hub",
     "Tài khoản": "dashboard-access-panel",
   },
 };
@@ -1386,13 +1448,16 @@ const roleHomeCopy: Record<Role, string> = {
   STUDENT: "Hoàn thành kế hoạch hôm nay theo từng bước ngắn và rõ ràng.",
   PARENT: "Nắm tiến độ của con, giới hạn học tập và việc gia đình cần xử lý.",
   TEACHER: "Ưu tiên đúng học sinh, bài cần chấm và phản hồi cần gửi hôm nay.",
-  CONTENT_EDITOR: "Đưa nội dung từ bản nháp đến xuất bản bằng một quy trình nhất quán.",
+  CONTENT_EDITOR:
+    "Đưa nội dung từ bản nháp đến xuất bản bằng một quy trình nhất quán.",
   ADMIN: "Theo dõi sức khỏe vận hành và chuyển nhanh đến đúng khu vực xử lý.",
   DIRECTOR: "Tập trung vào tăng trưởng, hiệu quả và rủi ro cần quyết định.",
   SUPPORT: "Xử lý yêu cầu theo mức độ ảnh hưởng và giữ phản hồi đúng cam kết.",
   SALE: "Theo sát đơn hàng, khách hàng và khoản cần phê duyệt trong ngày.",
-  AGENCY_OWNER: "Nắm hiệu suất đại lý, đội ngũ bán hàng và dòng tiền cần chú ý.",
-  AGENCY_MANAGER: "Điều phối đội ngũ, đơn hàng và tiến độ chi trả theo phạm vi được giao.",
+  AGENCY_OWNER:
+    "Nắm hiệu suất đại lý, đội ngũ bán hàng và dòng tiền cần chú ý.",
+  AGENCY_MANAGER:
+    "Điều phối đội ngũ, đơn hàng và tiến độ chi trả theo phạm vi được giao.",
   OPERATIONS: "Duyệt đúng hồ sơ, đối soát đúng chứng từ và kích hoạt đúng hạn.",
 };
 
@@ -1400,14 +1465,16 @@ const roleWorkspaceCards: Partial<Record<Role, RoleWorkspaceCard[]>> = {
   TEACHER: [
     {
       label: "Nội dung giảng dạy",
-      description: "Quản lý bài học, học liệu và nội dung cần sử dụng trên lớp.",
+      description:
+        "Quản lý bài học, học liệu và nội dung cần sử dụng trên lớp.",
       href: "/teacher/content",
       icon: FileVideo,
       meta: "Workspace giáo viên",
     },
     {
       label: "Học sinh cần hỗ trợ",
-      description: "Mở danh sách ưu tiên và xử lý các trường hợp có nguy cơ chậm tiến độ.",
+      description:
+        "Mở danh sách ưu tiên và xử lý các trường hợp có nguy cơ chậm tiến độ.",
       href: "#dashboard-primary-workspace",
       icon: Users,
       meta: "Ưu tiên hôm nay",
@@ -1423,24 +1490,27 @@ const roleWorkspaceCards: Partial<Record<Role, RoleWorkspaceCard[]>> = {
   CONTENT_EDITOR: [
     {
       label: "Xưởng nội dung",
-      description: "Tạo bài học, quản lý video và chỉnh sửa bản nháp tại một nơi.",
+      description:
+        "Tạo bài học, quản lý video và chỉnh sửa bản nháp tại một nơi.",
       href: "/admin/content",
       icon: FileVideo,
       meta: "Soạn thảo",
     },
     {
       label: "Ngân hàng câu hỏi",
-      description: "Chuẩn hóa câu hỏi, đáp án và thẻ tìm kiếm trước khi gửi duyệt.",
+      description:
+        "Chuẩn hóa câu hỏi, đáp án và thẻ tìm kiếm trước khi gửi duyệt.",
       href: "/admin/content",
       icon: ClipboardList,
-      meta: "2.430 câu hỏi",
+      meta: "Ngân hàng nội dung",
     },
     {
       label: "Hàng đợi xuất bản",
-      description: "Rà soát các nội dung đang chờ duyệt và hoàn tất bước xuất bản.",
+      description:
+        "Rà soát các nội dung đang chờ duyệt và hoàn tất bước xuất bản.",
       href: "/admin/content",
       icon: CheckCircle2,
-      meta: "9 mục cần duyệt",
+      meta: "Nội dung cần rà soát",
     },
   ],
   ADMIN: [
@@ -1453,7 +1523,8 @@ const roleWorkspaceCards: Partial<Record<Role, RoleWorkspaceCard[]>> = {
     },
     {
       label: "Đơn hàng cần xử lý",
-      description: "Duyệt hồ sơ, kiểm tra chứng từ và theo dõi trạng thái kích hoạt.",
+      description:
+        "Duyệt hồ sơ, kiểm tra chứng từ và theo dõi trạng thái kích hoạt.",
       href: "/admin/orders",
       icon: ClipboardCheck,
       meta: "Hàng đợi vận hành",
@@ -1463,20 +1534,22 @@ const roleWorkspaceCards: Partial<Record<Role, RoleWorkspaceCard[]>> = {
       description: "Quản lý tài khoản, vai trò và các trường hợp cần hỗ trợ.",
       href: "/admin/users",
       icon: Users,
-      meta: "42 mục cần chú ý",
+      meta: "Quản lý tài khoản",
     },
   ],
   DIRECTOR: [
     {
       label: "Bức tranh điều hành",
-      description: "Theo dõi các chỉ số cấp điều hành và điểm lệch cần quyết định.",
+      description:
+        "Theo dõi các chỉ số cấp điều hành và điểm lệch cần quyết định.",
       href: "/admin",
       icon: LineChart,
       meta: "Cập nhật hôm nay",
     },
     {
       label: "Doanh thu và dòng tiền",
-      description: "Phân tích doanh thu đã duyệt, hoa hồng và nghĩa vụ chi trả.",
+      description:
+        "Phân tích doanh thu đã duyệt, hoa hồng và nghĩa vụ chi trả.",
       href: "/admin/finance",
       icon: CircleDollarSign,
       meta: "Góc nhìn tài chính",
@@ -1515,7 +1588,8 @@ const roleWorkspaceCards: Partial<Record<Role, RoleWorkspaceCard[]>> = {
   SALE: [
     {
       label: "Đơn hàng của tôi",
-      description: "Tạo đơn, bổ sung chứng từ và theo dõi trạng thái phê duyệt.",
+      description:
+        "Tạo đơn, bổ sung chứng từ và theo dõi trạng thái phê duyệt.",
       href: "/admin/orders",
       icon: CircleDollarSign,
       meta: "Workspace bán hàng",
@@ -1538,7 +1612,8 @@ const roleWorkspaceCards: Partial<Record<Role, RoleWorkspaceCard[]>> = {
   AGENCY_OWNER: [
     {
       label: "Vận hành đại lý",
-      description: "Quản lý đại lý, thành viên và chính sách trong đúng phạm vi.",
+      description:
+        "Quản lý đại lý, thành viên và chính sách trong đúng phạm vi.",
       href: "/admin/channel",
       icon: Building2,
       meta: "Không gian đại lý",
@@ -1561,7 +1636,8 @@ const roleWorkspaceCards: Partial<Record<Role, RoleWorkspaceCard[]>> = {
   AGENCY_MANAGER: [
     {
       label: "Đội ngũ kinh doanh",
-      description: "Theo dõi thành viên và phạm vi được phân công trong đại lý.",
+      description:
+        "Theo dõi thành viên và phạm vi được phân công trong đại lý.",
       href: "/admin/channel",
       icon: Users,
       meta: "Quản lý đội ngũ",
@@ -1587,108 +1663,32 @@ const roleWorkspaceCards: Partial<Record<Role, RoleWorkspaceCard[]>> = {
       description: "Kiểm tra chứng từ, duyệt đơn và xử lý hồ sơ bị trả lại.",
       href: "/admin/orders",
       icon: CheckCircle2,
-      meta: "18 đơn đang chờ",
+      meta: "Hàng đợi đơn hàng",
     },
     {
       label: "Đối soát tài chính",
       description: "Theo dõi doanh thu, hóa đơn không khớp và khoản chi trả.",
       href: "/admin/finance",
       icon: WalletCards,
-      meta: "3 hóa đơn cần xem",
+      meta: "Đối soát tài chính",
     },
     {
       label: "Tài khoản và quyền học",
-      description: "Kích hoạt, tạm khóa và hỗ trợ tài khoản theo đúng quy trình.",
+      description:
+        "Kích hoạt, tạm khóa và hỗ trợ tài khoản theo đúng quy trình.",
       href: "/admin/users",
       icon: ShieldCheck,
-      meta: "27 tài khoản sắp hết hạn",
+      meta: "Quản lý tài khoản",
     },
   ],
 };
 
 const parentTabByNavLabel: Record<string, ParentTab> = {
-  "Học sinh": "children",
-  "Học hôm nay": "learning",
-  "Báo cáo": "reports",
-  "Thanh toán": "billing",
-  "Hồ sơ con": "family",
-};
-
-const fallbackMetrics: Record<Role, Metric[]> = {
-  STUDENT: [
-    { label: "Trình độ hiện tại", value: "A1", delta: "Bài 04" },
-    { label: "Mục tiêu tuần", value: "82%", delta: "+12%" },
-    { label: "Bài đã hoàn thành", value: "36", delta: "+3" },
-    { label: "Lượt nhắn AI còn lại", value: "184", delta: "Premium" },
-  ],
-  PARENT: [
-    { label: "Học sinh", value: "2", delta: "đang hoạt động" },
-    { label: "Thời gian học tuần", value: "4h 20m", delta: "+35m" },
-    { label: "Giới hạn thiết bị", value: "45 phút/ngày", delta: "đã bật" },
-    { label: "Thời hạn gói còn lại", value: "214 ngày", delta: "hàng năm" },
-  ],
-  TEACHER: [
-    { label: "Lớp học", value: "7", delta: "+1" },
-    { label: "Học sinh cần hỗ trợ", value: "23", delta: "-4" },
-    { label: "Bài cần chấm", value: "64", delta: "+11" },
-    { label: "Tỷ lệ hoàn thành TB", value: "78%", delta: "+4.1%" },
-  ],
-  CONTENT_EDITOR: [
-    { label: "Bài học nháp", value: "27", delta: "+5" },
-    { label: "Cần duyệt", value: "9", delta: "+2" },
-    { label: "Đang xử lý", value: "4", delta: "-1" },
-    { label: "Câu hỏi", value: "2,430", delta: "+184" },
-  ],
-  ADMIN: [
-    { label: "Người dùng chờ xử lý", value: "42", delta: "+6" },
-    { label: "Bài đã xuất bản", value: "318", delta: "+12" },
-    { label: "Thanh toán lỗi", value: "18", delta: "-3" },
-    { label: "Tình trạng hệ thống", value: "99.96%", delta: "ổn định" },
-  ],
-  DIRECTOR: [
-    { label: "Doanh thu từ đầu tháng", value: "218.4M VND", delta: "+12.8%" },
-    { label: "Gói đang hoạt động", value: "1,284", delta: "+9.4%" },
-    { label: "Tỷ lệ chuyển đổi dùng thử", value: "24%", delta: "-1.2%" },
-    { label: "Tỷ lệ chi phí AI", value: "6.1%", delta: "+0.4%" },
-  ],
-  SUPPORT: [
-    { label: "Yêu cầu đang mở", value: "31", delta: "-8" },
-    { label: "Vấn đề thanh toán", value: "12", delta: "+3" },
-    { label: "Phản hồi trung bình", value: "6m", delta: "-2m" },
-    { label: "Yêu cầu hoàn tiền", value: "5", delta: "+1" },
-  ],
-  SALE: [
-    { label: "Đơn đã tạo", value: "42", delta: "+8 hôm nay" },
-    { label: "Chờ phê duyệt", value: "15", delta: "chờ vận hành" },
-    { label: "Học viên mới", value: "38", delta: "+12%" },
-    { label: "Doanh thu đã gửi", value: "128.5M VND", delta: "+9%" },
-  ],
-  AGENCY_OWNER: [
-    { label: "Doanh thu đại lý", value: "0 VND", delta: "kỳ hiện tại" },
-    { label: "Nhân viên đại lý", value: "1", delta: "đang hoạt động" },
-    {
-      label: "Khoản chi chờ xử lý",
-      value: "0 VND",
-      delta: "danh sách chờ duyệt",
-    },
-    { label: "Mã giới thiệu", value: "2", delta: "sẵn sàng" },
-  ],
-  AGENCY_MANAGER: [
-    { label: "Nhân viên đang quản lý", value: "0", delta: "đã phân công" },
-    { label: "Đơn đã gửi", value: "0", delta: "kỳ hiện tại" },
-    { label: "Hoa hồng đại lý", value: "0 VND", delta: "chờ phê duyệt" },
-    {
-      label: "Trạng thái chi trả",
-      value: "Sẵn sàng",
-      delta: "không bị tạm giữ",
-    },
-  ],
-  OPERATIONS: [
-    { label: "Đơn đang chờ", value: "18", delta: "+4 hôm nay" },
-    { label: "Doanh thu đã duyệt", value: "94.8M VND", delta: "+11%" },
-    { label: "Hóa đơn không khớp", value: "3", delta: "cần xem xét" },
-    { label: "Tài khoản sắp hết hạn", value: "27", delta: "7 ngày" },
-  ],
+  "Tổng quan": "children",
+  "Cùng con học": "learning",
+  "Kết quả": "reports",
+  "Gói học": "billing",
+  "Các con": "family",
 };
 
 const dashboardApiTextVi: Record<string, string> = {
@@ -1708,7 +1708,7 @@ const dashboardApiTextVi: Record<string, string> = {
   "Lessons done": "Bài đã hoàn thành",
   "AI messages left": "Lượt nhắn AI còn lại",
   "Weekly study": "Thời gian học tuần",
-  "Device limit": "Giới hạn thiết bị",
+  "Device limit": "Giới hạn thời gian học",
   "Subscription left": "Thời hạn gói còn lại",
   "Students at risk": "Học sinh cần hỗ trợ",
   "To grade": "Bài cần chấm",
@@ -1817,7 +1817,10 @@ function dashboardTextVi(value: string) {
     [/^(\d+) days$/, (match) => `${match[1]} ngày`],
     [/^(\d+)m\/day$/, (match) => `${match[1]} phút/ngày`],
     [/^Unit (\d+)$/, (match) => `Bài ${match[1]}`],
-    [/^(\d+(?:\.\d+)?)M VND$/, (match) => `${match[1].replace(".", ",")} triệu ₫`],
+    [
+      /^(\d+(?:\.\d+)?)M VND$/,
+      (match) => `${match[1].replace(".", ",")} triệu ₫`,
+    ],
     [/^([\d.,]+) VND$/, (match) => `${match[1]} ₫`],
   ];
 
@@ -1832,30 +1835,27 @@ function dashboardTextVi(value: string) {
 export default function Home() {
   const [session, setSession] = useState<Session | null>(null);
   const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
-  const [email, setEmail] = useState("student@demo.local");
-  const [password, setPassword] = useState(demoPassword);
-  const [status, setStatus] = useState("Chọn tài khoản demo hoặc đăng nhập.");
+  const [dashboardError, setDashboardError] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [status, setStatus] = useState("Đăng nhập để tiếp tục.");
   const [isLoading, setIsLoading] = useState(false);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
 
   const loadDashboard = useCallback(async (authSession: Session) => {
-    const primaryRole = authSession.user.roles[0] ?? "STUDENT";
-    const response = await fetch(`${apiBaseUrl}/v1/me/dashboard`, {
-      headers: { Authorization: `Bearer ${authSession.accessToken}` },
-    });
-
-    if (!response.ok) {
-      setDashboard({
-        role: primaryRole,
-        title: `${roleLabels[primaryRole]} - Tổng quan`,
-        metrics: fallbackMetrics[primaryRole],
-        actions: ["Tiếp tục công việc", "Mở báo cáo", "Kiểm tra thông báo"],
-        user: authSession.user,
+    setDashboardError("");
+    try {
+      const response = await fetch(`${apiBaseUrl}/v1/me/dashboard`, {
+        headers: { Authorization: `Bearer ${authSession.accessToken}` },
       });
-      return;
+      if (!response.ok) {
+        throw new Error(await readApiError(response, "Không thể tải bảng tổng quan."));
+      }
+      setDashboard((await response.json()) as DashboardPayload);
+    } catch (error) {
+      setDashboard(null);
+      setDashboardError(error instanceof Error ? error.message : "Không thể tải bảng tổng quan.");
     }
-
-    setDashboard((await response.json()) as DashboardPayload);
   }, []);
 
   useEffect(() => {
@@ -1919,6 +1919,7 @@ export default function Home() {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     setSession(null);
     setDashboard(null);
+    setDashboardError("");
     clearStoredSession();
     setStatus("Đã đăng xuất.");
   }
@@ -1935,7 +1936,7 @@ export default function Home() {
     );
   }
 
-  if (!session || !dashboard) {
+  if (!session) {
     return (
       <LoginScreen
         email={email}
@@ -1948,8 +1949,22 @@ export default function Home() {
           event.preventDefault();
           void login();
         }}
-        onDemoLogin={(account) => void login(account.email, demoPassword)}
       />
+    );
+  }
+
+  if (!dashboard) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-slate-50 p-6 text-slate-900">
+        <div className="w-full max-w-lg rounded-2xl border border-amber-200 bg-white p-7 shadow-sm">
+          <h1 className="text-xl font-bold">Chưa tải được bảng tổng quan</h1>
+          <p className="mt-2 text-sm text-slate-600">{dashboardError || "Đang tải dữ liệu tài khoản..."}</p>
+          <div className="mt-5 flex gap-3">
+            <button className="rounded-xl bg-teal-700 px-4 py-2 font-semibold text-white" onClick={() => void loadDashboard(session)} type="button">Thử lại</button>
+            <button className="rounded-xl border border-slate-300 px-4 py-2" onClick={logout} type="button">Đăng xuất</button>
+          </div>
+        </div>
+      </main>
     );
   }
 
@@ -1963,7 +1978,6 @@ function LoginScreen({
   isLoading,
   password,
   status,
-  onDemoLogin,
   onEmailChange,
   onLogin,
   onPasswordChange,
@@ -1972,7 +1986,6 @@ function LoginScreen({
   isLoading: boolean;
   password: string;
   status: string;
-  onDemoLogin: (account: DemoAccount) => void;
   onEmailChange: (value: string) => void;
   onLogin: (event: FormEvent<HTMLFormElement>) => void;
   onPasswordChange: (value: string) => void;
@@ -1989,21 +2002,29 @@ function LoginScreen({
               <div>
                 <p className="text-sm font-extrabold">Anh ngữ Minh Hương</p>
                 <p className="text-xs text-slate-500">
-                  Ứng dụng học tiếng Anh cho gia đình
+                  Ứng dụng hỗ trợ học tập cho gia đình
                 </p>
               </div>
             </div>
 
             <div className="mt-8">
               <span className="kid-eyebrow">
-                <Sparkles size={14} /> Cùng bé khám phá
+                <Sparkles size={14} /> Đặc biệt hỗ trợ học ngoại ngữ
               </span>
               <h1 className="mt-3 text-4xl font-extrabold leading-tight tracking-tight">
-                Học tiếng Anh vui hơn mỗi ngày
+                Hỗ trợ trẻ học ngoại ngữ vui hơn mỗi ngày
               </h1>
               <p className="mt-4 max-w-md text-sm leading-6 text-slate-600">
-                Một không gian học tập đầy màu sắc, giúp các bé tự tin khám phá
-                và tiến bộ qua từng hoạt động nhỏ.
+                Anh ngữ Minh Hương là ứng dụng hỗ trợ học tập, tập trung đặc
+                biệt vào ngoại ngữ và tiếng Anh cho trẻ. Video, bài luyện và
+                trợ lý AI giúp trẻ khám phá, ôn tập và tiến bộ qua từng hoạt
+                động nhỏ.
+              </p>
+              <p className="mt-4 flex max-w-md items-start gap-2 rounded-2xl border border-emerald-200 bg-emerald-50/80 p-3 text-xs leading-5 text-emerald-950">
+                <ShieldCheck className="mt-0.5 shrink-0" size={16} />
+                Học liệu bên ngoài chỉ được dùng khi có căn cứ quyền phù hợp;
+                link hoặc phụ đề công khai không mặc nhiên cho phép sao chép và
+                tái sử dụng.
               </p>
             </div>
 
@@ -2044,64 +2065,37 @@ function LoginScreen({
               </div>
             </form>
           </div>
-
-          <div className="relative z-10 mt-8 border-t border-violet-100 pt-4 text-xs text-slate-500">
-            Mật khẩu demo cho tất cả tài khoản:{" "}
-            <span className="font-medium">{demoPassword}</span>
-          </div>
         </section>
 
         <section className="rounded-[2rem] border border-white/80 bg-white/85 p-6 shadow-xl shadow-violet-100/50 backdrop-blur sm:p-8">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-lg font-semibold">Tài khoản demo</h2>
+              <h2 className="text-lg font-semibold">
+                Đăng ký học cùng Minh Hương
+              </h2>
               <p className="mt-1 text-sm text-slate-500">
-                Mỗi tài khoản demo mở đúng trải nghiệm dành cho vai trò đó.
+                Tạo tài khoản để bắt đầu trải nghiệm. Sau khi đăng nhập, hệ
+                thống chỉ hiển thị không gian và dữ liệu được cấp quyền cho tài
+                khoản của bạn.
               </p>
             </div>
             <ShieldCheck className="text-slate-500" size={22} />
           </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {demoAccounts.map((account) => {
-              const Icon = account.icon;
-              return (
-                <button
-                  className="group flex min-h-24 items-center justify-between rounded-2xl border border-slate-200 p-4 text-left transition hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-50 hover:shadow-md"
-                  key={account.role}
-                  onClick={() => onDemoLogin(account)}
-                  type="button"
-                >
-                  <span>
-                    <span className="flex items-center gap-2 text-sm font-semibold">
-                      <Icon size={18} />
-                      {account.label}
-                    </span>
-                    <span className="mt-2 block text-xs text-slate-500">
-                      {account.email}
-                    </span>
-                  </span>
-                  <ChevronRight
-                    className="text-slate-400 transition group-hover:translate-x-1 group-hover:text-violet-600"
-                    size={18}
-                  />
-                </button>
-              );
-            })}
-          </div>
-
           <SelfServiceSignupPanel />
 
+          <Link className="mt-4 inline-flex text-sm font-semibold text-teal-700 underline" href="/agency-register">
+            Muốn bán hàng với tư cách đại lý? Gửi hồ sơ đăng ký
+          </Link>
+
           <div className="mt-6 rounded-3xl bg-gradient-to-br from-sky-50 via-violet-50 to-amber-50 p-5">
-            <p className="text-sm font-medium">Bản demo gồm có</p>
+            <p className="text-sm font-medium">Quyền riêng tư theo tài khoản</p>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               {[
                 "Đăng nhập an toàn",
-                "Trang chủ theo từng vai trò",
-                "Khu vực nhân sự được bảo vệ",
+                "Không gian làm việc theo quyền được cấp",
+                "Dữ liệu học tập và hồ sơ được bảo vệ",
                 "Quyền truy cập theo gói học",
-                "Quản lý nội dung học tập",
-                "Luyện tập với AI có hướng dẫn",
               ].map((item) => (
                 <div
                   className="flex items-center gap-2 text-sm text-slate-600"
@@ -2129,9 +2123,10 @@ function SelfServiceSignupPanel() {
   const [createdOrder, setCreatedOrder] = useState<ActivationOrder | null>(
     null,
   );
+  const [createdTrial, setCreatedTrial] = useState<FreeTrial | null>(null);
   const [paymentProof, setPaymentProof] = useState<File | null>(null);
   const [message, setMessage] = useState(
-    "Tạo tài khoản và yêu cầu thanh toán ngay trên ứng dụng.",
+    "Dùng thử 3 ngày không cần thẻ hoặc chuyển khoản. Giá gói luôn hiển thị công khai.",
   );
   const [isSaving, setIsSaving] = useState(false);
 
@@ -2226,6 +2221,44 @@ function SelfServiceSignupPanel() {
     }
   }
 
+  async function startFreeTrial() {
+    if (!email.trim() || password.length < 8 || !displayName.trim()) {
+      setMessage(
+        "Hãy nhập email, mật khẩu ít nhất 8 ký tự và tên học sinh để bắt đầu dùng thử.",
+      );
+      return;
+    }
+
+    setIsSaving(true);
+    setMessage("Đang mở dùng thử 3 ngày...");
+
+    try {
+      const response = await fetch(
+        `${apiBaseUrl}/v1/activation-orders/self-service/trial`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, displayName }),
+        },
+      );
+      if (!response.ok) {
+        throw new Error(await readApiError(response, "Không thể mở dùng thử."));
+      }
+
+      const data = (await response.json()) as FreeTrial;
+      setCreatedTrial(data);
+      setMessage(
+        "Đã mở dùng thử. Đăng nhập bằng email và mật khẩu vừa tạo để bắt đầu học.",
+      );
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Không thể mở dùng thử.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   async function uploadPaymentProof() {
     if (!createdOrder || !paymentProof) {
       setMessage("Hãy chọn ảnh hoặc tệp PDF minh chứng thanh toán trước.");
@@ -2275,14 +2308,22 @@ function SelfServiceSignupPanel() {
         <div>
           <h2 className="text-lg font-semibold">Đăng ký tự phục vụ</h2>
           <p className="mt-1 text-sm text-slate-500">
-            Phụ huynh có thể đăng ký, chuyển khoản và tải minh chứng ngay trên
-            ứng dụng.
+            Dùng thử trước, chỉ thanh toán khi thấy phù hợp. Không tự động trừ
+            tiền và không gọi điện đại trà.
           </p>
         </div>
         <WalletCards className="text-slate-500" size={22} />
       </div>
 
       <form className="mt-4 grid gap-3" onSubmit={createSelfServiceOrder}>
+        <div className="rounded-xl border border-teal-200 bg-teal-50 p-3 text-sm text-teal-950">
+          <p className="font-semibold">Dùng thử 3 ngày miễn phí</p>
+          <p className="mt-1 leading-5 text-teal-800">
+            Bao gồm 1 bài đánh giá đầu vào, 2 bài học và tối đa 5 lượt trợ lý
+            AI. Cuối ngày thứ 2, phụ huynh xem được báo cáo tiến độ và lộ trình
+            đề xuất.
+          </p>
+        </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block">
             <span className="text-sm font-medium text-slate-700">
@@ -2347,20 +2388,48 @@ function SelfServiceSignupPanel() {
           />
         </label>
 
-        <button
-          className="flex h-10 items-center justify-center gap-2 rounded-lg bg-teal-700 px-4 text-sm font-medium text-white disabled:opacity-60"
-          disabled={isSaving || !selectedPackage}
-          type="submit"
-        >
-          <CircleDollarSign size={18} />
-          Tạo yêu cầu thanh toán
-        </button>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <button
+            className="flex h-10 items-center justify-center gap-2 rounded-lg bg-teal-700 px-4 text-sm font-medium text-white disabled:opacity-60"
+            disabled={isSaving}
+            onClick={() => void startFreeTrial()}
+            type="button"
+          >
+            <Sparkles size={18} />
+            Dùng thử miễn phí 3 ngày
+          </button>
+          <button
+            className="flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium text-slate-800 disabled:opacity-60"
+            disabled={isSaving || !selectedPackage}
+            type="submit"
+          >
+            <CircleDollarSign size={18} />
+            Mua gói ngay
+          </button>
+        </div>
       </form>
 
       {selectedPackage && (
         <div className="mt-3 rounded-lg bg-slate-100 p-3 text-sm text-slate-600">
-          Đã chọn: {formatMoney(selectedPackage.amountVnd * 100, "VND")} /{" "}
-          {selectedPackage.durationDays} ngày.
+          Giá gói công khai:{" "}
+          {formatMoney(selectedPackage.amountVnd * 100, "VND")} /{" "}
+          {selectedPackage.durationDays} ngày. Không tự động trừ tiền.
+        </div>
+      )}
+
+      {createdTrial && (
+        <div className="mt-3 rounded-lg border border-teal-200 bg-teal-50 p-3 text-sm text-teal-950">
+          <p className="font-semibold">
+            Đã mở dùng thử cho {createdTrial.childProfile.displayName}
+          </p>
+          <p className="mt-1">
+            Hết hạn lúc {formatDate(createdTrial.trial.endsAt)}. Tài khoản, tiến
+            độ và báo cáo vẫn được giữ lại sau khi trial kết thúc; chỉ AI và bài
+            học mới bị khóa.
+          </p>
+          <p className="mt-1 text-teal-800">
+            Đăng nhập bằng {createdTrial.login.email} để bắt đầu.
+          </p>
         </div>
       )}
 
@@ -2420,6 +2489,139 @@ function SelfServiceSignupPanel() {
   );
 }
 
+function StudentAppTimeGate({
+  accessToken,
+  childProfileId,
+}: {
+  accessToken: string;
+  childProfileId: string;
+}) {
+  const [status, setStatus] = useState<AppSessionStatus | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!childProfileId) return;
+    const storageKey = "mhe_screen_time_device";
+    const existing = window.localStorage.getItem(storageKey);
+    const deviceKey =
+      existing ||
+      (window.crypto?.randomUUID?.() ??
+        `browser-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    window.localStorage.setItem(storageKey, deviceKey);
+
+    let cancelled = false;
+    const beat = async () => {
+      try {
+        const response = await fetch(
+          `${apiBaseUrl}/v1/learning/usage/heartbeat?childProfileId=${encodeURIComponent(childProfileId)}`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              deviceKey,
+              ...(sessionIdRef.current
+                ? { sessionId: sessionIdRef.current }
+                : {}),
+            }),
+          },
+        );
+        if (!response.ok || cancelled) return;
+        const next = (await response.json()) as AppSessionStatus;
+        sessionIdRef.current = next.sessionId;
+        setStatus(next);
+      } catch {
+        // Other protected API endpoints still enforce an active break.
+      }
+    };
+
+    void beat();
+    const heartbeatTimer = window.setInterval(() => void beat(), 15_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(heartbeatTimer);
+    };
+  }, [accessToken, childProfileId]);
+
+  useEffect(() => {
+    if (!status?.isEnabled) return;
+    const timer = window.setInterval(() => {
+      setStatus((current) => {
+        if (!current) return current;
+        if (!current.allowed) {
+          return {
+            ...current,
+            breakRemainingSeconds: Math.max(
+              0,
+              current.breakRemainingSeconds - 1,
+            ),
+          };
+        }
+        const remaining =
+          current.remainingSessionSeconds === null
+            ? null
+            : Math.max(0, current.remainingSessionSeconds - 1);
+        return {
+          ...current,
+          remainingSessionSeconds: remaining,
+          warning:
+            remaining !== null && remaining > 0 && remaining <= 180
+              ? "THREE_MINUTES"
+              : remaining !== null && remaining > 0 && remaining <= 300
+                ? "FIVE_MINUTES"
+                : null,
+        };
+      });
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [status?.isEnabled]);
+
+  if (!status?.isEnabled) return null;
+
+  if (!status.allowed) {
+    const minutes = Math.floor(status.breakRemainingSeconds / 60);
+    const seconds = status.breakRemainingSeconds % 60;
+    return createPortal(
+      <div className="fixed inset-0 z-[120] grid place-items-center bg-slate-950/95 p-5 text-center text-white">
+        <div className="max-w-lg rounded-3xl border border-white/15 bg-white/10 p-7 shadow-2xl backdrop-blur">
+          <div className="mx-auto grid size-16 place-items-center rounded-full bg-amber-300 text-slate-950">
+            <LockKeyhole size={30} />
+          </div>
+          <h2 className="mt-5 text-2xl font-extrabold">Đến giờ nghỉ rồi</h2>
+          <p className="mt-3 leading-7 text-slate-200">
+            Con đã hoàn thành phiên học {status.sessionLimitMinutes} phút. Hãy
+            rời màn hình, vận động và cho mắt nghỉ ngơi.
+          </p>
+          <p className="mt-5 text-4xl font-black tabular-nums text-amber-300">
+            {minutes}:{String(seconds).padStart(2, "0")}
+          </p>
+          <p className="mt-2 text-sm text-slate-300">
+            Ứng dụng sẽ tự mở lại sau thời gian nghỉ do phụ huynh cài đặt.
+          </p>
+        </div>
+      </div>,
+      document.body,
+    );
+  }
+
+  if (status.warning && status.remainingSessionSeconds !== null) {
+    const minutes = Math.ceil(status.remainingSessionSeconds / 60);
+    return createPortal(
+      <div
+        aria-live="assertive"
+        className="fixed left-1/2 top-4 z-[110] w-[min(92vw,520px)] -translate-x-1/2 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-center font-bold text-amber-950 shadow-xl"
+        role="alert"
+      >
+        Còn {minutes} phút trước khi ứng dụng chuyển sang giờ nghỉ.
+      </div>,
+      document.body,
+    );
+  }
+  return null;
+}
+
 function RoleDashboard({
   dashboard,
   onLogout,
@@ -2433,7 +2635,6 @@ function RoleDashboard({
   const role = dashboard.role;
   const navItems = navByRole[role];
   const displayName = dashboard.user.displayName ?? dashboard.user.email;
-  const workItems = useMemo(() => workItemsForRole(role), [role]);
   const canOpenAdminWorkspace =
     role === "ADMIN" ||
     role === "DIRECTOR" ||
@@ -2471,9 +2672,10 @@ function RoleDashboard({
   const [studentWorkspaceView, setStudentWorkspaceView] = useState<
     "video" | "practice"
   >("video");
+  const [studentExtrasOpen, setStudentExtrasOpen] = useState(false);
   const [staffSummaryView, setStaffSummaryView] = useState<
-    "workflow" | "guidance" | "account"
-  >("workflow");
+    "guidance" | "account"
+  >("guidance");
   const [showAdvancedTools, setShowAdvancedTools] = useState(false);
   const [studentHomeRefreshToken, setStudentHomeRefreshToken] = useState(0);
   const learningChildProfileId = learningProfile?.id ?? "";
@@ -2583,13 +2785,18 @@ function RoleDashboard({
     (label: string) => {
       setActiveNavLabel(label);
 
-      if (role === "STUDENT" && (label === "Bài học" || label === "Luyện tập")) {
+      if (
+        role === "STUDENT" &&
+        (label === "Bài học" || label === "Luyện tập")
+      ) {
         const view = label === "Bài học" ? "video" : "practice";
         setStudentWorkspaceView(view);
         window.setTimeout(
           () =>
             scrollToDashboardTarget(
-              view === "video" ? "student-video-panel" : "student-practice-panel",
+              view === "video"
+                ? "student-video-panel"
+                : "student-practice-panel",
               label,
             ),
           0,
@@ -2597,10 +2804,19 @@ function RoleDashboard({
         return;
       }
 
-      if (role !== "STUDENT" && role !== "PARENT" && label === "Quy trình") {
-        setStaffSummaryView("workflow");
+      if (role === "STUDENT" && label === "Bạn học") {
+        setStudentExtrasOpen(true);
         window.setTimeout(
-          () => scrollToDashboardTarget("dashboard-secondary-panel", label),
+          () => scrollToDashboardTarget("dashboard-ai-panel", label),
+          0,
+        );
+        return;
+      }
+
+      if (role !== "STUDENT" && role !== "PARENT" && label === "Quy trình") {
+        setStaffSummaryView("guidance");
+        window.setTimeout(
+          () => scrollToDashboardTarget("dashboard-ai-panel", label),
           0,
         );
         return;
@@ -2737,8 +2953,14 @@ function RoleDashboard({
   );
   return (
     <main className="kid-app-shell min-h-screen text-slate-950">
+      {role === "STUDENT" && (
+        <StudentAppTimeGate
+          accessToken={session.accessToken}
+          childProfileId={learningChildProfileId}
+        />
+      )}
       <div className="mx-auto flex min-h-screen max-w-[1440px] flex-col lg:flex-row">
-        <aside className="kid-sidebar border-b border-violet-100 bg-white/90 px-4 py-3 lg:sticky lg:top-0 lg:h-screen lg:w-72 lg:border-b-0 lg:border-r lg:px-5 lg:py-6">
+        <aside className="kid-sidebar border-b border-violet-100 bg-white/90 px-4 py-3 lg:sticky lg:top-0 lg:h-screen lg:w-72 lg:shrink-0 lg:border-b-0 lg:border-r lg:px-5 lg:py-6">
           <div className="flex items-center justify-between lg:block">
             <div className="flex items-center gap-3">
               <div className="kid-logo-mark grid size-11 place-items-center text-white">
@@ -2765,7 +2987,7 @@ function RoleDashboard({
           >
             {navItems.map(([label, Icon]) => {
               const href = dashboardRouteByRole[role]?.[label];
-              const className = `flex h-11 shrink-0 items-center gap-3 rounded-2xl px-3 text-sm font-bold ${
+              const className = `flex h-11 w-full shrink-0 items-center gap-3 whitespace-nowrap rounded-2xl px-3 text-sm font-bold ${
                 activeNavLabel === label ? "kid-nav-active" : "kid-nav-link"
               }`;
               return href ? (
@@ -2796,14 +3018,14 @@ function RoleDashboard({
             <div className="flex items-center gap-2 text-sm font-semibold text-amber-950">
               <Crown size={17} />
               {role === "STUDENT"
-                ? "Gói cao cấp"
+                ? "Hồ sơ học tập"
                 : role === "PARENT"
                   ? "Quyền học cho gia đình"
                   : "Quyền truy cập công việc"}
             </div>
             <p className="mt-2 text-xs leading-5 text-amber-900">
               {role === "STUDENT"
-                ? "Gói học đang hoạt động cho bài học và phần luyện tập hôm nay."
+                ? "Tiếp tục bài học và phần luyện tập được cấp cho hồ sơ này."
                 : role === "PARENT"
                   ? "Dùng tài khoản này để theo dõi tiến độ của con, kế hoạch học, báo cáo và thanh toán."
                   : "Tài khoản này mở các công cụ đã được cấp cho phạm vi công việc của bạn."}
@@ -2811,7 +3033,7 @@ function RoleDashboard({
           </div>
         </aside>
 
-        <section className="kid-page flex-1 px-4 py-4 pb-28 sm:px-6 lg:px-8 lg:py-6">
+        <section className="kid-page flex-1 px-4 py-4 pb-36 sm:px-6 sm:pb-32 lg:px-8 lg:py-6">
           <header
             className="kid-hero flex scroll-mt-4 flex-col gap-5 p-5 sm:p-6 xl:flex-row xl:items-center xl:justify-between"
             id="dashboard-overview"
@@ -2887,6 +3109,25 @@ function RoleDashboard({
                   </div>
                 )}
               </div>
+              {role === "PARENT" && (
+                <Link className="flex h-11 items-center gap-2 rounded-lg bg-emerald-700 px-3 text-sm font-bold text-white" href="/browser-control">
+                  Thiết lập máy học của con
+                </Link>
+              )}
+              {[
+                "TEACHER",
+                "CONTENT_EDITOR",
+                "ADMIN",
+                "SUPPORT",
+              ].includes(role) && (
+                <Link
+                  className="flex h-11 items-center gap-2 rounded-lg bg-violet-700 px-3 text-sm font-bold text-white"
+                  href="/ai-contexts"
+                >
+                  <Bot size={18} />
+                  Kho ngữ cảnh AI
+                </Link>
+              )}
               <button
                 className="flex h-11 items-center gap-2 rounded-lg bg-white px-3 text-sm font-bold text-slate-700 ring-1 ring-slate-200"
                 onClick={onLogout}
@@ -2898,21 +3139,26 @@ function RoleDashboard({
             </div>
           </header>
 
-          <div className="mt-5 grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
-            {dashboard.metrics.map((metric) => (
-              <section className="kid-stat-card p-4 sm:p-5" key={metric.label}>
-                <p className="text-xs text-slate-500">
-                  {dashboardTextVi(metric.label)}
-                </p>
-                <p className="mt-2 text-xl font-extrabold sm:text-2xl">
-                  {dashboardTextVi(metric.value)}
-                </p>
-                <p className="mt-2 text-xs text-teal-700">
-                  {dashboardTextVi(metric.delta)}
-                </p>
-              </section>
-            ))}
-          </div>
+          {role !== "STUDENT" && (
+            <div className="mt-5 grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
+              {dashboard.metrics.map((metric) => (
+                <section
+                  className="kid-stat-card p-4 sm:p-5"
+                  key={metric.label}
+                >
+                  <p className="text-xs text-slate-500">
+                    {dashboardTextVi(metric.label)}
+                  </p>
+                  <p className="mt-2 text-xl font-extrabold sm:text-2xl">
+                    {dashboardTextVi(metric.value)}
+                  </p>
+                  <p className="mt-2 text-xs text-teal-700">
+                    {dashboardTextVi(metric.delta)}
+                  </p>
+                </section>
+              ))}
+            </div>
+          )}
 
           {role === "STUDENT" && (
             <>
@@ -2933,7 +3179,9 @@ function RoleDashboard({
                     aria-controls="student-video-panel"
                     aria-selected={studentWorkspaceView === "video"}
                     className={`kid-learning-tab ${
-                      studentWorkspaceView === "video" ? "kid-learning-tab-active" : ""
+                      studentWorkspaceView === "video"
+                        ? "kid-learning-tab-active"
+                        : ""
                     }`}
                     onClick={() => {
                       setStudentWorkspaceView("video");
@@ -2949,7 +3197,9 @@ function RoleDashboard({
                     aria-controls="student-practice-panel"
                     aria-selected={studentWorkspaceView === "practice"}
                     className={`kid-learning-tab ${
-                      studentWorkspaceView === "practice" ? "kid-learning-tab-active" : ""
+                      studentWorkspaceView === "practice"
+                        ? "kid-learning-tab-active"
+                        : ""
                     }`}
                     onClick={() => {
                       setStudentWorkspaceView("practice");
@@ -3004,7 +3254,8 @@ function RoleDashboard({
                   Chế độ thao tác nhanh
                 </p>
                 <p className="mt-1 text-sm leading-6 text-violet-800">
-                  Chỉ mở các biểu mẫu và bảng chi tiết khi bạn thực sự cần xử lý ngay trên trang này.
+                  Chỉ mở các biểu mẫu và bảng chi tiết khi bạn thực sự cần xử lý
+                  ngay trên trang này.
                 </p>
               </div>
               <button
@@ -3013,7 +3264,9 @@ function RoleDashboard({
                 onClick={() => setShowAdvancedTools((current) => !current)}
                 type="button"
               >
-                {showAdvancedTools ? "Ẩn công cụ chi tiết" : "Mở công cụ chi tiết"}
+                {showAdvancedTools
+                  ? "Ẩn công cụ chi tiết"
+                  : "Mở công cụ chi tiết"}
               </button>
             </section>
           )}
@@ -3030,7 +3283,8 @@ function RoleDashboard({
                 role === "AGENCY_OWNER" ||
                 role === "AGENCY_MANAGER" ||
                 role === "OPERATIONS" ||
-                role === "ADMIN") && (
+                role === "ADMIN" ||
+                role === "DIRECTOR") && (
                 <ActivationOrdersPanel role={role} session={session} />
               )}
 
@@ -3068,10 +3322,8 @@ function RoleDashboard({
             </div>
           )}
 
-          {role !== "STUDENT" && role !== "PARENT" && (
-            <div className="mt-4 grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-              <PrimaryWorkspace role={role} />
-
+          {dashboard.actions.length > 0 && (
+            <div className="mt-4">
               <section
                 className="scroll-mt-4 rounded-lg border border-slate-200 bg-white p-4 sm:p-5"
                 id="dashboard-priority-actions"
@@ -3081,7 +3333,7 @@ function RoleDashboard({
                   <ChevronRight className="text-slate-400" size={18} />
                 </div>
                 <div className="mt-4 divide-y divide-slate-200">
-                  {dashboard.actions.map((action, index) => (
+                  {dashboard.actions.map((action) => (
                     <button
                       className="flex min-h-14 w-full items-center justify-between py-3 text-left"
                       key={action}
@@ -3091,9 +3343,6 @@ function RoleDashboard({
                       <span>
                         <span className="block text-sm font-medium">
                           {dashboardTextVi(action)}
-                        </span>
-                        <span className="mt-1 block text-xs text-slate-500">
-                          {workItems[index % workItems.length]}
                         </span>
                       </span>
                       <ChevronRight className="text-slate-400" size={18} />
@@ -3107,12 +3356,11 @@ function RoleDashboard({
           {role !== "STUDENT" && role !== "PARENT" && (
             <div
               aria-label="Thông tin hỗ trợ công việc"
-              className="mt-4 grid grid-cols-3 gap-2 rounded-2xl border border-violet-100 bg-white p-2 lg:hidden"
+              className="mt-4 grid grid-cols-2 gap-2 rounded-2xl border border-violet-100 bg-white p-2 lg:hidden"
               role="tablist"
             >
               {(
                 [
-                  ["workflow", "Quy trình", LineChart],
                   ["guidance", "Lưu ý", ShieldCheck],
                   ["account", "Tài khoản", Users],
                 ] as const
@@ -3134,18 +3382,34 @@ function RoleDashboard({
             </div>
           )}
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-3">
-            <div
-              className={
-                role !== "STUDENT" &&
-                role !== "PARENT" &&
-                staffSummaryView !== "workflow"
-                  ? "hidden lg:block"
-                  : ""
-              }
-            >
-              <SecondaryPanel role={role} />
-            </div>
+          {role === "STUDENT" && (
+            <section className="mt-4 rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">
+                    Khám phá thêm
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Lộ trình, trợ lý AI và thông tin tài khoản.
+                  </p>
+                </div>
+                <button
+                  aria-expanded={studentExtrasOpen}
+                  className="h-9 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                  onClick={() => setStudentExtrasOpen((current) => !current)}
+                  type="button"
+                >
+                  {studentExtrasOpen ? "Thu gọn" : "Mở thêm"}
+                </button>
+              </div>
+            </section>
+          )}
+
+          <div
+            className={`mt-4 grid gap-4 lg:grid-cols-2 ${
+              role === "STUDENT" && !studentExtrasOpen ? "hidden" : ""
+            }`}
+          >
             <div
               className={
                 role !== "STUDENT" &&
@@ -3243,7 +3507,7 @@ function RoleDashboard({
 }
 
 function RoleWorkspaceHub({ role }: { role: Role }) {
-  const cards = roleWorkspaceCards[role] ?? [];
+  const cards = (roleWorkspaceCards[role] ?? []).filter((card) => card.href.startsWith("/"));
   if (cards.length === 0) return null;
 
   return (
@@ -3261,7 +3525,8 @@ function RoleWorkspaceHub({ role }: { role: Role }) {
           </h2>
         </div>
         <p className="max-w-md text-sm leading-6 text-slate-500">
-          Dashboard chỉ giữ thông tin cần quyết định; biểu mẫu chi tiết nằm trong workspace chuyên trách.
+          Dashboard chỉ giữ thông tin cần quyết định; biểu mẫu chi tiết nằm
+          trong workspace chuyên trách.
         </p>
       </div>
 
@@ -3420,6 +3685,7 @@ function StudentTodayPanel({
   const [message, setMessage] = useState("Đang tải kế hoạch hôm nay.");
   const [actionStatus, setActionStatus] = useState("");
   const [busyItemId, setBusyItemId] = useState<string | null>(null);
+  const [planDetailsOpen, setPlanDetailsOpen] = useState(false);
 
   const authHeaders = useMemo(
     () => ({ Authorization: `Bearer ${session.accessToken}` }),
@@ -3481,19 +3747,29 @@ function StudentTodayPanel({
   const planItems = usesPersistentPlan
     ? (persistentPlan?.items ?? [])
     : legacyItems;
-  const completedItems = planItems.filter(
-    (item) => item.status === "COMPLETED",
-  ).length;
-  const totalItems = planItems.length;
   const nextItem =
     planItems.find((item) => item.status === "STARTED") ??
     planItems.find((item) => item.status === "READY");
   const allDone =
-    totalItems > 0 &&
+    planItems.length > 0 &&
     planItems.every((item) => ["COMPLETED", "SKIPPED"].includes(item.status));
   const noAssignment =
     persistentPlan?.contentSource.mode === "UNASSIGNED_FALLBACK" &&
     !persistentPlan.plan;
+  const suggestedLesson =
+    !noAssignment && planItems.length === 0 && !usage?.limitReached
+      ? (home?.continueLesson ?? null)
+      : null;
+  const hasPrimaryAction = Boolean(nextItem || suggestedLesson);
+  const primaryLessonTitle = nextItem
+    ? planItemTitle(nextItem)
+    : suggestedLesson?.title;
+  const suggestedLessonDetail =
+    suggestedLesson?.progress.status === "IN_PROGRESS"
+      ? `Đã học ${suggestedLesson.progress.progressPercent}% · tiếp tục ngay`
+      : suggestedLesson?.progress.status === "COMPLETED"
+        ? "Đã hoàn thành · xem lại khi con muốn"
+        : "Sẵn sàng bắt đầu";
   const todayTitle = childDisplayName
     ? `Hôm nay ${childDisplayName} học gì?`
     : "Hôm nay con học gì?";
@@ -3503,13 +3779,16 @@ function StudentTodayPanel({
       ? "Chưa có lộ trình được giao"
       : allDone
         ? "Hôm nay con học xong rồi"
-        : totalItems > 0
-          ? `Hôm nay con có ${totalItems} việc học`
-          : "Chưa có kế hoạch hôm nay";
-  const progressLabel =
-    totalItems > 0 ? `Con đã hoàn thành ${completedItems}/${totalItems}` : "";
-  const earnedStars = totalItems > 0 ? Math.min(3, completedItems) : 0;
-  const targetStars = totalItems > 0 ? Math.min(3, totalItems) : 0;
+        : primaryLessonTitle
+          ? `Bài tiếp theo: ${primaryLessonTitle}`
+          : suggestedLesson
+            ? "Chọn bài tiếp theo"
+            : "Chưa có kế hoạch hôm nay";
+  const progressLabel = nextItem
+    ? planItemDescription(nextItem)
+    : suggestedLesson
+      ? `${suggestedLesson.courseTitle} · ${suggestedLesson.unitTitle}`
+      : "";
 
   async function postPlanItemAction(
     item: LearningPersistentDailyPlanItem,
@@ -3629,6 +3908,13 @@ function StudentTodayPanel({
     }
   }
 
+  function resumeSuggestedLesson() {
+    if (!suggestedLesson) return;
+
+    onResume(suggestedLesson.id, "video");
+    setActionStatus(`Đã mở ${suggestedLesson.title}.`);
+  }
+
   return (
     <section
       className="mt-4 scroll-mt-4 rounded-lg border border-slate-200 bg-white p-4 sm:p-5"
@@ -3657,69 +3943,66 @@ function StudentTodayPanel({
             </div>
             <button
               className="flex h-10 items-center justify-center gap-2 rounded-lg bg-slate-950 px-3 text-sm font-medium text-white disabled:opacity-50"
-              disabled={!nextItem || usage?.limitReached}
-              onClick={() => nextItem && void startPlanItem(nextItem)}
+              disabled={!hasPrimaryAction || usage?.limitReached}
+              onClick={() => {
+                if (nextItem) {
+                  void startPlanItem(nextItem);
+                  return;
+                }
+                resumeSuggestedLesson();
+              }}
               type="button"
             >
               <CirclePlay size={18} />
-              Học tiếp
+              Học bài tiếp theo
             </button>
           </div>
 
-          {home && (
-            <>
-              <div className="mt-4 grid gap-2 sm:grid-cols-4">
-                {[
-                  [
-                    "Kế hoạch",
-                    totalItems > 0 ? `${completedItems}/${totalItems}` : "--",
-                  ],
-                  [
-                    "Sao hôm nay",
-                    targetStars > 0 ? `${earnedStars}/${targetStars}` : "--",
-                  ],
-                  [
-                    "Đã dùng",
-                    usage ? formatStudyMinutes(usage.usedMinutes) : "--",
-                  ],
-                  [
-                    "Còn lại",
-                    usage?.remainingMinutes === null
-                      ? "Không giới hạn"
-                      : usage
-                        ? formatStudyMinutes(usage.remainingMinutes ?? 0)
-                        : "--",
-                  ],
-                ].map(([label, value]) => (
-                  <div className="rounded-lg bg-slate-100 p-3" key={label}>
-                    <p className="text-xs text-slate-500">{label}</p>
-                    <p className="mt-1 text-sm font-semibold">{value}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-4">
-                <div className="flex items-center justify-between text-xs text-slate-500">
-                  <span>Tiến độ hôm nay</span>
-                  <span>
-                    {totalItems > 0
-                      ? `${Math.round((completedItems / totalItems) * 100)}%`
-                      : "0%"}
+          {suggestedLesson && (
+            <div className="mt-4 flex w-full items-center gap-3 overflow-hidden rounded-xl border border-violet-200 bg-violet-50/60 p-3 text-left">
+              <span
+                aria-hidden="true"
+                className="relative grid aspect-video w-28 shrink-0 place-items-center overflow-hidden rounded-lg bg-slate-900 bg-cover bg-center text-white"
+                style={
+                  suggestedLesson.video?.thumbnailUrl
+                    ? {
+                        backgroundImage: `linear-gradient(135deg, rgba(36, 49, 77, 0.12), rgba(36, 49, 77, 0.55)), url(${suggestedLesson.video.thumbnailUrl})`,
+                      }
+                    : undefined
+                }
+              >
+                <span className="grid size-9 place-items-center rounded-full bg-white/90 text-violet-700 shadow-sm">
+                  <Play fill="currentColor" size={16} />
+                </span>
+                {formatVideoDuration(
+                  suggestedLesson.durationSec ??
+                    suggestedLesson.video?.durationSec,
+                ) && (
+                  <span className="absolute bottom-1 right-1 rounded bg-slate-950/80 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                    {formatVideoDuration(
+                      suggestedLesson.durationSec ??
+                        suggestedLesson.video?.durationSec,
+                    )}
                   </span>
-                </div>
-                <div className="mt-2 h-2 rounded-full bg-slate-100">
-                  <div
-                    className="h-2 rounded-full bg-teal-600"
-                    style={{
-                      width:
-                        totalItems > 0
-                          ? `${Math.round((completedItems / totalItems) * 100)}%`
-                          : "0%",
-                    }}
-                  />
-                </div>
-              </div>
-            </>
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-xs font-bold uppercase tracking-wide text-violet-700">
+                  Bài gợi ý cho con
+                </span>
+                <span className="mt-1 block truncate text-base font-semibold text-slate-900">
+                  {suggestedLesson.title}
+                </span>
+                <span className="mt-1 block text-xs text-slate-600">
+                  {suggestedLessonDetail}
+                </span>
+              </span>
+              <ChevronRight
+                aria-hidden="true"
+                className="shrink-0 text-violet-700"
+                size={20}
+              />
+            </div>
           )}
 
           <p className="mt-3 text-sm text-slate-500">{message}</p>
@@ -3732,133 +4015,149 @@ function StudentTodayPanel({
 
         <div className="border-t border-slate-200 pt-4 xl:border-l xl:border-t-0 xl:pl-4 xl:pt-0">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-semibold">Kế hoạch hôm nay</h3>
-            <span className="text-xs font-medium text-slate-500">
-              {persistentPlan?.planDate ?? "Hôm nay"}
-            </span>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Lộ trình hôm nay
+              </p>
+              <h3 className="mt-1 text-base font-semibold">
+                {allDone
+                  ? "Đã hoàn thành"
+                  : (primaryLessonTitle ?? "Chưa có bài cần làm")}
+              </h3>
+            </div>
+            <button
+              aria-expanded={planDetailsOpen}
+              className="h-9 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              onClick={() => setPlanDetailsOpen((current) => !current)}
+              type="button"
+            >
+              {planDetailsOpen ? "Ẩn chi tiết" : "Xem kế hoạch"}
+            </button>
           </div>
-          <div className="mt-3 space-y-3">
-            {planItems.map((item) => (
-              <div
-                className={`rounded-lg border p-3 ${
-                  item.status === "LOCKED"
-                    ? "border-slate-200 bg-slate-50"
-                    : item.status === "COMPLETED"
-                      ? "border-teal-200 bg-teal-50"
-                      : item.status === "STARTED"
-                        ? "border-amber-200 bg-amber-50"
-                        : "border-slate-200 bg-white"
-                }`}
-                key={item.id}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-start gap-3">
-                    <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-700">
-                      {item.itemType === "PRACTICE" ? (
-                        <Gamepad2 size={17} />
-                      ) : item.itemType === "REST" ? (
-                        <LockKeyhole size={17} />
-                      ) : item.itemType === "REVIEW" ? (
-                        <RotateCcw size={17} />
-                      ) : item.itemType === "AI_CONVERSATION" ? (
-                        <Bot size={17} />
-                      ) : item.itemType === "REWARD" ? (
-                        <Crown size={17} />
-                      ) : (
-                        <FileVideo size={17} />
-                      )}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-sm font-medium">
-                        {planItemTitle(item)}
+          {planDetailsOpen && (
+            <div className="mt-3 space-y-3">
+              {planItems.map((item) => (
+                <div
+                  className={`rounded-lg border p-3 ${
+                    item.status === "LOCKED"
+                      ? "border-slate-200 bg-slate-50"
+                      : item.status === "COMPLETED"
+                        ? "border-teal-200 bg-teal-50"
+                        : item.status === "STARTED"
+                          ? "border-amber-200 bg-amber-50"
+                          : "border-slate-200 bg-white"
+                  }`}
+                  key={item.id}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-700">
+                        {item.itemType === "PRACTICE" ? (
+                          <Gamepad2 size={17} />
+                        ) : item.itemType === "REST" ? (
+                          <LockKeyhole size={17} />
+                        ) : item.itemType === "REVIEW" ? (
+                          <RotateCcw size={17} />
+                        ) : item.itemType === "AI_CONVERSATION" ? (
+                          <Bot size={17} />
+                        ) : item.itemType === "REWARD" ? (
+                          <Crown size={17} />
+                        ) : (
+                          <FileVideo size={17} />
+                        )}
                       </span>
-                      <span className="mt-1 block text-xs text-slate-500">
-                        {planItemDescription(item)}
+                      <span className="min-w-0">
+                        <span className="block text-sm font-medium">
+                          {planItemTitle(item)}
+                        </span>
+                        <span className="mt-1 block text-xs text-slate-500">
+                          {planItemDescription(item)}
+                        </span>
+                        {planItemEvidenceText(item) && (
+                          <span className="mt-2 block text-xs text-slate-600">
+                            {planItemEvidenceText(item)}
+                          </span>
+                        )}
+                        {item.blockedReason && (
+                          <span className="mt-2 block rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-900">
+                            {blockedPlanMessage(item.blockedReason)}
+                          </span>
+                        )}
                       </span>
-                      {planItemEvidenceText(item) && (
-                        <span className="mt-2 block text-xs text-slate-600">
-                          {planItemEvidenceText(item)}
-                        </span>
-                      )}
-                      {item.blockedReason && (
-                        <span className="mt-2 block rounded-md bg-amber-100 px-2 py-1 text-xs text-amber-900">
-                          {blockedPlanMessage(item.blockedReason)}
-                        </span>
-                      )}
+                    </div>
+                    <span className={planStatusClass(item.status)}>
+                      {planStatusLabel(item.status)}
                     </span>
                   </div>
-                  <span className={planStatusClass(item.status)}>
-                    {planStatusLabel(item.status)}
-                  </span>
-                </div>
 
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    className="flex h-9 items-center gap-2 rounded-lg bg-slate-950 px-3 text-xs font-medium text-white disabled:opacity-50"
-                    disabled={
-                      item.status === "LOCKED" ||
-                      item.status === "COMPLETED" ||
-                      item.status === "SKIPPED" ||
-                      busyItemId === item.id ||
-                      !item.lessonId ||
-                      item.itemType === "AI_CONVERSATION" ||
-                      item.itemType === "REWARD"
-                    }
-                    onClick={() => void startPlanItem(item)}
-                    type="button"
-                  >
-                    <Play size={15} />
-                    {item.status === "STARTED"
-                      ? "Học tiếp"
-                      : primaryPlanActionLabel(item)}
-                  </button>
-                  <button
-                    className="flex h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-medium text-slate-700 disabled:opacity-50"
-                    disabled={
-                      !usesPersistentPlan ||
-                      item.status === "LOCKED" ||
-                      item.status === "COMPLETED" ||
-                      item.status === "SKIPPED" ||
-                      busyItemId === item.id
-                    }
-                    onClick={() => void completePlanItem(item)}
-                    type="button"
-                  >
-                    <CheckCircle2 size={15} />
-                    {completePlanActionLabel(item)}
-                  </button>
-                  {!item.required && (
+                  <div className="mt-3 flex flex-wrap gap-2">
                     <button
-                      className="h-9 rounded-lg border border-slate-200 px-3 text-xs font-medium text-slate-600 disabled:opacity-50"
+                      className="flex h-9 items-center gap-2 rounded-lg bg-slate-950 px-3 text-xs font-medium text-white disabled:opacity-50"
+                      disabled={
+                        item.status === "LOCKED" ||
+                        item.status === "COMPLETED" ||
+                        item.status === "SKIPPED" ||
+                        busyItemId === item.id ||
+                        !item.lessonId ||
+                        item.itemType === "AI_CONVERSATION" ||
+                        item.itemType === "REWARD"
+                      }
+                      onClick={() => void startPlanItem(item)}
+                      type="button"
+                    >
+                      <Play size={15} />
+                      {item.status === "STARTED"
+                        ? "Học tiếp"
+                        : primaryPlanActionLabel(item)}
+                    </button>
+                    <button
+                      className="flex h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-medium text-slate-700 disabled:opacity-50"
                       disabled={
                         !usesPersistentPlan ||
+                        item.status === "LOCKED" ||
                         item.status === "COMPLETED" ||
                         item.status === "SKIPPED" ||
                         busyItemId === item.id
                       }
-                      onClick={() => void skipPlanItem(item)}
+                      onClick={() => void completePlanItem(item)}
                       type="button"
                     >
-                      Bỏ qua
+                      <CheckCircle2 size={15} />
+                      {completePlanActionLabel(item)}
                     </button>
-                  )}
-                  {(item.itemType === "AI_CONVERSATION" ||
-                    item.itemType === "REWARD") && (
-                    <span className="flex h-9 items-center rounded-lg bg-slate-100 px-3 text-xs font-medium text-slate-500">
-                      Sắp mở
-                    </span>
-                  )}
+                    {!item.required && (
+                      <button
+                        className="h-9 rounded-lg border border-slate-200 px-3 text-xs font-medium text-slate-600 disabled:opacity-50"
+                        disabled={
+                          !usesPersistentPlan ||
+                          item.status === "COMPLETED" ||
+                          item.status === "SKIPPED" ||
+                          busyItemId === item.id
+                        }
+                        onClick={() => void skipPlanItem(item)}
+                        type="button"
+                      >
+                        Bỏ qua
+                      </button>
+                    )}
+                    {(item.itemType === "AI_CONVERSATION" ||
+                      item.itemType === "REWARD") && (
+                      <span className="flex h-9 items-center rounded-lg bg-slate-100 px-3 text-xs font-medium text-slate-500">
+                        Sắp mở
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-            {home && planItems.length === 0 && (
-              <p className="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-                {noAssignment
-                  ? "Hồ sơ này chưa có gói học hoặc lộ trình đang hoạt động."
-                  : "Hôm nay chưa có việc học nào cần làm."}
-              </p>
-            )}
-          </div>
+              ))}
+              {home && planItems.length === 0 && (
+                <p className="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+                  {noAssignment
+                    ? "Hồ sơ này chưa có gói học hoặc lộ trình đang hoạt động."
+                    : "Hôm nay chưa có việc học nào cần làm."}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </section>
@@ -3868,10 +4167,13 @@ function StudentTodayPanel({
 function childHomeMessage(home: LearningHomePayload) {
   const plan = home.persistentDailyPlan;
   if (home.deviceUsage.limitReached) {
-    return "Hôm nay con đã hết thời gian dùng app. Hãy hỏi bố/mẹ để học thêm.";
+    return "Hôm nay con đã hết thời gian học trong ứng dụng. Hãy hỏi bố/mẹ để học thêm.";
   }
   if (plan?.contentSource.mode === "UNASSIGNED_FALLBACK" && !plan.plan) {
     return "Hồ sơ này chưa được giao gói học/lộ trình học đang hoạt động.";
+  }
+  if (plan?.plan?.status === "COMPLETED" && home.continueLesson) {
+    return `Kế hoạch hôm nay đã xong. Con có thể xem lại ${home.continueLesson.title}.`;
   }
   if (plan?.plan?.status === "COMPLETED") {
     return "Con đã hoàn thành kế hoạch hôm nay.";
@@ -3884,6 +4186,9 @@ function childHomeMessage(home: LearningHomePayload) {
 
 function friendlyLearningError(message: string) {
   const normalized = message.toLowerCase();
+  if (normalized.includes("free trial is limited")) {
+    return "Dùng thử đã đạt giới hạn 2 bài học, 1 bài đánh giá hoặc 5 lượt AI. Hãy chọn gói để tiếp tục.";
+  }
   if (
     normalized.includes("subscription") ||
     normalized.includes("entitlement")
@@ -3903,6 +4208,12 @@ function friendlyLearningError(message: string) {
     return "Không tìm thấy hồ sơ học sinh thuộc quyền tài khoản này.";
   }
   return message;
+}
+
+function friendlyTrialReportError(message: string) {
+  return message.toLowerCase().includes("trial learning report")
+    ? "Báo cáo kết quả sẽ mở vào cuối ngày dùng thử thứ 2. Tiến độ học vẫn đang được ghi nhận."
+    : message;
 }
 
 async function fetchLearningHomePayload(
@@ -4313,31 +4624,17 @@ function videoEvidenceMessage(evidence: VideoWatchEvidence) {
   return `Hệ thống đã ghi nhận ${evidence.watchPercent}%, cần ${evidence.minWatchPercent}% để hoàn thành.`;
 }
 
-function screenTimeLimitText(usage: LearningUsageStatus) {
-  if (!usage.isLimited || usage.limitMinutes === null) {
-    return "Không giới hạn";
-  }
-  if (usage.baseLimitMinutes && usage.grantedExtraMinutes) {
-    return `${formatStudyMinutes(usage.baseLimitMinutes)} + ${formatStudyMinutes(
-      usage.grantedExtraMinutes,
-    )}`;
-  }
-  return formatStudyMinutes(usage.limitMinutes);
-}
-
 function screenTimeMessage(usage: LearningUsageStatus) {
   if (usage.limitReached) {
-    return "Hôm nay con đã hết thời gian học. Hãy nhờ bố mẹ cấp thêm thời gian ở tab Học sinh.";
+    return "Hôm nay con đã dùng hết thời gian học trong ứng dụng. Hãy nhờ bố mẹ cộng thêm thời gian cho hôm nay.";
   }
   if (usage.isWarning && usage.remainingMinutes !== null) {
-    return `Sắp hết giờ học, còn khoảng ${formatStudyMinutes(
-      usage.remainingMinutes,
-    )}.`;
+    return `Sắp hết giờ học, còn khoảng ${formatStudyMinutes(usage.remainingMinutes)}.`;
   }
   if (!usage.isLimited) {
     return "Hôm nay chưa đặt giới hạn thời gian học.";
   }
-  return "Thời gian học do hệ thống theo dõi; màn hình chỉ hiển thị số phút đã được ghi nhận.";
+  return "Giới hạn này áp dụng cho thời gian học được ghi nhận trong ứng dụng.";
 }
 
 function useAuthenticatedUploadUrl(
@@ -4435,7 +4732,14 @@ function VideoImmersionPanel({
   const [feed, setFeed] = useState<VideoFeedPayload | null>(null);
   const [activeCourseId, setActiveCourseId] = useState("");
   const [activeTopicId, setActiveTopicId] = useState("");
+  const [activeSeriesId, setActiveSeriesId] = useState("");
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
   const [selectedLessonId, setSelectedLessonId] = useState("");
+  const [selectedVideoId, setSelectedVideoId] = useState("");
+  const [videoSearch, setVideoSearch] = useState({
+    lessonId: "",
+    query: "",
+  });
   const [usage, setUsage] = useState<LearningUsageStatus | null>(null);
   const [studyTimerActive, setStudyTimerActive] = useState(false);
   const [message, setMessage] = useState("Đang tải video.");
@@ -4443,6 +4747,8 @@ function VideoImmersionPanel({
   const [watchEvidenceByLessonId, setWatchEvidenceByLessonId] = useState<
     Record<string, VideoWatchEvidence>
   >({});
+  const playerContainerRef = useRef<HTMLDivElement>(null);
+  const [isVideoFullscreen, setIsVideoFullscreen] = useState(false);
 
   const authHeaders = useMemo(
     () => ({ Authorization: `Bearer ${session.accessToken}` }),
@@ -4452,10 +4758,10 @@ function VideoImmersionPanel({
   const courses = useMemo(() => feed?.courses ?? [], [feed?.courses]);
   const activeCourse =
     courses.find((course) => course.id === activeCourseId) ?? courses[0];
+  const activeCourseUnits = activeCourse?.units ?? [];
   const topics = Array.from(
     new Map(
-      courses
-        .flatMap((course) => course.units)
+      activeCourseUnits
         .flatMap((unit) => unit.lessons)
         .flatMap((lesson) => lesson.tags.filter((tag) => tag.kind === "TOPIC"))
         .map((tag) => [tag.id, tag]),
@@ -4464,24 +4770,51 @@ function VideoImmersionPanel({
   const allLessons = courses.flatMap((course) =>
     course.units.flatMap((unit) => unit.lessons),
   );
-  const activeLessons =
-    activeCourse?.units
-      .flatMap((unit) => unit.lessons)
-      .filter((lesson) =>
-        activeTopicId
-          ? lesson.tags.some((tag) => tag.id === activeTopicId)
-          : true,
-      ) ?? [];
-  const selectedLesson =
-    allLessons.find((lesson) => lesson.id === selectedLessonId) ??
-    activeLessons[0] ??
-    allLessons[0];
-  const selectedVideo = selectedLesson?.videos[0];
+  const activeLessons = activeCourseUnits
+    .filter((unit) => !activeSeriesId || unit.id === activeSeriesId)
+    .flatMap((unit) => unit.lessons)
+    .filter((lesson) =>
+      activeTopicId
+        ? lesson.tags.some((tag) => tag.id === activeTopicId)
+        : true,
+    );
+  const filteredActiveLessons = activeLessons.filter(
+    (lesson) => !showSavedOnly || lesson.progress.isFavorite,
+  );
+  const selectedLesson = showSavedOnly
+    ? (filteredActiveLessons.find((lesson) => lesson.id === selectedLessonId) ??
+      filteredActiveLessons[0])
+    : (activeLessons.find((lesson) => lesson.id === selectedLessonId) ??
+      activeLessons[0] ??
+      allLessons.find((lesson) => lesson.id === selectedLessonId) ??
+      allLessons[0]);
+  const selectedVideo =
+    selectedLesson?.videos.find((video) => video.id === selectedVideoId) ??
+    selectedLesson?.videos[0];
+  const selectedVideoIndex =
+    selectedLesson?.videos.findIndex(
+      (video) => video.id === selectedVideo?.id,
+    ) ?? -1;
+  const videoQuery =
+    videoSearch.lessonId === selectedLesson?.id ? videoSearch.query : "";
+  const normalizedVideoQuery = videoQuery.trim().toLocaleLowerCase("vi");
+  const displayedLessonVideos =
+    !selectedLesson || !normalizedVideoQuery
+      ? (selectedLesson?.videos ?? [])
+      : selectedLesson.videos.filter((video, index) =>
+          (video.title ?? `video ${index + 1}`)
+            .toLocaleLowerCase("vi")
+            .includes(normalizedVideoQuery),
+        );
   const selectedVideoUrl = useAuthenticatedUploadUrl(
     selectedVideo?.sourceUrl,
     session.accessToken,
     childProfileId,
   );
+  const selectedYouTubeEmbedUrl =
+    selectedVideo?.provider === "YOUTUBE" && selectedVideo.embedUrl
+      ? toInAppYouTubeEmbedUrl(selectedVideo.embedUrl)
+      : undefined;
   const selectedDurationSec = videoDurationSeconds(
     selectedLesson,
     selectedVideo,
@@ -4592,6 +4925,17 @@ function VideoImmersionPanel({
   }, [loadFeed]);
 
   useEffect(() => {
+    const syncFullscreenState = () => {
+      setIsVideoFullscreen(
+        document.fullscreenElement === playerContainerRef.current,
+      );
+    };
+    document.addEventListener("fullscreenchange", syncFullscreenState);
+    return () =>
+      document.removeEventListener("fullscreenchange", syncFullscreenState);
+  }, []);
+
+  useEffect(() => {
     if (selectedLesson?.id) {
       onLessonChange?.(selectedLesson.id);
     }
@@ -4618,6 +4962,9 @@ function VideoImmersionPanel({
     const timer = window.setTimeout(() => {
       setSelectedLessonId(nextLesson.id);
       setActiveCourseId((current) => nextCourse?.id ?? current);
+      setActiveSeriesId("");
+      setActiveTopicId("");
+      setSelectedVideoId(nextLesson.videos[0]?.id ?? "");
     }, 0);
 
     return () => window.clearTimeout(timer);
@@ -4770,6 +5117,11 @@ function VideoImmersionPanel({
 
       const progress = (await response.json()) as VideoFeedLesson["progress"];
       applyLessonProgress(lesson.id, progress);
+      setMessage(
+        progress.isFavorite
+          ? `Đã lưu ${lesson.title}. Con có thể mở bộ lọc Bài đã lưu để xem lại.`
+          : `Đã bỏ lưu ${lesson.title}.`,
+      );
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : "Không thể lưu bài yêu thích.",
@@ -4781,9 +5133,52 @@ function VideoImmersionPanel({
 
   function selectLesson(lesson: VideoFeedLesson) {
     setSelectedLessonId(lesson.id);
-    setStudyTimerActive(!usage?.limitReached);
+    setSelectedVideoId(lesson.videos[0]?.id ?? "");
+    setVideoSearch({ lessonId: lesson.id, query: "" });
+    setMessage(
+      `Đã chọn ${lesson.title}. Chọn video trong seri rồi bật phiên học khi con sẵn sàng xem.`,
+    );
     onLessonChange?.(lesson.id);
-    void recordWatch(lesson, "STARTED", lesson.progress.lastPositionSec);
+  }
+
+  function selectVideo(video: VideoFeedLesson["videos"][number]) {
+    if (!selectedLesson) {
+      return;
+    }
+
+    const videoIndex = selectedLesson.videos.findIndex(
+      (item) => item.id === video.id,
+    );
+    setSelectedVideoId(video.id);
+    setMessage(
+      `Đã chọn video ${videoIndex + 1}/${selectedLesson.videos.length}. Bật phiên học khi con sẵn sàng xem.`,
+    );
+  }
+
+  function selectAdjacentVideo(direction: -1 | 1) {
+    if (!selectedLesson || selectedVideoIndex < 0) {
+      return;
+    }
+
+    const nextVideo = selectedLesson.videos[selectedVideoIndex + direction];
+    if (nextVideo) {
+      selectVideo(nextVideo);
+    }
+  }
+
+  async function toggleVideoFullscreen() {
+    const player = playerContainerRef.current;
+
+    try {
+      if (document.fullscreenElement === player) {
+        await document.exitFullscreen();
+        return;
+      }
+      if (!player?.requestFullscreen) return;
+      await player.requestFullscreen();
+    } catch {
+      setMessage("Không thể thay đổi chế độ phóng to video trên thiết bị này.");
+    }
   }
 
   return (
@@ -4812,9 +5207,12 @@ function VideoImmersionPanel({
               key={course.id}
               onClick={() => {
                 setActiveCourseId(course.id);
+                setActiveTopicId("");
+                setActiveSeriesId("");
                 setSelectedLessonId(
                   course.units.flatMap((unit) => unit.lessons)[0]?.id ?? "",
                 );
+                setSelectedVideoId("");
               }}
               type="button"
             >
@@ -4824,104 +5222,156 @@ function VideoImmersionPanel({
         </div>
       </div>
 
-      {topics.length > 0 && (
-        <div className="mt-3 flex max-w-full gap-2 overflow-auto">
-          <button
-            className={`h-8 whitespace-nowrap rounded-lg px-3 text-xs font-medium ring-1 ${
-              activeTopicId
-                ? "bg-white text-slate-700 ring-slate-200"
-                : "bg-teal-700 text-white ring-teal-700"
-            }`}
-            onClick={() => setActiveTopicId("")}
-            type="button"
-          >
-            Tất cả chủ đề
-          </button>
-          {topics.map((topic) => (
+      {(topics.length > 0 || activeCourseUnits.length > 0) && (
+        <details className="group mt-3">
+          <summary className="flex h-9 cursor-pointer list-none items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-600 hover:bg-slate-100">
+            <span>Bộ lọc & seri</span>
+            <span className="text-violet-700 group-open:hidden">Mở</span>
+            <span className="hidden text-violet-700 group-open:inline">
+              Thu gọn
+            </span>
+          </summary>
+          {topics.length > 0 && (
+            <div className="mt-3 flex max-w-full gap-2 overflow-auto">
+              <button
+                className={`h-8 whitespace-nowrap rounded-lg px-3 text-xs font-medium ring-1 ${
+                  activeTopicId
+                    ? "bg-white text-slate-700 ring-slate-200"
+                    : "bg-teal-700 text-white ring-teal-700"
+                }`}
+                onClick={() => setActiveTopicId("")}
+                type="button"
+              >
+                Tất cả chủ đề
+              </button>
+              {topics.map((topic) => (
+                <button
+                  className={`h-8 whitespace-nowrap rounded-lg px-3 text-xs font-medium ring-1 ${
+                    activeTopicId === topic.id
+                      ? "bg-teal-700 text-white ring-teal-700"
+                      : "bg-white text-slate-700 ring-slate-200"
+                  }`}
+                  key={topic.id}
+                  onClick={() => {
+                    setActiveTopicId(topic.id);
+                    setActiveSeriesId("");
+                    const lesson = activeCourseUnits
+                      .flatMap((unit) => unit.lessons)
+                      .find((item) =>
+                        item.tags.some((tag) => tag.id === topic.id),
+                      );
+                    setSelectedLessonId(lesson?.id ?? "");
+                    setSelectedVideoId("");
+                  }}
+                  type="button"
+                >
+                  {topic.name}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {activeCourseUnits.length > 0 && (
+            <div className="mt-3 flex max-w-full gap-2 overflow-auto">
+              <span className="flex h-8 items-center px-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Seri
+              </span>
+              <button
+                aria-pressed={!activeSeriesId}
+                className={`h-8 whitespace-nowrap rounded-lg px-3 text-xs font-medium ring-1 ${
+                  activeSeriesId
+                    ? "bg-white text-slate-700 ring-slate-200"
+                    : "bg-violet-700 text-white ring-violet-700"
+                }`}
+                onClick={() => {
+                  setActiveSeriesId("");
+                  const lesson = activeCourseUnits
+                    .flatMap((unit) => unit.lessons)
+                    .find((item) =>
+                      activeTopicId
+                        ? item.tags.some((tag) => tag.id === activeTopicId)
+                        : true,
+                    );
+                  setSelectedLessonId(lesson?.id ?? "");
+                  setSelectedVideoId("");
+                }}
+                type="button"
+              >
+                Tất cả seri
+              </button>
+              {activeCourseUnits.map((unit) => (
+                <button
+                  aria-pressed={activeSeriesId === unit.id}
+                  className={`h-8 whitespace-nowrap rounded-lg px-3 text-xs font-medium ring-1 ${
+                    activeSeriesId === unit.id
+                      ? "bg-violet-700 text-white ring-violet-700"
+                      : "bg-white text-slate-700 ring-slate-200"
+                  }`}
+                  key={unit.id}
+                  onClick={() => {
+                    setActiveSeriesId(unit.id);
+                    const lesson = unit.lessons.find((item) =>
+                      activeTopicId
+                        ? item.tags.some((tag) => tag.id === activeTopicId)
+                        : true,
+                    );
+                    setSelectedLessonId(lesson?.id ?? "");
+                    setSelectedVideoId("");
+                  }}
+                  type="button"
+                >
+                  {unit.title}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-3 flex max-w-full gap-2 overflow-auto">
             <button
-              className={`h-8 whitespace-nowrap rounded-lg px-3 text-xs font-medium ring-1 ${
-                activeTopicId === topic.id
-                  ? "bg-teal-700 text-white ring-teal-700"
+              aria-pressed={showSavedOnly}
+              className={`flex h-8 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-xs font-medium ring-1 ${
+                showSavedOnly
+                  ? "bg-violet-700 text-white ring-violet-700"
                   : "bg-white text-slate-700 ring-slate-200"
               }`}
-              key={topic.id}
               onClick={() => {
-                setActiveTopicId(topic.id);
-                const lesson = allLessons.find((item) =>
-                  item.tags.some((tag) => tag.id === topic.id),
+                const nextShowSavedOnly = !showSavedOnly;
+                setShowSavedOnly(nextShowSavedOnly);
+                setSelectedLessonId("");
+                setMessage(
+                  nextShowSavedOnly
+                    ? "Đang hiển thị các bài con đã lưu."
+                    : "Đang hiển thị tất cả bài học.",
                 );
-                setSelectedLessonId(lesson?.id ?? "");
               }}
               type="button"
             >
-              {topic.name}
+              <Bookmark
+                fill={showSavedOnly ? "currentColor" : "none"}
+                size={14}
+              />
+              {showSavedOnly ? "Bài đã lưu" : "Lọc bài đã lưu"}
             </button>
-          ))}
-        </div>
+            {showSavedOnly && filteredActiveLessons.length === 0 && (
+              <span className="self-center text-xs text-slate-500">
+                Chưa có bài đã lưu trong khóa học này.
+              </span>
+            )}
+          </div>
+        </details>
       )}
 
-      {usage && (
+      {usage && (usage.isWarning || usage.limitReached) && (
         <div
+          aria-live="polite"
           className={`mt-3 rounded-lg border p-3 text-sm ${
             usage.limitReached
               ? "border-rose-200 bg-rose-50"
-              : usage.isWarning
-                ? "border-amber-200 bg-amber-50"
-                : "border-slate-200 bg-slate-50"
+              : "border-amber-200 bg-amber-50"
           }`}
         >
-          <div className="grid gap-2 sm:grid-cols-4">
-            <div>
-              <p className="text-xs text-slate-500">Đã học hôm nay</p>
-              <p className="mt-1 font-semibold">
-                {formatStudyMinutes(usage.usedMinutes)}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-500">Giới hạn ngày</p>
-              <p className="mt-1 font-semibold">{screenTimeLimitText(usage)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-500">Còn lại</p>
-              <p
-                className={`mt-1 font-semibold ${
-                  usage.limitReached
-                    ? "text-rose-700"
-                    : usage.isWarning
-                      ? "text-amber-700"
-                      : "text-teal-700"
-                }`}
-              >
-                {usage.remainingMinutes === null
-                  ? "Không giới hạn"
-                  : formatStudyMinutes(usage.remainingMinutes)}
-              </p>
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs text-slate-500">Bộ đếm video</p>
-                <p className="mt-1 font-semibold">
-                  {studyTimerActive ? "Đang chạy" : "Đang dừng"}
-                </p>
-              </div>
-              <button
-                className="h-9 rounded-lg border border-slate-300 px-3 text-sm font-medium disabled:opacity-50"
-                disabled={!selectedLesson || usage.limitReached}
-                onClick={() => setStudyTimerActive((current) => !current)}
-                type="button"
-              >
-                {studyTimerActive ? "Dừng" : "Bắt đầu"}
-              </button>
-            </div>
-          </div>
           <p
-            className={`mt-2 text-xs ${
-              usage.limitReached
-                ? "text-rose-800"
-                : usage.isWarning
-                  ? "text-amber-800"
-                  : "text-slate-500"
-            }`}
+            className={usage.limitReached ? "text-rose-800" : "text-amber-800"}
           >
             {screenTimeMessage(usage)}
           </p>
@@ -4929,240 +5379,479 @@ function VideoImmersionPanel({
       )}
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
-        <div>
-          {usage?.limitReached ? (
-            <div className="grid aspect-video w-full place-items-center rounded-lg border border-rose-200 bg-rose-50 p-4 text-center text-sm font-medium text-rose-900">
-              Hôm nay con đã hết thời gian học. Hãy nhờ bố mẹ cấp thêm thời
-              gian.
-            </div>
-          ) : selectedVideo?.provider === "YOUTUBE" &&
-            selectedVideo.embedUrl ? (
-            <iframe
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-              className="aspect-video w-full rounded-lg border border-slate-200"
-              src={selectedVideo.embedUrl}
-              title={selectedVideo.title ?? selectedLesson?.title ?? "Video"}
-            />
-          ) : selectedVideoUrl ? (
-            <video
-              className="aspect-video w-full rounded-lg border border-slate-200 bg-black"
-              controls
-              onEnded={(event) => {
-                if (!selectedLesson) return;
-                const durationSec = safeDurationSeconds(
-                  event.currentTarget.duration,
-                  selectedDurationSec,
-                );
-                setStudyTimerActive(false);
-                void recordWatch(
-                  selectedLesson,
-                  "COMPLETED",
-                  durationSec,
-                  Math.max(
-                    1,
-                    durationSec - selectedLesson.progress.lastPositionSec,
-                  ),
-                );
-              }}
-              onPause={() => setStudyTimerActive(false)}
-              onPlay={() => {
-                setStudyTimerActive(true);
-                return selectedLesson
-                  ? void recordWatch(
-                      selectedLesson,
-                      "STARTED",
-                      selectedLesson.progress.lastPositionSec,
-                    )
-                  : undefined;
-              }}
-              onTimeUpdate={(event) =>
-                selectedLesson
-                  ? applyLessonProgress(selectedLesson.id, {
-                      ...selectedLesson.progress,
-                      lastPositionSec: Math.floor(
-                        event.currentTarget.currentTime,
-                      ),
+        <div className="min-w-0">
+          <div
+            className="group relative aspect-video w-full overflow-hidden rounded-lg bg-black [&:fullscreen]:grid [&:fullscreen]:place-items-center"
+            ref={playerContainerRef}
+          >
+            {usage?.limitReached ? (
+              <div className="grid size-full place-items-center border border-rose-200 bg-rose-50 p-5 text-center text-rose-900">
+                <div>
+                  <p className="text-base font-bold">
+                    Hôm nay con đã hoàn thành thời gian học.
+                  </p>
+                  <p className="mt-2 text-sm font-normal">
+                    Con có thể nghỉ ngơi, hoặc nhờ bố mẹ cộng thêm thời gian học
+                    trong ứng dụng.
+                  </p>
+                </div>
+              </div>
+            ) : selectedYouTubeEmbedUrl ? (
+              <iframe
+                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                allowFullScreen
+                className="size-full border-0"
+                key={selectedVideo.id}
+                referrerPolicy="strict-origin-when-cross-origin"
+                sandbox="allow-same-origin allow-scripts allow-presentation"
+                src={selectedYouTubeEmbedUrl}
+                title={selectedVideo.title ?? selectedLesson?.title ?? "Video"}
+              />
+            ) : selectedVideoUrl ? (
+              <video
+                className="size-full bg-black"
+                controls
+                key={selectedVideo.id}
+                onEnded={(event) => {
+                  if (!selectedLesson) return;
+                  const durationSec = safeDurationSeconds(
+                    event.currentTarget.duration,
+                    selectedDurationSec,
+                  );
+                  setStudyTimerActive(false);
+                  void recordWatch(
+                    selectedLesson,
+                    "COMPLETED",
+                    durationSec,
+                    Math.max(
+                      1,
+                      durationSec - selectedLesson.progress.lastPositionSec,
+                    ),
+                  );
+                }}
+                onPause={() => setStudyTimerActive(false)}
+                onPlay={() => {
+                  setStudyTimerActive(true);
+                  return selectedLesson
+                    ? void recordWatch(
+                        selectedLesson,
+                        "STARTED",
+                        selectedLesson.progress.lastPositionSec,
+                      )
+                    : undefined;
+                }}
+                onTimeUpdate={(event) =>
+                  selectedLesson
+                    ? applyLessonProgress(selectedLesson.id, {
+                        ...selectedLesson.progress,
+                        lastPositionSec: Math.floor(
+                          event.currentTarget.currentTime,
+                        ),
+                      })
+                    : undefined
+                }
+                src={selectedVideoUrl}
+              />
+            ) : (
+              <div className="grid size-full place-items-center border border-slate-200 bg-slate-100 p-4 text-center text-sm text-slate-500">
+                {showSavedOnly
+                  ? "Chưa có bài đã lưu trong khóa học này."
+                  : "Chưa chọn video"}
+              </div>
+            )}
+            {!usage?.limitReached &&
+              (selectedYouTubeEmbedUrl || selectedVideoUrl) && (
+                <button
+                  aria-label={
+                    isVideoFullscreen ? "Thu nhỏ video" : "Phóng to video"
+                  }
+                  className="absolute right-3 top-3 z-10 grid size-10 place-items-center rounded-lg border border-white/50 bg-slate-950/80 text-white opacity-0 shadow-sm transition hover:bg-slate-950 focus-visible:opacity-100 group-hover:opacity-100"
+                  onClick={() => void toggleVideoFullscreen()}
+                  title={isVideoFullscreen ? "Thu nhỏ video" : "Phóng to video"}
+                  type="button"
+                >
+                  {isVideoFullscreen ? (
+                    <Minimize2 size={18} />
+                  ) : (
+                    <Maximize2 size={18} />
+                  )}
+                </button>
+              )}
+          </div>
+
+          {selectedLesson && selectedVideo && (
+            <section className="mt-3 rounded-xl border border-violet-100 bg-violet-50/60 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-violet-700">
+                    Chọn video trong bài
+                  </p>
+                  <p className="mt-1 text-sm font-semibold leading-5 text-slate-900">
+                    {selectedVideo.title ?? selectedLesson.title}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    aria-label="Video trước"
+                    className="grid size-9 place-items-center rounded-lg border border-violet-200 bg-white text-violet-800 disabled:opacity-40"
+                    disabled={selectedVideoIndex <= 0}
+                    onClick={() => selectAdjacentVideo(-1)}
+                    type="button"
+                  >
+                    <ArrowLeft size={17} />
+                  </button>
+                  <button
+                    aria-label="Video tiếp theo"
+                    className="grid size-9 place-items-center rounded-lg border border-violet-200 bg-white text-violet-800 disabled:opacity-40"
+                    disabled={
+                      selectedVideoIndex < 0 ||
+                      selectedVideoIndex >= selectedLesson.videos.length - 1
+                    }
+                    onClick={() => selectAdjacentVideo(1)}
+                    type="button"
+                  >
+                    <ArrowRight size={17} />
+                  </button>
+                  <button
+                    className="h-9 rounded-lg bg-violet-700 px-3 text-xs font-bold text-white disabled:opacity-50"
+                    disabled={usage?.limitReached}
+                    onClick={() => setStudyTimerActive((current) => !current)}
+                    type="button"
+                  >
+                    {studyTimerActive ? "Dừng ghi nhận" : "Bắt đầu học"}
+                  </button>
+                </div>
+              </div>
+              {selectedLesson.videos.length > 8 && (
+                <input
+                  aria-label="Tìm video trong bài"
+                  className="mt-3 h-9 w-full rounded-lg border border-violet-200 bg-white px-3 text-sm outline-none placeholder:text-slate-400 focus:border-violet-400"
+                  onChange={(event) =>
+                    setVideoSearch({
+                      lessonId: selectedLesson.id,
+                      query: event.target.value,
                     })
-                  : undefined
-              }
-              src={selectedVideoUrl}
-            />
-          ) : (
-            <div className="grid aspect-video w-full place-items-center rounded-lg border border-slate-200 bg-slate-100 text-sm text-slate-500">
-              Chưa chọn video
-            </div>
+                  }
+                  placeholder="Tìm video theo tên hoặc chủ đề"
+                  type="search"
+                  value={videoQuery}
+                />
+              )}
+              <div
+                aria-label={`Danh sách ${selectedLesson.videos.length} video trong bài ${selectedLesson.title}`}
+                className="mt-3 flex gap-3 overflow-x-auto pb-1"
+              >
+                {displayedLessonVideos.map((video) => {
+                  const videoIndex = selectedLesson.videos.findIndex(
+                    (item) => item.id === video.id,
+                  );
+                  const isSelected = video.id === selectedVideo.id;
+                  const durationLabel = formatVideoDuration(video.durationSec);
+
+                  return (
+                    <button
+                      aria-current={isSelected ? "true" : undefined}
+                      aria-label={`Mở ${video.title ?? `Video ${videoIndex + 1}`}${
+                        isSelected ? ", đang chọn" : ""
+                      }`}
+                      className={`w-36 shrink-0 overflow-hidden rounded-lg border text-left transition sm:w-40 ${
+                        isSelected
+                          ? "border-violet-500 bg-white shadow-sm"
+                          : "border-violet-100 bg-white hover:border-violet-300"
+                      }`}
+                      key={video.id}
+                      onClick={() => selectVideo(video)}
+                      type="button"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="relative grid aspect-video w-full place-items-center bg-slate-900 bg-cover bg-center text-white"
+                        style={
+                          video.thumbnailUrl
+                            ? {
+                                backgroundImage: `linear-gradient(135deg, rgba(36, 49, 77, 0.08), rgba(36, 49, 77, 0.62)), url(${video.thumbnailUrl})`,
+                              }
+                            : undefined
+                        }
+                      >
+                        <span className="grid size-8 place-items-center rounded-full bg-white/90 text-violet-700 shadow-sm">
+                          <Play fill="currentColor" size={14} />
+                        </span>
+                        {durationLabel && (
+                          <span className="absolute bottom-1 right-1 rounded bg-slate-950/80 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                            {durationLabel}
+                          </span>
+                        )}
+                      </span>
+                      <span className="block p-2">
+                        <span className="block truncate text-xs font-bold text-slate-800">
+                          {video.title ?? `Video ${videoIndex + 1}`}
+                        </span>
+                        <span className="mt-1 block text-[11px] text-slate-500">
+                          {isSelected ? "Đang xem" : `Video ${videoIndex + 1}`}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+                {displayedLessonVideos.length === 0 && (
+                  <p className="px-1 py-3 text-sm text-slate-500">
+                    Không tìm thấy video phù hợp.
+                  </p>
+                )}
+              </div>
+            </section>
           )}
 
           {selectedLesson && (
-            <div className="mt-3 space-y-3">
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold tracking-wide text-teal-700">
-                      Bằng chứng xem video
-                    </p>
-                    <p className="mt-1 text-sm text-slate-600">
-                      Cần xem đủ {requiredWatchPercent}% để hoàn thành phần
-                      video.
-                    </p>
+            <details className="group mt-3 rounded-lg border border-slate-200 bg-slate-50">
+              <summary className="flex h-11 cursor-pointer list-none items-center justify-between px-3 text-sm font-semibold text-slate-700">
+                <span>Tiến độ và tùy chọn bài học</span>
+                <span className="text-xs font-medium text-violet-700 group-open:hidden">
+                  Xem thêm
+                </span>
+                <span className="hidden text-xs font-medium text-violet-700 group-open:inline">
+                  Thu gọn
+                </span>
+              </summary>
+              <div className="space-y-3 border-t border-slate-200 p-3">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold tracking-wide text-teal-700">
+                        Bằng chứng xem video
+                      </p>
+                      <p className="mt-1 text-sm text-slate-600">
+                        Cần xem đủ {requiredWatchPercent}% để hoàn thành phần
+                        video.
+                      </p>
+                    </div>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${videoEvidenceStatusClass(
+                        {
+                          hasBackendEvidence,
+                          passed: evidencePassed,
+                        },
+                      )}`}
+                    >
+                      {evidenceStatusLabel}
+                    </span>
                   </div>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-semibold ${videoEvidenceStatusClass(
-                      {
-                        hasBackendEvidence,
-                        passed: evidencePassed,
-                      },
-                    )}`}
-                  >
-                    {evidenceStatusLabel}
-                  </span>
-                </div>
-                <div className="mt-3 flex items-center gap-3">
-                  <div className="h-2 flex-1 rounded-full bg-white">
-                    <div
-                      className={`h-2 rounded-full ${
-                        evidencePassed ? "bg-teal-600" : "bg-amber-500"
-                      }`}
-                      style={{
-                        width: `${Math.max(
-                          0,
-                          Math.min(100, displayWatchPercent),
-                        )}%`,
-                      }}
-                    />
+                  <div className="mt-3 flex items-center gap-3">
+                    <div className="h-2 flex-1 rounded-full bg-white">
+                      <div
+                        className={`h-2 rounded-full ${
+                          evidencePassed ? "bg-teal-600" : "bg-amber-500"
+                        }`}
+                        style={{
+                          width: `${Math.max(0, Math.min(100, displayWatchPercent))}%`,
+                        }}
+                      />
+                    </div>
+                    <span className="text-xs font-semibold text-slate-700">
+                      {displayWatchPercent}%
+                    </span>
                   </div>
-                  <span className="text-xs font-semibold text-slate-700">
-                    {displayWatchPercent}%
-                  </span>
-                </div>
-                <p className="mt-2 text-xs text-slate-500">
-                  {hasBackendEvidence
-                    ? selectedWatchEvidence?.passed
-                      ? "Hệ thống đã ghi nhận đủ thời lượng xem video."
-                      : "Hệ thống đã ghi nhận tiến độ nhưng con cần xem thêm để hoàn thành."
-                    : "Chưa có ghi nhận xem video. Bật video để hệ thống lưu tiến độ."}
-                </p>
-                {selectedLesson &&
-                  planContext?.lessonId === selectedLesson.id && (
-                    <p className="mt-1 text-xs text-teal-700">
-                      Video này đang được mở từ kế hoạch học hôm nay.
-                    </p>
-                  )}
-              </div>
-
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h3 className="text-base font-semibold">
-                    {selectedLesson.title}
-                  </h3>
-                  <p className="mt-1 text-sm text-slate-500">
-                    {selectedLesson.progress.watchCount} lần ghi nhận / tiến độ{" "}
-                    {lessonProgressStatusLabel(selectedLesson.progress.status)}
+                  <p className="mt-2 text-xs text-slate-500">
+                    {hasBackendEvidence
+                      ? selectedWatchEvidence?.passed
+                        ? "Hệ thống đã ghi nhận đủ thời lượng xem video."
+                        : "Hệ thống đã ghi nhận tiến độ nhưng con cần xem thêm để hoàn thành."
+                      : "Chưa có ghi nhận xem video. Bật video để hệ thống lưu tiến độ."}
                   </p>
-                  {selectedLesson.tags.length > 0 && (
-                    <p className="mt-2 flex flex-wrap gap-1 text-xs text-slate-500">
-                      {selectedLesson.tags.map((tag) => (
-                        <span
-                          className="rounded-md bg-slate-100 px-2 py-1"
-                          key={tag.id}
-                        >
-                          {tag.name}
-                        </span>
-                      ))}
-                    </p>
-                  )}
+                  {selectedLesson &&
+                    planContext?.lessonId === selectedLesson.id && (
+                      <p className="mt-1 text-xs text-teal-700">
+                        Video này đang được mở từ kế hoạch học hôm nay.
+                      </p>
+                    )}
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    className="h-9 rounded-lg border border-slate-200 px-3 text-sm font-medium disabled:opacity-60"
-                    disabled={isSaving}
-                    onClick={() => void toggleFavorite(selectedLesson)}
-                    type="button"
-                  >
-                    {selectedLesson.progress.isFavorite ? "Đã lưu" : "Lưu bài"}
-                  </button>
-                  <button
-                    className="h-9 rounded-lg border border-slate-200 px-3 text-sm font-medium"
-                    onClick={() =>
-                      void recordWatch(selectedLesson, "REPLAYED", 0)
-                    }
-                    type="button"
-                  >
-                    Xem lại
-                  </button>
-                  <button
-                    className="h-9 rounded-lg bg-teal-700 px-3 text-sm font-medium text-white"
-                    onClick={() =>
-                      void recordWatch(
-                        selectedLesson,
-                        "PROGRESSED",
-                        selectedLesson.progress.lastPositionSec,
-                      )
-                    }
-                    type="button"
-                  >
-                    Cập nhật tiến độ
-                  </button>
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h3 className="text-base font-semibold">
+                      {selectedLesson.title}
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {selectedLesson.progress.watchCount} lần ghi nhận / tiến
+                      độ{" "}
+                      {lessonProgressStatusLabel(
+                        selectedLesson.progress.status,
+                      )}
+                    </p>
+                    {selectedLesson.tags.length > 0 && (
+                      <p className="mt-2 flex flex-wrap gap-1 text-xs text-slate-500">
+                        {selectedLesson.tags.map((tag) => (
+                          <span
+                            className="rounded-md bg-slate-100 px-2 py-1"
+                            key={tag.id}
+                          >
+                            {tag.name}
+                          </span>
+                        ))}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      aria-label={
+                        selectedLesson.progress.isFavorite
+                          ? "Bỏ lưu bài này"
+                          : "Lưu bài này"
+                      }
+                      className={`flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium disabled:opacity-60 ${
+                        selectedLesson.progress.isFavorite
+                          ? "border-violet-200 bg-violet-50 text-violet-800"
+                          : "border-slate-200 text-slate-700"
+                      }`}
+                      disabled={isSaving}
+                      onClick={() => void toggleFavorite(selectedLesson)}
+                      type="button"
+                    >
+                      <Bookmark
+                        fill={
+                          selectedLesson.progress.isFavorite
+                            ? "currentColor"
+                            : "none"
+                        }
+                        size={16}
+                      />
+                      {isSaving
+                        ? "Đang lưu"
+                        : selectedLesson.progress.isFavorite
+                          ? "Đã lưu"
+                          : "Lưu bài"}
+                    </button>
+                    <button
+                      className="h-9 rounded-lg border border-slate-200 px-3 text-sm font-medium"
+                      onClick={() =>
+                        void recordWatch(selectedLesson, "REPLAYED", 0)
+                      }
+                      type="button"
+                    >
+                      Xem lại
+                    </button>
+                    <button
+                      className="h-9 rounded-lg bg-teal-700 px-3 text-sm font-medium text-white"
+                      onClick={() =>
+                        void recordWatch(
+                          selectedLesson,
+                          "PROGRESSED",
+                          selectedLesson.progress.lastPositionSec,
+                        )
+                      }
+                      type="button"
+                    >
+                      Cập nhật tiến độ
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            </details>
           )}
         </div>
 
-        <div className="max-h-[520px] overflow-auto border-y border-slate-200">
-          {(activeCourse?.units ?? []).map((unit) => (
-            <div className="py-3" key={unit.id}>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                {unit.title}
+        <div className="min-w-0 space-y-4">
+          <section className="border-y border-slate-200 py-3">
+            <div className="mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Chọn bài học
               </p>
-              <div className="space-y-2">
-                {unit.lessons
-                  .filter((lesson) =>
-                    activeTopicId
-                      ? lesson.tags.some((tag) => tag.id === activeTopicId)
-                      : true,
-                  )
-                  .map((lesson) => (
-                    <button
-                      className={`flex w-full items-center gap-3 rounded-lg border p-2 text-left ${
-                        lesson.id === selectedLesson?.id
-                          ? "border-teal-300 bg-teal-50"
-                          : "border-slate-200 bg-white"
-                      }`}
-                      key={lesson.id}
-                      onClick={() => selectLesson(lesson)}
-                      type="button"
-                    >
-                      <div className="grid size-12 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-600">
-                        <Play size={18} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">
-                          {lesson.title}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {lesson.progress.watchCount} lượt xem
-                          {lesson.hasPractice ? " / bài luyện" : ""}
-                          {lesson.progress.isFavorite ? " / đã lưu" : ""}
-                        </p>
-                        {lesson.tags.length > 0 && (
-                          <p className="mt-1 truncate text-xs text-slate-400">
-                            {lesson.tags.map((tag) => tag.name).join(", ")}
-                          </p>
-                        )}
-                      </div>
-                      {lesson.progress.status === "COMPLETED" && (
-                        <CheckCircle2
-                          className="shrink-0 text-teal-600"
-                          size={17}
-                        />
-                      )}
-                    </button>
-                  ))}
-              </div>
             </div>
-          ))}
+            {filteredActiveLessons.length === 0 && (
+              <p className="py-6 text-center text-sm text-slate-500">
+                {showSavedOnly
+                  ? "Chưa có bài đã lưu trong bộ lọc này."
+                  : "Chưa có bài học phù hợp với bộ lọc."}
+              </p>
+            )}
+            {activeCourseUnits
+              .filter((unit) => !activeSeriesId || unit.id === activeSeriesId)
+              .map((unit) => (
+                <div className="py-3" key={unit.id}>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {unit.title}
+                  </p>
+                  <div className="space-y-2">
+                    {unit.lessons
+                      .filter(
+                        (lesson) =>
+                          (activeTopicId
+                            ? lesson.tags.some(
+                                (tag) => tag.id === activeTopicId,
+                              )
+                            : true) &&
+                          (!showSavedOnly || lesson.progress.isFavorite),
+                      )
+                      .map((lesson) => {
+                        const thumbnailUrl = lesson.videos[0]?.thumbnailUrl;
+                        const durationLabel = formatVideoDuration(
+                          lesson.durationSec ?? lesson.videos[0]?.durationSec,
+                        );
+                        return (
+                          <button
+                            aria-label={`Mở bài ${lesson.title}`}
+                            className={`flex w-full items-center gap-3 rounded-lg border p-2 text-left ${
+                              lesson.id === selectedLesson?.id
+                                ? "border-teal-300 bg-teal-50"
+                                : "border-slate-200 bg-white"
+                            }`}
+                            key={lesson.id}
+                            onClick={() => selectLesson(lesson)}
+                            type="button"
+                          >
+                            <div
+                              aria-hidden="true"
+                              className="relative grid aspect-video w-24 shrink-0 place-items-center overflow-hidden rounded-lg bg-slate-900 bg-cover bg-center text-white"
+                              style={
+                                thumbnailUrl
+                                  ? {
+                                      backgroundImage: `linear-gradient(135deg, rgba(36, 49, 77, 0.08), rgba(36, 49, 77, 0.62)), url(${thumbnailUrl})`,
+                                    }
+                                  : undefined
+                              }
+                            >
+                              <span className="grid size-8 place-items-center rounded-full bg-white/90 text-violet-700 shadow-sm">
+                                <Play fill="currentColor" size={15} />
+                              </span>
+                              {durationLabel && (
+                                <span className="absolute bottom-1 right-1 rounded bg-slate-950/80 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                                  {durationLabel}
+                                </span>
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium">
+                                {lesson.title}
+                              </p>
+                              <p className="mt-1 text-xs text-slate-500">
+                                {lessonProgressStatusLabel(
+                                  lesson.progress.status,
+                                )}
+                                {lesson.hasPractice ? " / bài luyện" : ""}
+                                {lesson.progress.isFavorite ? " / đã lưu" : ""}
+                              </p>
+                              {lesson.tags.length > 0 && (
+                                <p className="mt-1 truncate text-xs text-slate-400">
+                                  {lesson.tags
+                                    .map((tag) => tag.name)
+                                    .join(", ")}
+                                </p>
+                              )}
+                            </div>
+                            {lesson.progress.status === "COMPLETED" && (
+                              <CheckCircle2
+                                className="shrink-0 text-teal-600"
+                                size={17}
+                              />
+                            )}
+                          </button>
+                        );
+                      })}
+                  </div>
+                </div>
+              ))}
+          </section>
         </div>
       </div>
     </section>
@@ -5186,6 +5875,49 @@ type PracticeSubmitResponse = {
   orderedAnswerIds?: string[];
 };
 
+type PracticeDraft = {
+  selectedAnswers: Record<string, string[]>;
+  textAnswers: Record<string, string>;
+  orderedAnswers: Record<string, string[]>;
+};
+
+function practiceDraftStorageKey(childProfileId: string, lessonId: string) {
+  return `minhhuong:practice-draft:v1:${childProfileId || "self"}:${lessonId}`;
+}
+
+function readPracticeDraft(
+  childProfileId: string,
+  lessonId: string,
+): PracticeDraft | null {
+  try {
+    const stored = window.localStorage.getItem(
+      practiceDraftStorageKey(childProfileId, lessonId),
+    );
+    if (!stored) {
+      return null;
+    }
+
+    const parsed = JSON.parse(stored) as Partial<PracticeDraft>;
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      !parsed.selectedAnswers ||
+      !parsed.textAnswers ||
+      !parsed.orderedAnswers
+    ) {
+      return null;
+    }
+
+    return {
+      selectedAnswers: parsed.selectedAnswers,
+      textAnswers: parsed.textAnswers,
+      orderedAnswers: parsed.orderedAnswers,
+    };
+  } catch {
+    return null;
+  }
+}
+
 function StudentPracticePanel({
   childProfileId,
   lessonId,
@@ -5200,6 +5932,8 @@ function StudentPracticePanel({
   session: Session;
 }) {
   const [practice, setPractice] = useState<PracticeLesson | null>(null);
+  const [activeActivityId, setActiveActivityId] = useState("");
+  const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<
     Record<string, string[]>
   >({});
@@ -5246,16 +5980,21 @@ function StudentPracticePanel({
       }
 
       const data = (await practiceResponse.json()) as PracticeLesson;
+      const draft = readPracticeDraft(childProfileId, lessonId);
       setPractice(data);
-      setSelectedAnswers({});
-      setTextAnswers({});
-      setOrderedAnswers({});
+      setActiveActivityId(data.activities[0]?.id ?? "");
+      setActiveQuestionIndex(0);
+      setSelectedAnswers(draft?.selectedAnswers ?? {});
+      setTextAnswers(draft?.textAnswers ?? {});
+      setOrderedAnswers(draft?.orderedAnswers ?? {});
       setResult(null);
       setRefreshedPracticeContext(null);
       setPlanRefreshMessage("");
       setMessage(
         data.activities.length > 0
-          ? "Trả lời từng câu rồi nộp để hệ thống chấm điểm."
+          ? draft
+            ? "Đã khôi phục bài làm nháp trên thiết bị này. Hoàn thành rồi nộp bài để được chấm điểm."
+            : "Trả lời từng câu rồi nộp để hệ thống chấm điểm."
           : "Bài video này chưa có phần luyện tập.",
       );
     } catch (error) {
@@ -5275,8 +6014,44 @@ function StudentPracticePanel({
     return () => window.clearTimeout(timer);
   }, [loadPractice]);
 
+  useEffect(() => {
+    if (!lessonId || !practice || practice.id !== lessonId || result) {
+      return;
+    }
+
+    const hasDraft =
+      Object.keys(selectedAnswers).length > 0 ||
+      Object.keys(textAnswers).length > 0 ||
+      Object.keys(orderedAnswers).length > 0;
+    const storageKey = practiceDraftStorageKey(childProfileId, lessonId);
+
+    try {
+      if (!hasDraft) {
+        window.localStorage.removeItem(storageKey);
+        return;
+      }
+
+      window.localStorage.setItem(
+        storageKey,
+        JSON.stringify({ selectedAnswers, textAnswers, orderedAnswers }),
+      );
+    } catch {
+      // Storage may be unavailable in a private browser session.
+    }
+  }, [
+    childProfileId,
+    lessonId,
+    orderedAnswers,
+    practice,
+    result,
+    selectedAnswers,
+    textAnswers,
+  ]);
+
   async function submitPractice() {
-    const activity = practice?.activities[0];
+    const activity =
+      practice?.activities.find((item) => item.id === activeActivityId) ??
+      practice?.activities[0];
     if (!activity) {
       return;
     }
@@ -5488,15 +6263,46 @@ function StudentPracticePanel({
   }
 
   function resetPracticeRun() {
+    setActiveQuestionIndex(0);
     setSelectedAnswers({});
     setTextAnswers({});
     setOrderedAnswers({});
     setResult(null);
     setPlanRefreshMessage("");
     setMessage("Làm lại từ đầu rồi nộp để hệ thống chấm điểm mới.");
+
+    if (lessonId) {
+      try {
+        window.localStorage.removeItem(
+          practiceDraftStorageKey(childProfileId, lessonId),
+        );
+      } catch {
+        // Storage may be unavailable in a private browser session.
+      }
+    }
   }
 
-  const activity = practice?.activities[0];
+  function selectPracticeActivity(activityId: string) {
+    const activity = practice?.activities.find(
+      (item) => item.id === activityId,
+    );
+    if (!activity || activity.id === activeActivityId) {
+      return;
+    }
+
+    setActiveActivityId(activity.id);
+    setActiveQuestionIndex(0);
+    setResult(null);
+    setRefreshedPracticeContext(null);
+    setPlanRefreshMessage("");
+    setMessage(
+      `Đang làm phần ${activity.title}. Bài làm nháp vẫn được giữ lại.`,
+    );
+  }
+
+  const activity =
+    practice?.activities.find((item) => item.id === activeActivityId) ??
+    practice?.activities[0];
   const candidatePracticeContext = refreshedPracticeContext ?? planContext;
   const practiceContext =
     candidatePracticeContext &&
@@ -5548,6 +6354,12 @@ function StudentPracticePanel({
             {activity?.title ?? "Phần luyện tập đang chuẩn bị"}
           </h2>
           <p className="mt-1 text-sm text-slate-500">{message}</p>
+          {practice && activity && !result && (
+            <p className="mt-2 text-xs font-medium text-teal-700">
+              Bài làm nháp được tự động lưu trên thiết bị này; chỉ tính điểm sau
+              khi nộp bài.
+            </p>
+          )}
         </div>
         <div className="grid min-w-full grid-cols-3 gap-2 sm:min-w-[300px]">
           {[
@@ -5572,6 +6384,40 @@ function StudentPracticePanel({
           ))}
         </div>
       </div>
+
+      {practice && practice.activities.length > 1 && (
+        <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Chọn phần luyện tập
+          </p>
+          <div
+            aria-label="Chọn phần luyện tập"
+            className="mt-2 flex max-w-full gap-2 overflow-auto"
+            role="tablist"
+          >
+            {practice.activities.map((item, index) => {
+              const selected = item.id === activity?.id;
+              return (
+                <button
+                  aria-controls="practice-question-card"
+                  aria-selected={selected}
+                  className={`h-9 whitespace-nowrap rounded-lg px-3 text-sm font-medium ${
+                    selected
+                      ? "bg-slate-950 text-white"
+                      : "bg-white text-slate-700 ring-1 ring-slate-200"
+                  }`}
+                  key={item.id}
+                  onClick={() => selectPracticeActivity(item.id)}
+                  role="tab"
+                  type="button"
+                >
+                  Phần {index + 1}: {item.title}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {practiceContext && (
         <div className="mt-4 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-950">
@@ -5672,176 +6518,240 @@ function StudentPracticePanel({
             </div>
           </div>
 
-          {activity.questions.map((question, index) => {
-            const response = result?.responses.find(
-              (item) => item.questionId === question.id,
-            );
-            const answered = isQuestionAnswered(question);
-            const imageUrl = practiceMediaUrl(question, [
-              "imageUrl",
-              "promptImageUrl",
-              "image",
-              "promptImage",
-            ]);
-            const audioUrl = practiceMediaUrl(question, [
-              "audioUrl",
-              "promptAudioUrl",
-              "audio",
-              "promptAudio",
-            ]);
-            const unsupported = !isPracticeQuestionAutoGraded(question);
+          {activity.questions
+            .slice(activeQuestionIndex, activeQuestionIndex + 1)
+            .map((question) => {
+              const questionIndex = activeQuestionIndex;
+              const response = result?.responses.find(
+                (item) => item.questionId === question.id,
+              );
+              const answered = isQuestionAnswered(question);
+              const imageUrl = practiceMediaUrl(question, [
+                "imageUrl",
+                "promptImageUrl",
+                "image",
+                "promptImage",
+              ]);
+              const audioUrl = practiceMediaUrl(question, [
+                "audioUrl",
+                "promptAudioUrl",
+                "audio",
+                "promptAudio",
+              ]);
+              const unsupported = !isPracticeQuestionAutoGraded(question);
 
-            return (
-              <div
-                className={`rounded-lg border p-4 ${
-                  response
-                    ? response.isCorrect
-                      ? "border-teal-200 bg-teal-50"
-                      : "border-amber-200 bg-amber-50"
-                    : answered
-                      ? "border-sky-200 bg-sky-50"
-                      : "border-slate-200 bg-white"
-                }`}
-                key={question.id}
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
-                    Câu {index + 1}/{totalQuestions}
-                  </span>
-                  <span className="text-xs font-medium text-slate-500">
-                    {question.points} điểm
-                  </span>
-                </div>
-                <p className="mt-3 text-base font-semibold leading-6 text-slate-950">
-                  {question.prompt}
-                </p>
-
-                {(imageUrl || audioUrl) && (
-                  <div className="mt-3 grid gap-3 md:grid-cols-[1fr_auto]">
-                    {imageUrl && (
-                      <div
-                        aria-label="Hình minh họa câu hỏi"
-                        className="min-h-40 rounded-lg border border-slate-200 bg-slate-100 bg-contain bg-center bg-no-repeat"
-                        style={{ backgroundImage: `url(${imageUrl})` }}
-                      />
-                    )}
-                    {audioUrl && (
-                      <audio
-                        className="w-full min-w-64"
-                        controls
-                        preload="none"
-                        src={audioUrl}
-                      />
-                    )}
+              return (
+                <div
+                  className={`rounded-lg border p-4 ${
+                    response
+                      ? response.isCorrect
+                        ? "border-teal-200 bg-teal-50"
+                        : "border-amber-200 bg-amber-50"
+                      : answered
+                        ? "border-sky-200 bg-sky-50"
+                        : "border-slate-200 bg-white"
+                  }`}
+                  id="practice-question-card"
+                  key={question.id}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
+                      Câu {questionIndex + 1}/{totalQuestions}
+                    </span>
+                    <span className="text-xs font-medium text-slate-500">
+                      {question.points} điểm
+                    </span>
                   </div>
-                )}
-
-                {unsupported ? (
-                  <p className="mt-3 rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-600">
-                    Dạng câu hỏi này chưa hỗ trợ tự chấm trong MVP luyện tập.
+                  <p className="mt-3 text-base font-semibold leading-6 text-slate-950">
+                    {question.prompt}
                   </p>
-                ) : question.type === "TEXT_INPUT" ? (
-                  <textarea
-                    className="mt-3 min-h-24 w-full resize-y rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-teal-500"
-                    disabled={Boolean(result)}
-                    onChange={(event) =>
-                      setTextAnswers((current) => ({
-                        ...current,
-                        [question.id]: event.target.value,
-                      }))
-                    }
-                    placeholder="Gõ câu trả lời của con"
-                    value={textAnswers[question.id] ?? ""}
-                  />
-                ) : question.type === "ORDERING" ? (
-                  <div className="mt-3 space-y-2">
-                    {orderedAnswerIdsFor(question).map(
-                      (answerId, answerIndex) => {
-                        const answer = question.answers.find(
-                          (item) => item.id === answerId,
-                        );
-                        if (!answer) {
-                          return null;
-                        }
+
+                  {(imageUrl || audioUrl) && (
+                    <div className="mt-3 grid gap-3 md:grid-cols-[1fr_auto]">
+                      {imageUrl && (
+                        <div
+                          aria-label="Hình minh họa câu hỏi"
+                          className="min-h-40 rounded-lg border border-slate-200 bg-slate-100 bg-contain bg-center bg-no-repeat"
+                          style={{ backgroundImage: `url(${imageUrl})` }}
+                        />
+                      )}
+                      {audioUrl && (
+                        <audio
+                          className="w-full min-w-64"
+                          controls
+                          preload="none"
+                          src={audioUrl}
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {unsupported ? (
+                    <p className="mt-3 rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-600">
+                      Dạng câu hỏi này chưa hỗ trợ tự chấm trong MVP luyện tập.
+                    </p>
+                  ) : question.type === "TEXT_INPUT" ? (
+                    <textarea
+                      className="mt-3 min-h-24 w-full resize-y rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-teal-500"
+                      disabled={Boolean(result)}
+                      onChange={(event) =>
+                        setTextAnswers((current) => ({
+                          ...current,
+                          [question.id]: event.target.value,
+                        }))
+                      }
+                      placeholder="Gõ câu trả lời của con"
+                      value={textAnswers[question.id] ?? ""}
+                    />
+                  ) : question.type === "ORDERING" ? (
+                    <div className="mt-3 space-y-2">
+                      {orderedAnswerIdsFor(question).map(
+                        (answerId, answerIndex) => {
+                          const answer = question.answers.find(
+                            (item) => item.id === answerId,
+                          );
+                          if (!answer) {
+                            return null;
+                          }
+
+                          return (
+                            <div
+                              className="flex min-h-12 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 text-sm"
+                              key={answer.id}
+                            >
+                              <span>{answer.text}</span>
+                              <span className="flex gap-1">
+                                <button
+                                  aria-label="Đưa đáp án lên"
+                                  className="grid size-8 place-items-center rounded-lg border border-slate-200 disabled:opacity-40"
+                                  disabled={
+                                    Boolean(result) || answerIndex === 0
+                                  }
+                                  onClick={() =>
+                                    moveOrderedAnswer(question, answerIndex, -1)
+                                  }
+                                  type="button"
+                                >
+                                  <ArrowUp size={16} />
+                                </button>
+                                <button
+                                  aria-label="Đưa đáp án xuống"
+                                  className="grid size-8 place-items-center rounded-lg border border-slate-200 disabled:opacity-40"
+                                  disabled={
+                                    Boolean(result) ||
+                                    answerIndex === question.answers.length - 1
+                                  }
+                                  onClick={() =>
+                                    moveOrderedAnswer(question, answerIndex, 1)
+                                  }
+                                  type="button"
+                                >
+                                  <ArrowDown size={16} />
+                                </button>
+                              </span>
+                            </div>
+                          );
+                        },
+                      )}
+                    </div>
+                  ) : (
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      {question.answers.map((answer) => {
+                        const isMultiple = question.type === "MULTIPLE_CHOICE";
+                        const checked = (
+                          selectedAnswers[question.id] ?? []
+                        ).includes(answer.id);
 
                         return (
-                          <div
-                            className="flex min-h-12 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 text-sm"
+                          <button
+                            aria-pressed={checked}
+                            className={practiceAnswerClass(checked)}
+                            disabled={Boolean(result)}
                             key={answer.id}
+                            onClick={() =>
+                              toggleChoice(question.id, answer.id, isMultiple)
+                            }
+                            type="button"
                           >
-                            <span>{answer.text}</span>
-                            <span className="flex gap-1">
-                              <button
-                                aria-label="Đưa đáp án lên"
-                                className="grid size-8 place-items-center rounded-lg border border-slate-200 disabled:opacity-40"
-                                disabled={Boolean(result) || answerIndex === 0}
-                                onClick={() =>
-                                  moveOrderedAnswer(question, answerIndex, -1)
-                                }
-                                type="button"
-                              >
-                                <ArrowUp size={16} />
-                              </button>
-                              <button
-                                aria-label="Đưa đáp án xuống"
-                                className="grid size-8 place-items-center rounded-lg border border-slate-200 disabled:opacity-40"
-                                disabled={
-                                  Boolean(result) ||
-                                  answerIndex === question.answers.length - 1
-                                }
-                                onClick={() =>
-                                  moveOrderedAnswer(question, answerIndex, 1)
-                                }
-                                type="button"
-                              >
-                                <ArrowDown size={16} />
-                              </button>
+                            <span className="grid size-6 shrink-0 place-items-center rounded-full border border-current text-xs font-semibold">
+                              {checked ? "✓" : ""}
                             </span>
-                          </div>
+                            {answer.text}
+                          </button>
                         );
-                      },
-                    )}
-                  </div>
-                ) : (
-                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                    {question.answers.map((answer) => {
-                      const isMultiple = question.type === "MULTIPLE_CHOICE";
-                      const checked = (
-                        selectedAnswers[question.id] ?? []
-                      ).includes(answer.id);
+                      })}
+                    </div>
+                  )}
+                  {response && (
+                    <p
+                      className={`mt-3 rounded-lg px-3 py-2 text-sm ${
+                        response.isCorrect ? "text-teal-700" : "text-rose-700"
+                      }`}
+                    >
+                      {practiceFeedbackText(response)}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
 
-                      return (
-                        <button
-                          aria-pressed={checked}
-                          className={practiceAnswerClass(checked)}
-                          disabled={Boolean(result)}
-                          key={answer.id}
-                          onClick={() =>
-                            toggleChoice(question.id, answer.id, isMultiple)
-                          }
-                          type="button"
-                        >
-                          <span className="grid size-6 shrink-0 place-items-center rounded-full border border-current text-xs font-semibold">
-                            {checked ? "✓" : ""}
-                          </span>
-                          {answer.text}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-                {response && (
-                  <p
-                    className={`mt-3 rounded-lg px-3 py-2 text-sm ${
-                      response.isCorrect ? "text-teal-700" : "text-rose-700"
+          <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:flex-row sm:items-center sm:justify-between">
+            <button
+              aria-label="Câu trước"
+              className="flex h-9 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 disabled:opacity-40"
+              disabled={activeQuestionIndex === 0}
+              onClick={() =>
+                setActiveQuestionIndex((index) => Math.max(0, index - 1))
+              }
+              type="button"
+            >
+              <ArrowLeft size={16} />
+              Câu trước
+            </button>
+            <div
+              aria-label="Điều hướng câu hỏi"
+              className="flex max-w-full gap-1 overflow-auto"
+              role="tablist"
+            >
+              {activity.questions.map((question, index) => {
+                const isActive = index === activeQuestionIndex;
+                const isAnswered = isQuestionAnswered(question);
+                return (
+                  <button
+                    aria-label={`Câu ${index + 1}${isAnswered ? ", đã trả lời" : ""}`}
+                    aria-selected={isActive}
+                    className={`grid size-9 shrink-0 place-items-center rounded-lg text-sm font-bold ${
+                      isActive
+                        ? "bg-slate-950 text-white"
+                        : isAnswered
+                          ? "bg-teal-100 text-teal-800"
+                          : "bg-white text-slate-600 ring-1 ring-slate-200"
                     }`}
+                    key={question.id}
+                    onClick={() => setActiveQuestionIndex(index)}
+                    role="tab"
+                    type="button"
                   >
-                    {practiceFeedbackText(response)}
-                  </p>
-                )}
-              </div>
-            );
-          })}
+                    {index + 1}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              aria-label="Câu tiếp theo"
+              className="flex h-9 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 disabled:opacity-40"
+              disabled={activeQuestionIndex >= totalQuestions - 1}
+              onClick={() =>
+                setActiveQuestionIndex((index) =>
+                  Math.min(Math.max(totalQuestions - 1, 0), index + 1),
+                )
+              }
+              type="button"
+            >
+              Câu tiếp
+              <ArrowRight size={16} />
+            </button>
+          </div>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm text-slate-500">
@@ -5975,7 +6885,13 @@ function ActivationOrdersPanel({
     role === "AGENCY_MANAGER" ||
     role === "ADMIN";
   const canApprove = role === "OPERATIONS" || role === "ADMIN";
+  const canExtendTrial =
+    role === "OPERATIONS" || role === "DIRECTOR" || role === "ADMIN";
   const [orders, setOrders] = useState<ActivationOrder[]>([]);
+  const [trials, setTrials] = useState<FreeTrialRecord[]>([]);
+  const [trialExtensionDays, setTrialExtensionDays] = useState<
+    Record<string, string>
+  >({});
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -6102,23 +7018,52 @@ function ActivationOrdersPanel({
     }
   }, []);
 
+  const loadTrials = useCallback(async () => {
+    if (!canExtendTrial) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${apiBaseUrl}/v1/activation-orders/trials`,
+        {
+          headers: authHeaders,
+        },
+      );
+      if (!response.ok) {
+        throw new Error(
+          await readApiError(response, "Không thể tải danh sách dùng thử."),
+        );
+      }
+      setTrials((await response.json()) as FreeTrialRecord[]);
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Không thể tải danh sách dùng thử.",
+      );
+    }
+  }, [authHeaders, canExtendTrial]);
+
   useEffect(() => {
     const timer = window.setTimeout(() => {
       void loadOrders();
       void loadPackages();
+      void loadTrials();
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, [loadOrders, loadPackages]);
+  }, [loadOrders, loadPackages, loadTrials]);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
       if (!document.hidden) {
         void loadOrders();
+        void loadTrials();
       }
     }, 30_000);
     return () => window.clearInterval(interval);
-  }, [loadOrders]);
+  }, [loadOrders, loadTrials]);
 
   const selectedPackage = useMemo(
     () => packageOptions.find((item) => item.code === packageCode),
@@ -6295,6 +7240,46 @@ function ActivationOrdersPanel({
     }
   }
 
+  async function extendTrial(subscriptionId: string) {
+    const days = Number(trialExtensionDays[subscriptionId] ?? "1");
+    if (!Number.isInteger(days) || days < 1 || days > 15) {
+      setMessage("Số ngày gia hạn trial phải từ 1 đến 15.");
+      return;
+    }
+
+    setIsLoading(true);
+    setMessage("Đang gia hạn dùng thử...");
+    try {
+      const response = await fetch(
+        `${apiBaseUrl}/v1/activation-orders/trials/${subscriptionId}/extend`,
+        {
+          method: "POST",
+          headers: { ...authHeaders, "Content-Type": "application/json" },
+          body: JSON.stringify({ days }),
+        },
+      );
+      if (!response.ok) {
+        throw new Error(
+          await readApiError(response, "Không thể gia hạn dùng thử."),
+        );
+      }
+      setMessage(
+        "Đã gia hạn trial. Tổng thời gian trial vẫn không vượt 15 ngày.",
+      );
+      setTrialExtensionDays((current) => ({
+        ...current,
+        [subscriptionId]: "",
+      }));
+      await loadTrials();
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Không thể gia hạn dùng thử.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   async function rejectOrder(orderId: string) {
     if (!canApprove) {
       return;
@@ -6388,7 +7373,10 @@ function ActivationOrdersPanel({
     try {
       const response = await fetch(
         `${apiBaseUrl}/v1/activation-orders/${orderId}/cancel`,
-        { method: "POST", headers: authHeaders },
+        {
+          method: "POST",
+          headers: authHeaders,
+        },
       );
       if (!response.ok) {
         throw new Error(await readApiError(response, "Không thể hủy đơn."));
@@ -6499,6 +7487,85 @@ function ActivationOrdersPanel({
           ))}
         </div>
       </div>
+
+      {canExtendTrial && (
+        <div className="mt-4 rounded-xl border border-violet-200 bg-violet-50 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-sm font-bold text-violet-950">
+                Quản lý dùng thử
+              </p>
+              <p className="mt-1 text-xs text-violet-800">
+                Vận hành và giám đốc chỉ có thể gia hạn tối đa 15 ngày tính từ
+                lúc bắt đầu trial.
+              </p>
+            </div>
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-violet-800">
+              {trials.filter((trial) => trial.status === "TRIALING").length}{" "}
+              đang dùng thử
+            </span>
+          </div>
+          <div className="mt-3 grid gap-2">
+            {trials.map((trial) => (
+              <div
+                className="grid gap-2 rounded-lg border border-violet-100 bg-white p-3 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center"
+                key={trial.id}
+              >
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {trial.childName} ·{" "}
+                    {trial.parent.displayName ?? trial.parent.email}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-600">
+                    {trial.status === "TRIALING"
+                      ? "Đang dùng thử"
+                      : "Đã hết hạn"}{" "}
+                    · hết hạn {formatDate(trial.endsAt)} · báo cáo{" "}
+                    {trial.report.available
+                      ? "đã mở"
+                      : "mở từ ngày " +
+                        formatDate(trial.report.availableAt ?? trial.endsAt)}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Đánh giá {trial.usage.initialAssessments}/
+                    {trial.limits.initialAssessments} · bài học{" "}
+                    {trial.usage.lessons}/{trial.limits.lessons} · AI{" "}
+                    {trial.usage.aiResponses}/{trial.limits.aiResponses}
+                  </p>
+                </div>
+                <input
+                  className="h-9 w-24 rounded-lg border border-violet-200 px-2 text-sm"
+                  disabled={isLoading || !trial.canExtend}
+                  max="15"
+                  min="1"
+                  onChange={(event) =>
+                    setTrialExtensionDays((current) => ({
+                      ...current,
+                      [trial.id]: event.target.value,
+                    }))
+                  }
+                  placeholder="Ngày"
+                  type="number"
+                  value={trialExtensionDays[trial.id] ?? "1"}
+                />
+                <button
+                  className="h-9 rounded-lg bg-violet-700 px-3 text-xs font-semibold text-white disabled:opacity-60"
+                  disabled={isLoading || !trial.canExtend}
+                  onClick={() => void extendTrial(trial.id)}
+                  type="button"
+                >
+                  Gia hạn trial
+                </button>
+              </div>
+            ))}
+            {trials.length === 0 && (
+              <p className="rounded-lg bg-white p-3 text-sm text-slate-500">
+                Chưa có tài khoản dùng thử.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[0.92fr_1.08fr]">
         {canCreate ? (
@@ -10440,26 +11507,194 @@ function AiOrOpsPanel({
   const staffNotes: Record<Role, string> = {
     STUDENT: "",
     PARENT: "",
-    TEACHER: "Ưu tiên phản hồi có bằng chứng và hoàn tất vòng hỗ trợ trước khi đóng việc.",
-    CONTENT_EDITOR: "Chỉ xuất bản khi video, câu hỏi, thẻ và trạng thái duyệt đã nhất quán.",
-    ADMIN: "Mọi thay đổi quyền và dữ liệu quan trọng cần có lý do cùng dấu vết kiểm toán.",
-    DIRECTOR: "Đi từ tín hiệu đến tác động và quyết định; không xử lý chi tiết vận hành tại đây.",
-    SUPPORT: "Giữ người dùng được cập nhật, chuyển cấp đúng hạn và xác nhận kết quả sau xử lý.",
+    TEACHER:
+      "Ưu tiên phản hồi có bằng chứng và hoàn tất vòng hỗ trợ trước khi đóng việc.",
+    CONTENT_EDITOR:
+      "Chỉ xuất bản khi video, câu hỏi, thẻ và trạng thái duyệt đã nhất quán.",
+    ADMIN:
+      "Mọi thay đổi quyền và dữ liệu quan trọng cần có lý do cùng dấu vết kiểm toán.",
+    DIRECTOR:
+      "Đi từ tín hiệu đến tác động và quyết định; không xử lý chi tiết vận hành tại đây.",
+    SUPPORT:
+      "Giữ người dùng được cập nhật, chuyển cấp đúng hạn và xác nhận kết quả sau xử lý.",
     SALE: "Mỗi đơn cần đủ thông tin khách hàng, chứng từ và bước tiếp theo rõ ràng.",
-    AGENCY_OWNER: "Theo dõi theo phạm vi đại lý và đối soát trước khi xác nhận chi trả.",
-    AGENCY_MANAGER: "Chỉ thao tác trong phạm vi thành viên và đơn hàng được phân công.",
-    OPERATIONS: "Không kích hoạt quyền học khi chứng từ hoặc trạng thái phê duyệt chưa hợp lệ.",
+    AGENCY_OWNER:
+      "Theo dõi theo phạm vi đại lý và đối soát trước khi xác nhận chi trả.",
+    AGENCY_MANAGER:
+      "Chỉ thao tác trong phạm vi thành viên và đơn hàng được phân công.",
+    OPERATIONS:
+      "Không kích hoạt quyền học khi chứng từ hoặc trạng thái phê duyệt chưa hợp lệ.",
   };
   const [chatOpen, setChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [chatSessionId, setChatSessionId] = useState("");
   const [chatReply, setChatReply] = useState("");
   const [chatStatus, setChatStatus] = useState("");
+  const [chatMode, setChatMode] = useState<"LIVE" | "MOCK_DEV_ONLY" | "">("");
   const [chatBusy, setChatBusy] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isBuddySpeaking, setIsBuddySpeaking] = useState(false);
+  const [buddyPet, setBuddyPet] = useState<BuddyPet>("mimi");
+  const recognitionRef = useRef<VoiceRecognition | null>(null);
+  const voiceTranscriptRef = useRef("");
+  const voiceHadErrorRef = useRef(false);
+  const buddyMood = chatBusy
+    ? "thinking"
+    : isListening
+      ? "listening"
+      : chatReply
+        ? "celebrating"
+        : "ready";
+  const buddyCopy = isBuddySpeaking
+    ? "Mình đang đọc câu trả lời cho con nghe nhé!"
+    : {
+        ready: "Con muốn luyện câu tiếng Anh nào?",
+        listening: "Mình đang ghé tai lắng nghe con nói...",
+        thinking: "Buddy đang nghĩ về câu con vừa nói...",
+        celebrating: "Con làm tốt lắm! Cùng nghe Buddy nhé.",
+      }[buddyMood];
 
-  async function sendChatMessage(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const message = chatInput.trim();
+  useEffect(() => {
+    const browserWindow = window as typeof window & {
+      SpeechRecognition?: VoiceRecognitionConstructor;
+      webkitSpeechRecognition?: VoiceRecognitionConstructor;
+    };
+    setVoiceSupported(
+      Boolean(
+        browserWindow.SpeechRecognition ??
+        browserWindow.webkitSpeechRecognition,
+      ),
+    );
+
+    return () => {
+      voiceHadErrorRef.current = true;
+      recognitionRef.current?.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    const savedPet = window.localStorage.getItem(
+      `minhhuong:ai-buddy-pet:${childProfileId}`,
+    );
+    if (buddyPets.some((pet) => pet.id === savedPet)) {
+      setBuddyPet(savedPet as BuddyPet);
+    }
+  }, [childProfileId]);
+
+  function chooseBuddyPet(pet: BuddyPet) {
+    window.speechSynthesis?.cancel();
+    setIsBuddySpeaking(false);
+    setBuddyPet(pet);
+    window.localStorage.setItem(
+      `minhhuong:ai-buddy-pet:${childProfileId}`,
+      pet,
+    );
+  }
+
+  function closeBuddyDialog() {
+    const recognition = recognitionRef.current;
+    recognitionRef.current = null;
+    voiceHadErrorRef.current = true;
+    recognition?.abort();
+    window.speechSynthesis?.cancel();
+    setIsListening(false);
+    setIsBuddySpeaking(false);
+    setChatOpen(false);
+  }
+
+  useEffect(() => {
+    if (!chatOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeBuddyDialog();
+      }
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [chatOpen]);
+
+  function startVoicePractice() {
+    const browserWindow = window as typeof window & {
+      SpeechRecognition?: VoiceRecognitionConstructor;
+      webkitSpeechRecognition?: VoiceRecognitionConstructor;
+    };
+    const Recognition =
+      browserWindow.SpeechRecognition ?? browserWindow.webkitSpeechRecognition;
+    if (!Recognition) {
+      setChatStatus(
+        "Trình duyệt này chưa hỗ trợ nhận dạng giọng nói. Con vẫn có thể nhập câu tiếng Anh.",
+      );
+      return;
+    }
+
+    recognitionRef.current?.abort();
+    voiceTranscriptRef.current = "";
+    voiceHadErrorRef.current = false;
+    const recognition = new Recognition();
+    recognition.lang = "en-US";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onresult = (event) => {
+      const result = event.results[event.results.length - 1];
+      const transcript = result?.[0]?.transcript.trim();
+      if (transcript) {
+        voiceTranscriptRef.current = transcript;
+        setChatInput(transcript);
+        setChatStatus("Buddy đã nghe xong. Đang chuẩn bị phản hồi cho con...");
+      }
+    };
+    recognition.onerror = (event) => {
+      voiceHadErrorRef.current = true;
+      setChatStatus(
+        event.error === "not-allowed"
+          ? "Hãy cho phép dùng micro để luyện nói."
+          : "Chưa nghe rõ. Con hãy thử nói chậm và gần micro hơn nhé.",
+      );
+    };
+    recognition.onend = () => {
+      setIsListening(false);
+      if (recognitionRef.current !== recognition) {
+        return;
+      }
+      const transcript = voiceTranscriptRef.current.trim();
+      if (transcript && !voiceHadErrorRef.current) {
+        void submitPracticeMessage(transcript);
+      }
+    };
+    recognitionRef.current = recognition;
+    setChatStatus("AI đang lắng nghe. Con hãy nói bằng tiếng Anh.");
+    setIsListening(true);
+    recognition.start();
+  }
+
+  function speakAiReply() {
+    if (!chatReply || !window.speechSynthesis) {
+      setChatStatus("Trình duyệt này chưa hỗ trợ đọc phản hồi bằng giọng nói.");
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(chatReply);
+    utterance.lang = "en-US";
+    utterance.rate = 0.85;
+    utterance.onstart = () => setIsBuddySpeaking(true);
+    utterance.onend = () => setIsBuddySpeaking(false);
+    utterance.onerror = () => setIsBuddySpeaking(false);
+    window.speechSynthesis.speak(utterance);
+  }
+
+  async function submitPracticeMessage(rawMessage: string) {
+    const message = rawMessage.trim();
     if (!message) {
       setChatStatus("Hãy nhập câu hoặc chủ đề con muốn luyện.");
       return;
@@ -10470,7 +11705,7 @@ function AiOrOpsPanel({
     }
 
     setChatBusy(true);
-    setChatStatus("");
+    setChatStatus("Buddy đang nghĩ về câu con vừa nói...");
     try {
       const response = await fetch(`${apiBaseUrl}/v1/ai-chat/messages`, {
         method: "POST",
@@ -10488,6 +11723,7 @@ function AiOrOpsPanel({
         assistantMessage?: string;
         message?: string | string[];
         sessionId?: string;
+        mode?: "LIVE" | "MOCK_DEV_ONLY";
       };
       if (!response.ok) {
         const errorMessage = Array.isArray(payload.message)
@@ -10498,6 +11734,7 @@ function AiOrOpsPanel({
 
       setChatSessionId(payload.sessionId ?? chatSessionId);
       setChatReply(payload.assistantMessage ?? "Trợ lý đã nhận được câu hỏi.");
+      setChatMode(payload.mode ?? "");
       setChatInput("");
     } catch (error) {
       setChatStatus(
@@ -10506,6 +11743,11 @@ function AiOrOpsPanel({
     } finally {
       setChatBusy(false);
     }
+  }
+
+  async function sendChatMessage(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await submitPracticeMessage(chatInput);
   }
 
   return (
@@ -10530,14 +11772,14 @@ function AiOrOpsPanel({
       <div className="mt-4 space-y-3 text-sm">
         <p className="rounded-lg bg-slate-100 p-3 text-slate-700">
           {isStudent
-            ? "Thử hỏi: “Giúp con luyện cách chào hỏi bằng tiếng Anh.”"
+            ? "Xem bài xong, con có thể nói với AI để luyện phản xạ tiếng Anh."
             : isParent
               ? "Chọn đúng hồ sơ con trước khi mở bài học và báo cáo tiến độ."
               : roleHomeCopy[role]}
         </p>
         <p className="rounded-lg bg-violet-50 p-3 text-violet-950">
           {isStudent
-            ? "Trợ lý sử dụng hồ sơ học tập và quyền của gói đang hoạt động."
+            ? "AI sẽ sửa nhẹ nhàng, cho câu mẫu và hỏi một câu tiếp theo để con trả lời."
             : isParent
               ? "Các giới hạn học và thiết bị được quản lý trong hồ sơ gia đình."
               : staffNotes[role]}
@@ -10549,41 +11791,213 @@ function AiOrOpsPanel({
           <button
             aria-expanded={chatOpen}
             className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-violet-700 px-3 text-sm font-medium text-white"
-            onClick={() => setChatOpen((current) => !current)}
+            onClick={() => setChatOpen(true)}
             type="button"
           >
             <Bot size={18} />
-            {chatOpen ? "Đóng trò chuyện" : "Mở trò chuyện"}
+            Luyện nói cùng AI
           </button>
-          {chatOpen && (
-            <form className="mt-3 space-y-3" onSubmit={sendChatMessage}>
-              {chatReply && (
-                <p className="rounded-2xl bg-violet-50 p-3 text-sm leading-6 text-violet-950">
-                  {chatReply}
-                </p>
-              )}
-              <textarea
-                aria-label="Tin nhắn cho trợ lý AI"
-                className="min-h-24 w-full rounded-2xl border border-slate-200 bg-white p-3 text-sm outline-none"
-                onChange={(event) => setChatInput(event.target.value)}
-                placeholder="Con muốn luyện câu nào?"
-                value={chatInput}
-              />
-              {chatStatus && (
-                <p className="text-xs font-medium text-rose-600">
-                  {chatStatus}
-                </p>
-              )}
-              <button
-                className="kid-primary-button flex h-10 w-full items-center justify-center gap-2 text-sm disabled:opacity-50"
-                disabled={chatBusy}
-                type="submit"
+          {chatOpen &&
+            createPortal(
+              <div
+                className="ai-buddy-modal-backdrop"
+                onMouseDown={(event) => {
+                  if (event.target === event.currentTarget) {
+                    closeBuddyDialog();
+                  }
+                }}
               >
-                <Send size={16} />
-                {chatBusy ? "Đang gửi..." : "Gửi cho trợ lý"}
-              </button>
-            </form>
-          )}
+                <div
+                  aria-labelledby="ai-buddy-dialog-title"
+                  aria-modal="true"
+                  className="ai-buddy-dialog"
+                  role="dialog"
+                >
+                  <header className="ai-buddy-dialog-header">
+                    <div className="ai-buddy-dialog-title">
+                      <span aria-hidden="true">✨</span>
+                      <div>
+                        <h2 id="ai-buddy-dialog-title">AI English Buddy</h2>
+                        <p>Nói tiếng Anh cùng người bạn con yêu thích</p>
+                      </div>
+                    </div>
+                    <button
+                      aria-label="Đóng AI English Buddy"
+                      className="ai-buddy-dialog-close"
+                      onClick={closeBuddyDialog}
+                      type="button"
+                    >
+                      <X size={22} />
+                    </button>
+                  </header>
+                  <form
+                    className="ai-buddy-dialog-form space-y-3"
+                    onSubmit={sendChatMessage}
+                  >
+                    <fieldset className="ai-buddy-pet-picker">
+                      <legend>Chọn pet đồng hành</legend>
+                      <div className="ai-buddy-pet-options">
+                        {buddyPets.map((pet) => {
+                          const isSelected = buddyPet === pet.id;
+                          return (
+                            <button
+                              aria-pressed={isSelected}
+                              className={`ai-buddy-pet-option${
+                                isSelected ? " is-selected" : ""
+                              }`}
+                              key={pet.id}
+                              onClick={() => chooseBuddyPet(pet.id)}
+                              type="button"
+                            >
+                              <span
+                                aria-hidden="true"
+                                className="ai-buddy-pet-emoji"
+                              >
+                                {pet.emoji}
+                              </span>
+                              <span className="ai-buddy-pet-copy">
+                                <strong>{pet.name}</strong>
+                                <small>{pet.animal}</small>
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </fieldset>
+                    <div
+                      aria-live="polite"
+                      className={`ai-buddy-stage ai-buddy-stage--${buddyMood}`}
+                    >
+                      <div
+                        aria-hidden="true"
+                        className="ai-buddy-mascot"
+                        data-pet={buddyPet}
+                        data-speaking={isBuddySpeaking ? "true" : "false"}
+                      >
+                        <span className="ai-buddy-cape" />
+                        <span className="ai-buddy-ear ai-buddy-ear--left" />
+                        <span className="ai-buddy-ear ai-buddy-ear--right" />
+                        <span className="ai-buddy-face">
+                          <i className="ai-buddy-hero-mask" />
+                          <i className="ai-buddy-eye ai-buddy-eye--left" />
+                          <i className="ai-buddy-eye ai-buddy-eye--right" />
+                          <i className="ai-buddy-cheek ai-buddy-cheek--left" />
+                          <i className="ai-buddy-cheek ai-buddy-cheek--right" />
+                          <i className="ai-buddy-nose" />
+                          <i className="ai-buddy-smile" />
+                        </span>
+                        <span className="ai-buddy-pet-beak" />
+                        <span className="ai-buddy-pet-belly" />
+                        <span className="ai-buddy-pet-tail" />
+                        <span className="ai-buddy-hero-emblem">★</span>
+                        <span className="ai-buddy-hand ai-buddy-hand--ear" />
+                        <span className="ai-buddy-hand ai-buddy-hand--drum" />
+                        <span className="ai-buddy-drum">
+                          <i />
+                          <i />
+                        </span>
+                        <span className="ai-buddy-spark ai-buddy-spark--one">
+                          ✦
+                        </span>
+                        <span className="ai-buddy-spark ai-buddy-spark--two">
+                          ✦
+                        </span>
+                      </div>
+                      <div className="ai-buddy-speech">
+                        <span className="ai-buddy-name">
+                          {buddyPets.find((pet) => pet.id === buddyPet)?.name} ·
+                          AI English Buddy
+                        </span>
+                        <p>{buddyCopy}</p>
+                        {buddyMood === "thinking" && (
+                          <span aria-hidden="true" className="ai-buddy-dots">
+                            <i />
+                            <i />
+                            <i />
+                          </span>
+                        )}
+                        {buddyMood === "listening" && (
+                          <span
+                            aria-hidden="true"
+                            className="ai-buddy-sound-bars"
+                          >
+                            <i />
+                            <i />
+                            <i />
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {chatReply && (
+                      <div className="rounded-2xl bg-violet-50 p-3 text-sm leading-6 text-violet-950">
+                        <p>{chatReply}</p>
+                        <div className="mt-2 flex items-center justify-between gap-2">
+                          <button
+                            className="inline-flex items-center gap-1 rounded-lg bg-white px-2 py-1 text-xs font-semibold text-violet-800 ring-1 ring-violet-200"
+                            onClick={speakAiReply}
+                            type="button"
+                          >
+                            <Volume2 size={14} />
+                            {isBuddySpeaking
+                              ? "Buddy đang đọc..."
+                              : "Nghe AI đọc"}
+                          </button>
+                          {chatMode && (
+                            <span className="text-[11px] text-violet-700">
+                              {chatMode === "LIVE"
+                                ? "AI đang hoạt động"
+                                : "Chế độ luyện thử"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    <textarea
+                      aria-label="Tin nhắn cho trợ lý AI"
+                      className="min-h-24 w-full rounded-2xl border border-slate-200 bg-white p-3 text-sm outline-none"
+                      onChange={(event) => setChatInput(event.target.value)}
+                      placeholder="Ví dụ: Hello, my name is Lan. I like cats."
+                      value={chatInput}
+                    />
+                    {voiceSupported && (
+                      <button
+                        className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-violet-200 bg-white px-3 text-sm font-semibold text-violet-800 disabled:opacity-50"
+                        disabled={chatBusy}
+                        onClick={() =>
+                          isListening
+                            ? recognitionRef.current?.stop()
+                            : startVoicePractice()
+                        }
+                        type="button"
+                      >
+                        <Mic size={16} />
+                        {isListening
+                          ? "Dừng nghe và gửi câu"
+                          : "Bấm micro để nói"}
+                      </button>
+                    )}
+                    {chatStatus && (
+                      <p className="text-xs font-medium text-violet-700">
+                        {chatStatus}
+                      </p>
+                    )}
+                    <p className="text-center text-[11px] leading-4 text-slate-500">
+                      Buddy chỉ gửi câu hoàn chỉnh sau khi con dừng nói, không
+                      gửi âm thanh hoặc lời nói dở dang lên AI.
+                    </p>
+                    <button
+                      className="kid-primary-button flex h-10 w-full items-center justify-center gap-2 text-sm disabled:opacity-50"
+                      disabled={chatBusy}
+                      type="submit"
+                    >
+                      <Send size={16} />
+                      {chatBusy ? "Đang gửi..." : "Gửi cho trợ lý"}
+                    </button>
+                  </form>
+                </div>
+              </div>,
+              document.body,
+            )}
         </>
       ) : (
         <button
@@ -10612,18 +12026,16 @@ function AccessPanel({ dashboard }: { dashboard: DashboardPayload }) {
       <div className="mt-4 grid grid-cols-2 border-y border-slate-200">
         {[
           ["Loại tài khoản", roleLabels[dashboard.role]],
-          ["Trạng thái", "Đang hoạt động"],
+          ["Trạng thái", dashboard.user.status === "ACTIVE" ? "Đang hoạt động" : dashboard.user.status ?? "Chưa rõ"],
           [
             dashboard.role === "STUDENT" || dashboard.role === "PARENT"
               ? "Quyền học tập"
               : "Phạm vi truy cập",
-            dashboard.role === "STUDENT"
-              ? "Cao cấp"
-              : dashboard.role === "PARENT"
-                ? "Góc nhìn gia đình"
-                : "Công cụ công việc",
+            dashboard.role === "PARENT"
+              ? "Góc nhìn gia đình"
+              : "Theo vai trò được cấp",
           ],
-          ["Hỗ trợ", "Khả dụng"],
+          ["Email", dashboard.user.email],
         ].map(([label, value], index) => (
           <div
             className={`p-3 ${index % 2 === 1 ? "border-l border-slate-200" : ""} ${
@@ -10880,6 +12292,10 @@ function ParentChildrenPanel({
 }) {
   const [children, setChildren] = useState<ParentChild[]>([]);
   const [limits, setLimits] = useState<Record<string, string>>({});
+  const [sessionLimits, setSessionLimits] = useState<Record<string, string>>(
+    {},
+  );
+  const [breakLimits, setBreakLimits] = useState<Record<string, string>>({});
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
   const [message, setMessage] = useState("Đang tải dữ liệu học tập của con.");
   const [savingChildId, setSavingChildId] = useState<string | null>(null);
@@ -10908,6 +12324,22 @@ function ParentChildrenPanel({
           data.children.map((child) => [
             child.id,
             String(child.screenTime.dailyLimitMinutes),
+          ]),
+        ),
+      );
+      setSessionLimits(
+        Object.fromEntries(
+          data.children.map((child) => [
+            child.id,
+            String(child.screenTime.sessionLimitMinutes),
+          ]),
+        ),
+      );
+      setBreakLimits(
+        Object.fromEntries(
+          data.children.map((child) => [
+            child.id,
+            String(child.screenTime.breakMinutes),
           ]),
         ),
       );
@@ -10940,9 +12372,23 @@ function ParentChildrenPanel({
 
   async function saveScreenTime(child: ParentChild) {
     const limit = Number(limits[child.id]);
+    const sessionLimit = Number(sessionLimits[child.id]);
+    const breakLimit = Number(breakLimits[child.id]);
 
     if (!Number.isInteger(limit) || limit < 10 || limit > 240) {
       setMessage("Số phút/ngày phải từ 10 đến 240 phút.");
+      return;
+    }
+    if (
+      !Number.isInteger(sessionLimit) ||
+      sessionLimit < 5 ||
+      sessionLimit > 120
+    ) {
+      setMessage("Mỗi phiên sử dụng phải từ 5 đến 120 phút.");
+      return;
+    }
+    if (!Number.isInteger(breakLimit) || breakLimit < 10 || breakLimit > 120) {
+      setMessage("Thời gian nghỉ phải từ 10 đến 120 phút.");
       return;
     }
 
@@ -10959,13 +12405,15 @@ function ParentChildrenPanel({
           body: JSON.stringify({
             isEnabled: enabled[child.id] ?? false,
             dailyLimitMinutes: limit,
+            sessionLimitMinutes: sessionLimit,
+            breakMinutes: breakLimit,
           }),
         },
       );
 
       if (!response.ok) {
         throw new Error(
-          await readApiError(response, "Không thể lưu giới hạn thiết bị."),
+          await readApiError(response, "Không thể lưu giới hạn thời gian học."),
         );
       }
 
@@ -10976,16 +12424,24 @@ function ParentChildrenPanel({
         ),
       );
       setLimits((current) => ({ ...current, [child.id]: String(limit) }));
+      setSessionLimits((current) => ({
+        ...current,
+        [child.id]: String(screenTime.sessionLimitMinutes),
+      }));
+      setBreakLimits((current) => ({
+        ...current,
+        [child.id]: String(screenTime.breakMinutes),
+      }));
       setEnabled((current) => ({
         ...current,
         [child.id]: screenTime.isEnabled,
       }));
-      setMessage(`Đã lưu giới hạn thiết bị cho ${child.displayName}.`);
+      setMessage(`Đã lưu giới hạn thời gian học cho ${child.displayName}.`);
     } catch (error) {
       setMessage(
         error instanceof Error
           ? error.message
-          : "Không thể lưu giới hạn thiết bị.",
+          : "Không thể lưu giới hạn thời gian học.",
       );
     } finally {
       setSavingChildId(null);
@@ -11043,7 +12499,7 @@ function ParentChildrenPanel({
             Theo dõi học tập
           </p>
           <h2 className="mt-1 text-xl font-semibold">
-            Tiến độ và giới hạn thiết bị
+            Tiến độ và thời gian học
           </h2>
           {message === "no-children" ? (
             <p className="mt-1 text-sm text-slate-500">
@@ -11068,6 +12524,11 @@ function ParentChildrenPanel({
           const childLimit =
             limits[child.id] ?? String(child.screenTime.dailyLimitMinutes);
           const childEnabled = enabled[child.id] ?? child.screenTime.isEnabled;
+          const childSessionLimit =
+            sessionLimits[child.id] ??
+            String(child.screenTime.sessionLimitMinutes);
+          const childBreakLimit =
+            breakLimits[child.id] ?? String(child.screenTime.breakMinutes);
           const completionRate = Math.min(
             100,
             Math.max(0, child.progress.completionRate),
@@ -11085,7 +12546,9 @@ function ParentChildrenPanel({
                     <p className="mt-1 text-sm text-slate-500">
                       {child.subscription.status === "ACTIVE"
                         ? "Gói đang hoạt động"
-                        : child.subscription.status}
+                        : child.subscription.status === "TRIALING"
+                          ? "Đang dùng thử"
+                          : child.subscription.status}
                     </p>
                   )}
                   {!child.subscription && (
@@ -11107,7 +12570,7 @@ function ParentChildrenPanel({
                     formatStudyMinutes(child.progress.weeklyStudyMinutes),
                   ],
                   [
-                    "Thiết bị hôm nay",
+                    "Học hôm nay",
                     formatStudyMinutes(child.deviceUsage.usedMinutes),
                   ],
                   [
@@ -11151,7 +12614,7 @@ function ParentChildrenPanel({
               </div>
 
               <div className="mt-4 rounded-lg border border-slate-200 p-3">
-                <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4 xl:items-end">
                   <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
                     <input
                       checked={childEnabled}
@@ -11164,10 +12627,42 @@ function ParentChildrenPanel({
                       }
                       type="checkbox"
                     />
-                    Bật giới hạn thiết bị
+                    Bật giới hạn thời gian học
                   </label>
                   <label className="text-sm font-medium text-slate-700">
-                    Số phút tối đa/ngày
+                    Số phút mỗi phiên
+                    <input
+                      className="mt-1 h-10 w-full rounded-lg border border-slate-300 px-3 text-sm"
+                      max={120}
+                      min={5}
+                      onChange={(event) =>
+                        setSessionLimits((current) => ({
+                          ...current,
+                          [child.id]: event.target.value,
+                        }))
+                      }
+                      type="number"
+                      value={childSessionLimit}
+                    />
+                  </label>
+                  <label className="text-sm font-medium text-slate-700">
+                    Nghỉ tối thiểu (phút)
+                    <input
+                      className="mt-1 h-10 w-full rounded-lg border border-slate-300 px-3 text-sm"
+                      max={120}
+                      min={10}
+                      onChange={(event) =>
+                        setBreakLimits((current) => ({
+                          ...current,
+                          [child.id]: event.target.value,
+                        }))
+                      }
+                      type="number"
+                      value={childBreakLimit}
+                    />
+                  </label>
+                  <label className="text-sm font-medium text-slate-700">
+                    Số phút học tối đa/ngày
                     <input
                       className="mt-1 h-10 w-full rounded-lg border border-slate-300 px-3 text-sm md:w-32"
                       max={240}
@@ -11194,7 +12689,7 @@ function ParentChildrenPanel({
                 </div>
                 <p className="mt-3 text-xs text-slate-500">
                   {child.screenTime.isEnabled
-                    ? `${child.deviceUsage.limitMinutes ?? child.screenTime.dailyLimitMinutes} phút/ngày đã bật.`
+                    ? `${child.deviceUsage.limitMinutes ?? child.screenTime.dailyLimitMinutes} phút/ngày; mỗi phiên ${child.screenTime.sessionLimitMinutes} phút và nghỉ ít nhất ${child.screenTime.breakMinutes} phút.`
                     : "Giới hạn đang tắt."}
                   {child.deviceUsage.grantedExtraMinutes
                     ? ` Cộng thêm hôm nay: ${child.deviceUsage.grantedExtraMinutes} phút.`
@@ -11208,10 +12703,14 @@ function ParentChildrenPanel({
                             )}`,
                         )
                         .join(", ")}.`
-                    : " Chưa ghi nhận thiết bị hôm nay."}
+                    : " Chưa ghi nhận thời gian học hôm nay."}
                   {child.subscription
                     ? ` Gói học đến ngày ${formatDate(child.subscription.currentPeriodEnd)}.`
                     : " Chưa có gói học."}
+                </p>
+                <p className="mt-2 text-xs leading-5 text-slate-500">
+                  Giới hạn này áp dụng cho thời gian học được ghi nhận trong ứng
+                  dụng, không khóa toàn bộ điện thoại của con.
                 </p>
 
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -11363,12 +12862,12 @@ function ParentPortal({
   session: Session;
 }) {
   const tabs: Array<{ id: ParentTab; label: string }> = [
-    { id: "children", label: "Học sinh" },
-    { id: "learning", label: "Học hôm nay" },
-    { id: "learningPath", label: "Lộ trình" },
-    { id: "family", label: "Hồ sơ con" },
-    { id: "reports", label: "Báo cáo" },
-    { id: "billing", label: "Đơn & thanh toán" },
+    { id: "children", label: "Tổng quan" },
+    { id: "learning", label: "Cùng con học" },
+    { id: "learningPath", label: "Lộ trình học" },
+    { id: "family", label: "Các con" },
+    { id: "reports", label: "Kết quả" },
+    { id: "billing", label: "Gói học" },
     { id: "profile", label: "Tài khoản" },
   ];
 
@@ -11555,6 +13054,11 @@ function ParentChildLearningPanel({ session }: { session: Session }) {
         </p>
       ) : (
         <>
+          <ParentDailyPlanComposer
+            child={selectedChild}
+            onAssigned={() => setHomeRefreshToken((current) => current + 1)}
+            session={session}
+          />
           <StudentTodayPanel
             childDisplayName={selectedChild.displayName}
             childProfileId={selectedChild.id}
@@ -11578,6 +13082,216 @@ function ParentChildLearningPanel({ session }: { session: Session }) {
           />
         </>
       )}
+    </section>
+  );
+}
+
+function ParentDailyPlanComposer({
+  child,
+  onAssigned,
+  session,
+}: {
+  child: ParentChild;
+  onAssigned: () => void;
+  session: Session;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [candidates, setCandidates] = useState<ParentDailyPlanCandidate[]>([]);
+  const [selectedLessonIds, setSelectedLessonIds] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const authHeaders = useMemo(
+    () => ({ Authorization: `Bearer ${session.accessToken}` }),
+    [session.accessToken],
+  );
+
+  const loadCandidates = useCallback(async () => {
+    setIsLoading(true);
+    setMessage("");
+    try {
+      const response = await fetch(
+        `${apiBaseUrl}/v1/parent/children/${child.id}/daily-plan-candidates?query=${encodeURIComponent(query)}`,
+        { headers: authHeaders },
+      );
+      if (!response.ok) {
+        throw new Error(
+          await readApiError(response, "Không thể tải bài học để giao."),
+        );
+      }
+      setCandidates((await response.json()) as ParentDailyPlanCandidate[]);
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Không thể tải bài học để giao.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [authHeaders, child.id, query]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const timer = window.setTimeout(() => void loadCandidates(), 0);
+    return () => window.clearTimeout(timer);
+  }, [isOpen, loadCandidates]);
+
+  function toggleLesson(lessonId: string) {
+    setSelectedLessonIds((current) => {
+      if (current.includes(lessonId)) {
+        return current.filter((id) => id !== lessonId);
+      }
+      if (current.length >= 3) {
+        setMessage(
+          "Mỗi ngày chỉ nên giao tối đa 3 bài để bé không bị quá tải.",
+        );
+        return current;
+      }
+      return [...current, lessonId];
+    });
+  }
+
+  async function savePlan() {
+    if (!selectedLessonIds.length) {
+      setMessage("Hãy chọn ít nhất một bài học.");
+      return;
+    }
+    setIsSaving(true);
+    setMessage("");
+    try {
+      const response = await fetch(
+        `${apiBaseUrl}/v1/parent/children/${child.id}/daily-plans/today`,
+        {
+          method: "POST",
+          headers: { ...authHeaders, "Content-Type": "application/json" },
+          body: JSON.stringify({ lessonIds: selectedLessonIds }),
+        },
+      );
+      if (!response.ok) {
+        throw new Error(
+          await readApiError(response, "Không thể cập nhật kế hoạch hôm nay."),
+        );
+      }
+      setMessage(
+        `Đã giao ${selectedLessonIds.length} bài cho ${child.displayName}.`,
+      );
+      setIsOpen(false);
+      onAssigned();
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Không thể cập nhật kế hoạch hôm nay.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  return (
+    <section className="rounded-lg border border-violet-200 bg-violet-50/50 p-4 sm:p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">
+            Phụ huynh điều chỉnh
+          </p>
+          <h2 className="mt-1 text-base font-semibold text-slate-900">
+            Giao bài cho {child.displayName}
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Nếu chưa giao, hệ thống sẽ tự đề xuất bài tiếp theo theo lộ trình.
+          </p>
+        </div>
+        <button
+          className="h-10 rounded-lg bg-violet-700 px-4 text-sm font-semibold text-white hover:bg-violet-800"
+          onClick={() => setIsOpen((current) => !current)}
+          type="button"
+        >
+          {isOpen ? "Đóng" : "Chọn bài hôm nay"}
+        </button>
+      </div>
+      {isOpen && (
+        <div className="mt-4 border-t border-violet-200 pt-4">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input
+              className="h-10 min-w-0 flex-1 rounded-lg border border-violet-200 bg-white px-3 text-sm"
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") void loadCandidates();
+              }}
+              placeholder="Tìm theo tên bài, ví dụ: phonics, animals..."
+              type="search"
+              value={query}
+            />
+            <button
+              className="h-10 rounded-lg border border-violet-200 bg-white px-4 text-sm font-semibold text-violet-800 disabled:opacity-60"
+              disabled={isLoading}
+              onClick={() => void loadCandidates()}
+              type="button"
+            >
+              {isLoading ? "Đang tìm..." : "Tìm bài"}
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-slate-500">
+            Chọn tối đa 3 bài. Kế hoạch chỉ thay đổi khi bé chưa bắt đầu học hôm
+            nay.
+          </p>
+          <div className="mt-3 max-h-72 space-y-2 overflow-y-auto pr-1">
+            {candidates.map((lesson) => {
+              const selected = selectedLessonIds.includes(lesson.id);
+              return (
+                <label
+                  className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
+                    selected
+                      ? "border-violet-400 bg-white"
+                      : "border-violet-100 bg-white/70 hover:border-violet-300"
+                  }`}
+                  key={lesson.id}
+                >
+                  <input
+                    checked={selected}
+                    className="mt-0.5 size-4 accent-violet-700"
+                    onChange={() => toggleLesson(lesson.id)}
+                    type="checkbox"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-slate-800">
+                      {lesson.title}
+                    </span>
+                    <span className="mt-1 block text-xs text-slate-500">
+                      {lesson.courseTitle}
+                      {formatVideoDuration(lesson.durationSec)
+                        ? ` · ${formatVideoDuration(lesson.durationSec)}`
+                        : ""}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+            {!isLoading && candidates.length === 0 && (
+              <p className="rounded-lg border border-dashed border-violet-200 bg-white p-4 text-sm text-slate-500">
+                Không tìm thấy bài phù hợp. Hãy thử từ khóa khác.
+              </p>
+            )}
+          </div>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-slate-600">
+              Đã chọn: {selectedLessonIds.length}/3
+            </p>
+            <button
+              className="h-10 rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white disabled:opacity-50"
+              disabled={isSaving || selectedLessonIds.length === 0}
+              onClick={() => void savePlan()}
+              type="button"
+            >
+              {isSaving ? "Đang giao bài..." : "Giao bài hôm nay"}
+            </button>
+          </div>
+        </div>
+      )}
+      {message && <p className="mt-3 text-sm text-violet-800">{message}</p>}
     </section>
   );
 }
@@ -11641,7 +13355,14 @@ function ParentLearningPathPanel({ session }: { session: Session }) {
             throw new Error(
               await readApiError(res, "Không thể tải lộ trình học."),
             );
-          setAssignment((await res.json()) as ParentContentAssignment);
+          const payload = await res.text();
+          // Nest returns an empty successful response for a missing assignment.
+          // Treat it as no assigned path instead of attempting JSON.parse("").
+          setAssignment(
+            payload.trim()
+              ? (JSON.parse(payload) as ParentContentAssignment)
+              : null,
+          );
         } catch (err) {
           setError(
             err instanceof Error ? err.message : "Không thể tải lộ trình học.",
@@ -11767,6 +13488,7 @@ type MyOrder = {
   status: string;
   source: string;
   packageName?: string | null;
+  childProfile?: { id: string; displayName: string } | null;
   amountCents: number;
   currency: string;
   bankName?: string | null;
@@ -11799,6 +13521,13 @@ const orderStatusColor: Record<string, string> = {
 
 function ParentBillingPanel({ session }: { session: Session }) {
   const [orders, setOrders] = useState<MyOrder[]>([]);
+  const [children, setChildren] = useState<ParentChild[]>([]);
+  const [packages, setPackages] = useState<ActivationPackage[]>([]);
+  const [childProfileId, setChildProfileId] = useState("");
+  const [packageCode, setPackageCode] = useState("");
+  const [referralCode, setReferralCode] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -11810,13 +13539,25 @@ function ParentBillingPanel({ session }: { session: Session }) {
   useEffect(() => {
     void (async () => {
       try {
-        const res = await fetch(`${apiBaseUrl}/v1/me/activation-orders`, {
-          headers: authHeaders,
-        });
+        const [res, childrenRes, optionsRes] = await Promise.all([
+          fetch(`${apiBaseUrl}/v1/me/activation-orders`, { headers: authHeaders }),
+          fetch(`${apiBaseUrl}/v1/parent/children`, { headers: authHeaders }),
+          fetch(`${apiBaseUrl}/v1/activation-orders/self-service/options`),
+        ]);
         if (!res.ok)
           throw new Error(await readApiError(res, "Không thể tải đơn hàng."));
+        if (!childrenRes.ok)
+          throw new Error(await readApiError(childrenRes, "Không thể tải hồ sơ con."));
+        if (!optionsRes.ok)
+          throw new Error(await readApiError(optionsRes, "Không thể tải gói học."));
         const data = (await res.json()) as { orders: MyOrder[] };
+        const childData = (await childrenRes.json()) as ParentChildrenPayload;
+        const optionData = (await optionsRes.json()) as SelfServiceOptions;
         setOrders(data.orders);
+        setChildren(childData.children);
+        setPackages(optionData.packages);
+        setChildProfileId((current) => current || childData.children[0]?.id || "");
+        setPackageCode((current) => current || optionData.packages[0]?.code || "");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Lỗi tải dữ liệu.");
       } finally {
@@ -11825,24 +13566,81 @@ function ParentBillingPanel({ session }: { session: Session }) {
     })();
   }, [authHeaders]);
 
+  async function createOrder(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmitting(true);
+    setNotice("");
+    try {
+      const response = await fetch(`${apiBaseUrl}/v1/activation-orders/self-service/parent`, {
+        method: "POST",
+        headers: { ...authHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify({ childProfileId, packageCode, referralCode: referralCode.trim() || undefined }),
+      });
+      if (!response.ok) throw new Error(await readApiError(response, "Không thể tạo đơn."));
+      const listResponse = await fetch(`${apiBaseUrl}/v1/me/activation-orders`, { headers: authHeaders });
+      if (!listResponse.ok) throw new Error(await readApiError(listResponse, "Không thể tải lại đơn."));
+      const data = (await listResponse.json()) as { orders: MyOrder[] };
+      setOrders(data.orders);
+      setNotice("Đã tạo đơn. Hãy chuyển khoản theo thông tin bên dưới và tải minh chứng thanh toán.");
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Không thể tạo đơn.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function uploadProof(orderId: string, file: File) {
+    setNotice("");
+    const form = new FormData();
+    form.append("paymentProof", file);
+    try {
+      const response = await fetch(`${apiBaseUrl}/v1/activation-orders/self-service/parent/${orderId}/payment-proof`, {
+        method: "POST",
+        headers: authHeaders,
+        body: form,
+      });
+      if (!response.ok) throw new Error(await readApiError(response, "Không thể tải minh chứng."));
+      const listResponse = await fetch(`${apiBaseUrl}/v1/me/activation-orders`, { headers: authHeaders });
+      if (!listResponse.ok) throw new Error(await readApiError(listResponse, "Không thể tải lại đơn."));
+      const data = (await listResponse.json()) as { orders: MyOrder[] };
+      setOrders(data.orders);
+      setNotice("Đã gửi minh chứng. Đơn đang chờ duyệt.");
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Không thể tải minh chứng.");
+    }
+  }
+
   if (loading)
     return <p className="text-sm text-slate-500 py-6">Đang tải đơn hàng...</p>;
   if (error) return <p className="text-sm text-red-600 py-6">{error}</p>;
 
-  if (orders.length === 0) {
-    return (
-      <div className="rounded-lg border border-slate-200 bg-white p-6 text-center">
-        <WalletCards className="mx-auto mb-3 text-slate-300" size={40} />
-        <p className="text-sm text-slate-500">Chưa có đơn thanh toán nào.</p>
-        <p className="mt-1 text-xs text-slate-400">
-          Khi bạn mua gói học, đơn sẽ xuất hiện tại đây.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
+      <form className="rounded-lg border border-slate-200 bg-white p-5 space-y-3" onSubmit={createOrder}>
+        <h3 className="font-semibold">Mua gói học cho con</h3>
+        {children.length === 0 ? (
+          <p className="text-sm text-slate-600">Hãy tạo hồ sơ con trong mục Các con trước khi mua gói.</p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="text-sm">Hồ sơ con
+              <select className="mt-1 w-full rounded-lg border border-slate-300 p-2" value={childProfileId} onChange={(event) => setChildProfileId(event.target.value)}>
+                {children.map((child) => <option key={child.id} value={child.id}>{child.displayName}</option>)}
+              </select>
+            </label>
+            <label className="text-sm">Gói học
+              <select className="mt-1 w-full rounded-lg border border-slate-300 p-2" value={packageCode} onChange={(event) => setPackageCode(event.target.value)}>
+                {packages.map((pkg) => <option key={pkg.code} value={pkg.code}>{pkg.name} · {pkg.amountVnd.toLocaleString("vi-VN")} ₫ / {pkg.durationDays} ngày</option>)}
+              </select>
+            </label>
+          </div>
+        )}
+        <label className="block text-sm">Mã giới thiệu (nếu có)
+          <input className="mt-1 w-full rounded-lg border border-slate-300 p-2" value={referralCode} onChange={(event) => setReferralCode(event.target.value)} />
+        </label>
+        <button className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50" disabled={submitting || !childProfileId || !packageCode} type="submit">{submitting ? "Đang tạo đơn..." : "Tạo đơn thanh toán"}</button>
+        {notice && <p className="text-sm text-slate-700" role="status">{notice}</p>}
+      </form>
+      {orders.length === 0 && <p className="text-sm text-slate-500">Chưa có đơn thanh toán nào.</p>}
       {orders.map((order) => {
         const statusLabel = orderStatusLabel[order.status] ?? order.status;
         const statusColor =
@@ -11855,6 +13653,7 @@ function ParentBillingPanel({ session }: { session: Session }) {
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
                 <p className="font-medium">{order.packageName ?? "Gói học"}</p>
+                {order.childProfile && <p className="text-xs text-slate-500">Cho {order.childProfile.displayName}</p>}
                 <p className="mt-0.5 text-xs text-slate-500">
                   {formatMoney(order.amountCents, order.currency)} &middot;{" "}
                   {new Date(order.createdAt).toLocaleDateString("vi-VN")}
@@ -11918,6 +13717,11 @@ function ParentBillingPanel({ session }: { session: Session }) {
                   </tbody>
                 </table>
               </div>
+            )}
+            {order.status === "WAITING_PAYMENT" && order.source === "SELF_SERVICE" && (
+              <label className="mt-3 block text-sm font-medium text-teal-800">Tải minh chứng chuyển khoản
+                <input accept="image/png,image/jpeg,image/webp,application/pdf" className="mt-1 block w-full text-sm" onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadProof(order.id, file); }} type="file" />
+              </label>
             )}
             {order.status === "APPROVED" && order.expiresAt && (
               <p className="mt-2 text-xs text-teal-700">
@@ -12289,9 +14093,11 @@ function ParentLearningReportPanel({ session }: { session: Session }) {
           setReport((await res.json()) as ParentLearningEvidenceReport);
         } catch (err) {
           setError(
-            err instanceof Error
-              ? err.message
-              : "Không thể tải báo cáo học tập.",
+            friendlyTrialReportError(
+              err instanceof Error
+                ? err.message
+                : "Không thể tải báo cáo học tập.",
+            ),
           );
         } finally {
           setLoading(false);

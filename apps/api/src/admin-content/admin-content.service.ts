@@ -360,6 +360,7 @@ export class AdminContentService {
         embedUrl: normalized.embedUrl,
         thumbnailUrl: dto.thumbnailUrl ?? normalized.thumbnailUrl,
         durationSec: dto.durationSec,
+        sortOrder: dto.sortOrder ?? 0,
         uploadedById: user.sub,
       },
     });

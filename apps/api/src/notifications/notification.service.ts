@@ -72,6 +72,22 @@ export class NotificationService {
     await this.send(ctx.to, subject, html);
   }
 
+  async sendAgencyApplicationApproved(to: string, code: string): Promise<void> {
+    await this.send(
+      to,
+      '[Minh Huong English] Đăng ký đại lý đã được duyệt',
+      `<p>Hồ sơ đại lý của bạn đã được duyệt.</p><p>Mã đại lý: <strong>${code}</strong></p><p>Bạn có thể đăng nhập bằng email và mật khẩu đã đăng ký để tạo link affiliate và bán hàng.</p>`,
+    );
+  }
+
+  async sendAgencyApplicationRejected(to: string): Promise<void> {
+    await this.send(
+      to,
+      '[Minh Huong English] Kết quả đăng ký đại lý',
+      '<p>Hồ sơ đại lý của bạn chưa được duyệt. Vui lòng liên hệ bộ phận hỗ trợ nếu cần thêm thông tin.</p>',
+    );
+  }
+
   async sendOrderApproved(ctx: OrderEmailContext): Promise<void> {
     const subject = `[Minh Huong English] Tài khoản đã được kích hoạt 🎉`;
     const html = `

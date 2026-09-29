@@ -1,9 +1,11 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import type { AuthenticatedUser } from '../auth/auth.types';
+import { FREE_TRIAL_PROVIDER_REF } from '../entitlement/trial-policy';
 import { ChildAccessService } from '../learning-access/child-access.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateChildProfileDto } from './dto/create-child-profile.dto';
@@ -196,7 +198,12 @@ export class ParentService {
     dto: UpdateChildScreenTimeDto,
     user: AuthenticatedUser,
   ) {
-    if (dto.isEnabled === undefined && dto.dailyLimitMinutes === undefined) {
+    if (
+      dto.isEnabled === undefined &&
+      dto.dailyLimitMinutes === undefined &&
+      dto.sessionLimitMinutes === undefined &&
+      dto.breakMinutes === undefined
+    ) {
       throw new BadRequestException('No screen time setting was provided');
     }
 
@@ -209,11 +216,19 @@ export class ParentService {
       throw new NotFoundException('Child profile not found');
     }
 
-    const settingUpdate: { isEnabled?: boolean; dailyLimitMinutes?: number } =
-      {};
+    const settingUpdate: {
+      isEnabled?: boolean;
+      dailyLimitMinutes?: number;
+      sessionLimitMinutes?: number;
+      breakMinutes?: number;
+    } = {};
     if (dto.isEnabled !== undefined) settingUpdate.isEnabled = dto.isEnabled;
     if (dto.dailyLimitMinutes !== undefined)
       settingUpdate.dailyLimitMinutes = dto.dailyLimitMinutes;
+    if (dto.sessionLimitMinutes !== undefined)
+      settingUpdate.sessionLimitMinutes = dto.sessionLimitMinutes;
+    if (dto.breakMinutes !== undefined)
+      settingUpdate.breakMinutes = dto.breakMinutes;
 
     const setting = await this.prisma.childScreenTimeSetting.upsert({
       where: { childProfileId },
@@ -222,6 +237,8 @@ export class ParentService {
         childProfileId,
         isEnabled: dto.isEnabled ?? true,
         dailyLimitMinutes: dto.dailyLimitMinutes ?? 45,
+        sessionLimitMinutes: dto.sessionLimitMinutes ?? 30,
+        breakMinutes: dto.breakMinutes ?? 10,
       },
     });
 
@@ -441,6 +458,7 @@ export class ParentService {
       notFoundForDenied: true,
       purpose: 'parent-learning-report',
     });
+    await this.assertTrialReportAvailable(childProfileId);
 
     const rangeDays = range === '30d' ? 30 : 7;
     const toDate = this.todayInBangkok();
@@ -892,12 +910,16 @@ export class ParentService {
     setting: {
       isEnabled: boolean;
       dailyLimitMinutes: number;
+      sessionLimitMinutes: number;
+      breakMinutes: number;
       updatedAt: Date;
     } | null,
   ) {
     return {
       isEnabled: setting?.isEnabled ?? false,
       dailyLimitMinutes: setting?.dailyLimitMinutes ?? 45,
+      sessionLimitMinutes: setting?.sessionLimitMinutes ?? 30,
+      breakMinutes: setting?.breakMinutes ?? 10,
       updatedAt: setting?.updatedAt ?? null,
     };
   }
@@ -1105,6 +1127,29 @@ export class ParentService {
       code: reason,
       message: this.parentBlockedMessage(reason),
     };
+  }
+
+  private async assertTrialReportAvailable(childProfileId: string) {
+    const trial = await this.prisma.subscription.findFirst({
+      where: {
+        childProfileId,
+        providerRef: FREE_TRIAL_PROVIDER_REF,
+      },
+      orderBy: { currentPeriodEnd: 'desc' },
+      select: {
+        childProfile: {
+          select: {
+            trialAccess: { select: { reportAvailableAt: true } },
+          },
+        },
+      },
+    });
+    const availableAt = trial?.childProfile.trialAccess?.reportAvailableAt;
+    if (availableAt && availableAt > new Date()) {
+      throw new ForbiddenException(
+        'Trial learning report becomes available at the end of day 2.',
+      );
+    }
   }
 
   private todayInBangkok() {

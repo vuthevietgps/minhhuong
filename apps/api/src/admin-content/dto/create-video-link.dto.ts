@@ -32,6 +32,11 @@ export class CreateVideoLinkDto {
   durationSec?: number;
 
   @IsOptional()
+  @IsInt()
+  @Min(0)
+  sortOrder?: number;
+
+  @IsOptional()
   @IsString()
   @MaxLength(1000)
   thumbnailUrl?: string;

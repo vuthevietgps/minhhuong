@@ -166,6 +166,26 @@ describe('LearningLocalDemoProductionRuntimeSafety', () => {
     );
   });
 
+  it('blocks a separate live video AI provider in hosted staging', () => {
+    const report = inspectProductionRuntimeSafety({
+      ...secureProductionEnvironment,
+      DEPLOYMENT_ENVIRONMENT: 'hosted-staging',
+      NOTIFICATION_PROVIDER: 'disabled',
+      PAYMENT_PROVIDER: 'disabled',
+      AI_PROVIDER: 'disabled',
+      AI_CONTEXT_PROVIDER: 'deepinfra',
+      VIDEO_PROVIDER: 'disabled',
+    });
+    expect(report.violations).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'HOSTED_STAGING_PROVIDER_NOT_DISABLED',
+          variable: expect.stringContaining('AI_CONTEXT_PROVIDER') as string,
+        }),
+      ]),
+    );
+  });
+
   it('builds deterministic go-live blocker evidence for the remaining external gates', () => {
     const report = buildLearningProductionRuntimeGateMatrixReport(
       '2026-07-10T03:00:00.000Z',

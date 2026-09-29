@@ -6,6 +6,13 @@ Monorepo khoi dau cho nen tang hoc tieng Anh:
 - `apps/web`: Next.js web app cho hoc vien va admin.
 - `packages/shared`: kieu du lieu/contract dung chung cho web, backend, mobile sau nay.
 - `docs`: tai lieu kien truc va van hanh noi dung.
+- `minhhuongextension`: Chrome extension cho profile cua tre, dong bo cau hinh voi website.
+
+## Quan Ly Trinh Duyet Cua Con
+
+Trang `/browser-control` ket hop extension de duyet link, dat lich va han muc xem, chuyen sang AI/bai tap va theo doi ket qua. Xem [huong dan tich hop](docs/minhhuong-browser-control.md) va [cai extension](minhhuongextension/README.md).
+
+Quy trinh chuan bi va gui duyet Chrome Web Store: [docs/chrome-web-store-publishing.md](docs/chrome-web-store-publishing.md).
 
 ## Yeu Cau
 

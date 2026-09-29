@@ -60,6 +60,7 @@ export const adminFinanceRoles = [
 ] as const;
 
 export const adminPackagesRoles = adminChannelRoles;
+export const adminPackageManageRoles = ["ADMIN", "OPERATIONS"] as const;
 
 export const adminPerformanceRoles = [
   "SALE",

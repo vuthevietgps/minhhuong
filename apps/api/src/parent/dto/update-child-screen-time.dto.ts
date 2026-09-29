@@ -10,4 +10,16 @@ export class UpdateChildScreenTimeDto {
   @Min(10)
   @Max(240)
   dailyLimitMinutes?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(5)
+  @Max(120)
+  sessionLimitMinutes?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(10)
+  @Max(120)
+  breakMinutes?: number;
 }

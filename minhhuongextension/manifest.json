@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Minh Hương — Máy học của con",
+  "version": "1.1.0",
+  "description": "Chỉ mở nội dung bố mẹ đã chọn, giới hạn thời gian xem và đưa con đến bài học Minh Hương.",
+  "minimum_chrome_version": "120",
+  "permissions": [
+    "storage",
+    "alarms",
+    "tabs",
+    "webNavigation",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": ["http://*/*", "https://*/*"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "action": { "default_popup": "popup.html" },
+  "declarative_net_request": {
+    "rule_resources": [
+      { "id": "default_deny", "enabled": true, "path": "rules.json" }
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["blocked.html", "blocked.js", "style.css"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "incognito": "not_allowed"
+}
