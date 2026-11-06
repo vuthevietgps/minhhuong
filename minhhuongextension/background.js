@@ -229,10 +229,16 @@ async function handle(message, sender) {
   const localPage = sender.url === blocked || internal;
   if (message.type === "STATUS" && localPage) {
     const state = await read();
-    if (!state) return { paired: false };
+    const version = chrome.runtime.getManifest?.().version || "";
+    if (!state) return { paired: false, version };
     const now = safeNow(state);
+    // Diagnostics for support staff; never include the device token.
     return {
       paired: true,
+      version,
+      api: state.api,
+      deviceName: state.deviceName || "",
+      pendingEvents: state.events.length,
       childName: state.childName,
       revoked: state.revoked,
       clockWarning: state.clockWarning,
@@ -255,9 +261,12 @@ async function handle(message, sender) {
     };
   }
   if (message.type === "PAIR" && internal) {
-    if ((await read())?.token)
+    const current = await read();
+    if (current?.token && !current.revoked)
       throw new Error("Thiết bị đã ghép. Phụ huynh quản lý tại website.");
-    const url = new URL(message.api);
+    // A revoked device may pair again, but only with the server it was
+    // installed for: the API origin stays fixed after the first pairing.
+    const url = new URL(current?.api || message.api);
     if (
       url.username ||
       url.password ||
@@ -278,6 +287,7 @@ async function handle(message, sender) {
     const state = {
       ...response,
       api: url.origin,
+      deviceName: message.name.trim(),
       usage: response.usage || [],
       events: [],
       leases: {},

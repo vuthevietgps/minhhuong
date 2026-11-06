@@ -10,9 +10,14 @@ async function refresh() {
     state.clockWarning ||
     state.mode === "PAUSED"
   ) {
+    // Distinct wording lets parents and support tell the cases apart by phone.
     status.textContent = !state?.paired
       ? "Nhờ bố mẹ kết nối máy bằng biểu tượng Minh Hương trên Chrome."
-      : "Đang tạm dừng. Con hãy nhờ bố mẹ kiểm tra nhé.";
+      : state.revoked
+        ? "Máy này đã được ngắt kết nối với tài khoản của bố mẹ. Con nhờ bố mẹ kết nối lại bằng biểu tượng Minh Hương trên Chrome nhé."
+        : state.clockWarning
+          ? "Ngày giờ trên máy đang chưa đúng. Con nhờ bố mẹ chỉnh lại ngày giờ rồi bấm Thử lại nhé."
+          : "Bố mẹ đang tạm dừng giờ dùng máy. Con nghỉ ngơi một chút nhé.";
     return;
   }
   if (!state.items.length) {

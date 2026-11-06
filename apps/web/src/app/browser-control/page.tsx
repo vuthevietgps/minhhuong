@@ -143,7 +143,9 @@ export default function BrowserControlPage() {
   const [pairing, setPairing] = useState<{
     code: string;
     expiresAt: string;
+    knownDeviceIds: string[];
   } | null>(null);
+  const [now, setNow] = useState(0);
   const [childName, setChildName] = useState("");
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const loadId = useRef(0);
@@ -188,6 +190,58 @@ export default function BrowserControlPage() {
     }, 0);
     return () => clearTimeout(timer);
   }, [load]);
+  useEffect(() => {
+    if (!pairing) return;
+    // Countdown tick for the visible expiry of the pairing code.
+    const tick = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(tick);
+  }, [pairing]);
+  useEffect(() => {
+    if (!pairing || !childId) return;
+    // While a code is waiting, refresh only devices/usage/events so the parent
+    // sees the child's machine appear without reloading or losing unsaved edits.
+    const requestId = loadId.current;
+    let cancelled = false;
+    const poll = setInterval(async () => {
+      if (Date.now() > Date.parse(pairing.expiresAt)) {
+        clearInterval(poll);
+        return;
+      }
+      try {
+        const result = await api<Dashboard>(`parent/browser-control/${childId}`);
+        if (cancelled || requestId !== loadId.current) return;
+        setData((current) =>
+          current
+            ? {
+                ...current,
+                devices: result.devices,
+                usage: result.usage,
+                events: result.events,
+              }
+            : current,
+        );
+        const added = result.devices.find(
+          (device) =>
+            !device.revokedAt && !pairing.knownDeviceIds.includes(device.id),
+        );
+        if (added) {
+          setPairing(null);
+          setStatus(
+            `Đã kết nối “${added.name}”. Máy của con đã sẵn sàng sử dụng.`,
+          );
+        }
+      } catch {
+        // Transient errors: keep waiting until the code expires.
+      }
+    }, 4000);
+    return () => {
+      cancelled = true;
+      clearInterval(poll);
+    };
+  }, [pairing, childId]);
+  const pairingSecondsLeft = pairing
+    ? Math.max(0, Math.ceil((Date.parse(pairing.expiresAt) - now) / 1000))
+    : 0;
   const change = (next: Policy) => {
     setPolicy(next);
     setDirty(true);
@@ -625,26 +679,37 @@ export default function BrowserControlPage() {
                     <button
                       disabled={busy}
                       onClick={() =>
-                        void run(async () =>
-                          setPairing(
-                            await api(
-                              `parent/browser-control/${childId}/pairing`,
-                              "POST",
-                            ),
-                          ),
-                        )
+                        void run(async () => {
+                          const created = await api<{
+                            code: string;
+                            expiresAt: string;
+                          }>(`parent/browser-control/${childId}/pairing`, "POST");
+                          setNow(Date.now());
+                          setPairing({
+                            ...created,
+                            knownDeviceIds: data.devices.map((d) => d.id),
+                          });
+                        })
                       }
                     >
-                      Tạo mã kích hoạt plugin
+                      {pairing ? "Tạo mã mới" : "Tạo mã kích hoạt plugin"}
                     </button>
-                    {pairing && (
+                    {pairing && pairingSecondsLeft === 0 && (
+                      <p className={styles.hint}>
+                        Mã đã hết hạn. Bấm “Tạo mã mới” để lấy mã khác.
+                      </p>
+                    )}
+                    {pairing && pairingSecondsLeft > 0 && (
                       <div className={styles.pair}>
-                        <code>{pairing.code}</code>
+                        <code>{pairing.code.match(/.{1,4}/g)?.join(" ")}</code>
                         <p>
-                          Dùng một lần · hết hạn{" "}
-                          {new Date(pairing.expiresAt).toLocaleTimeString(
-                            "vi-VN",
-                          )}
+                          Dùng một lần · còn{" "}
+                          {Math.floor(pairingSecondsLeft / 60)}:
+                          {String(pairingSecondsLeft % 60).padStart(2, "0")} ·
+                          gõ trên máy của con, không cần gõ dấu cách.
+                        </p>
+                        <p className={styles.hint}>
+                          Đang chờ máy của con kết nối… Trang sẽ tự cập nhật.
                         </p>
                         <button
                           className={styles.secondary}

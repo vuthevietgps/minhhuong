@@ -17,6 +17,7 @@ globalThis.chrome = {
   runtime: {
     id: "test",
     getURL: (path) => extensionUrl + path,
+    getManifest: () => ({ version: "9.9.9" }),
     onMessage: event("message"),
     onInstalled: event("installed"),
     onStartup: event("startup"),
@@ -161,6 +162,50 @@ test("revocation removes allow rules, clears leases and redirects existing tabs"
   assert.equal(state.revoked, true);
   assert.deepEqual(dynamicRules, []);
   assert.equal(tabs[0].url, extensionUrl + "blocked.html");
+});
+test("status exposes support diagnostics without the device token", async () => {
+  setup();
+  state.deviceName = "Laptop";
+  const status = await message({ type: "STATUS" });
+  assert.equal(status.data.version, "9.9.9");
+  assert.equal(status.data.api, "https://api.test");
+  assert.equal(status.data.deviceName, "Laptop");
+  assert.equal(status.data.pendingEvents, 0);
+  assert.ok(!JSON.stringify(status.data).includes(state.token));
+  state = undefined;
+  const unpaired = await message({ type: "STATUS" });
+  assert.deepEqual(unpaired.data, { paired: false, version: "9.9.9" });
+});
+test("active device cannot pair twice, revoked device re-pairs only with its own server", async () => {
+  setup();
+  const pairResponse = {
+    deviceId: "device-2",
+    token: "b".repeat(64),
+    policy: { ...state.policy, items: [] },
+    revision: 2,
+    webOrigin: "https://school.test",
+    childName: "Child",
+    serverTime: new Date().toISOString(),
+    usage: [],
+  };
+  let requested;
+  network = async (url, options) => {
+    requested = { url, body: JSON.parse(options.body) };
+    return { ok: true, json: async () => pairResponse };
+  };
+  const pair = (api) =>
+    message({ type: "PAIR", api, code: "c".repeat(32), name: " Laptop " });
+  assert.equal((await pair("https://api.test")).ok, false);
+  assert.equal(requested, undefined);
+
+  state.revoked = true;
+  const response = await pair("https://other.test");
+  assert.equal(response.ok, true);
+  assert.equal(requested.url, "https://api.test/v1/browser-extension/pair");
+  assert.equal(state.api, "https://api.test");
+  assert.equal(state.token, "b".repeat(64));
+  assert.equal(state.revoked, undefined);
+  assert.equal(state.deviceName, "Laptop");
 });
 test("unauthorized page cannot relay learning, pair or reset device", async () => {
   setup();

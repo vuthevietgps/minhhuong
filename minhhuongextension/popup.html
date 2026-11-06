@@ -5,8 +5,8 @@
   <body class="popup">
     <main>
       <span class="badge">MINH HƯƠNG · MÁY HỌC CỦA CON</span>
-      <p class="step">BƯỚC CUỐI · KẾT NỐI MÁY</p>
-      <h1>Kết nối máy của con</h1>
+      <p class="step" id="step">BƯỚC CUỐI · KẾT NỐI MÁY</p>
+      <h1 id="title">Kết nối máy của con</h1>
       <p id="lead">Phụ huynh tạo mã kích hoạt trên trang quản lý trình duyệt, rồi nhập mã đó tại đây.</p>
       <form id="pair">
         <label
@@ -20,10 +20,11 @@
             name="code"
             pattern="[a-fA-F0-9]{32}"
             inputmode="text"
-            placeholder="Dán mã phụ huynh đã tạo"
+            placeholder="Dán hoặc gõ mã phụ huynh đã tạo"
             required
             autocomplete="one-time-code" /></label
-        ><details class="advanced">
+        ><small id="code-hint">Gõ đủ 32 ký tự, không cần gõ dấu cách.</small
+        ><details class="advanced" id="advanced">
           <summary>Dành cho người hỗ trợ</summary>
           <label
             >Địa chỉ máy chủ<input
@@ -42,6 +43,17 @@
       <p id="status" role="status"></p>
       <button id="sync" hidden>Kiểm tra thay đổi</button
       ><a class="button" href="blocked.html" target="_blank">Góc học của con</a>
+      <section class="support">
+        <button type="button" id="copy-support" class="secondary">
+          Sao chép thông tin hỗ trợ
+        </button>
+        <small id="support-hint"
+          >Khi cần giúp đỡ, bấm nút trên rồi dán nội dung gửi cho người hỗ trợ
+          Minh Hương. Thông tin này không chứa mật khẩu hay mã bảo mật.</small
+        >
+        <textarea id="support-text" readonly hidden rows="8"></textarea>
+        <small id="version" class="version"></small>
+      </section>
     </main>
     <script src="popup.js"></script>
   </body>
