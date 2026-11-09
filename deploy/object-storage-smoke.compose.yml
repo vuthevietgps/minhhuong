@@ -1,6 +1,8 @@
 services:
   minio:
-    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    # minio/minio and minio/mc were removed from Docker Hub; pgsty/minio is a
+    # community fork with the same server CLI and an `mc` binary on PATH.
+    image: &minio-image pgsty/minio:RELEASE.2026-08-04T00-00-00Z@sha256:b6bfe7239bfc83fb90d31612d9704d86039dd714f7904b3f1ad68f211e602372
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${UPLOAD_S3_ACCESS_KEY_ID:?synthetic access key required}
@@ -19,7 +21,7 @@ services:
       - data
 
   minio-init:
-    image: minio/mc:RELEASE.2025-04-16T18-13-26Z
+    image: *minio-image
     restart: "no"
     environment:
       MINIO_ROOT_USER: ${UPLOAD_S3_ACCESS_KEY_ID:?synthetic access key required}

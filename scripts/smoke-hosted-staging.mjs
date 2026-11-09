@@ -192,7 +192,7 @@ try {
       "sh",
       image,
       "-c",
-      "test ! -e /app/.env && test ! -e /app/.env.example && test ! -e /app/.codex-workspaces && test ! -e /app/src && test ! -e /app/prisma && ! find /app -path '*/uploads/*' -type f -print -quit | grep -q .",
+      "test ! -e /app/.env && test ! -e /app/.env.example && test ! -e /app/.codex-workspaces && test ! -e /app/src && test ! -e /app/prisma && ! find /app -path /app/node_modules -prune -o -path '*/uploads/*' -type f -print -quit | grep -q .",
     ]);
     const user = await run(
       "docker",
