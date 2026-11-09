@@ -14,6 +14,7 @@ import {
 } from '../package-entitlement/package-entitlement-snapshot';
 import { ListActivationOrdersQueryDto } from './dto/list-activation-orders-query.dto';
 import { ResubmitActivationOrderDto } from './dto/resubmit-activation-order.dto';
+import { sanitizeHistoryMetadata } from './activation-order-lifecycle.helpers';
 import { ActivationOrderSupportService } from './activation-order-support.service';
 import {
   assertManualPaidPilotSingleChildAllocation,
@@ -22,7 +23,6 @@ import {
   hashPassword,
   invoiceUrl,
   orderInclude,
-  sanitizeHistoryMetadata,
   toAffiliateAttributionJson,
   toCommissionChainSnapshotJson,
 } from './activation-order.helpers';

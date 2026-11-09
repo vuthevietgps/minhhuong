@@ -16,12 +16,12 @@ import {
 import { ExtendFreeTrialDto } from './dto/extend-free-trial.dto';
 import { StartFreeTrialDto } from './dto/start-free-trial.dto';
 import { ActivationOrderSupportService } from './activation-order-support.service';
+import { dbUserId } from './activation-order.helpers';
 import {
-  dbUserId,
   freeTrialLimits,
   freeTrialSelect,
   toFreeTrialView,
-} from './activation-order.helpers';
+} from './free-trial.helpers';
 
 /** Free trial start, lookup and extension. */
 @Injectable()

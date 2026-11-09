@@ -8,6 +8,12 @@ import {
   CommissionChainSnapshot,
   CommissionChainSnapshotItem,
   MANUAL_PAID_PILOT_REFUND_WINDOW_DAYS,
+  dbUserId,
+  manualRefundRequestActions,
+  manualRefundRequestApprovedAction,
+  manualRefundRequestOpenedAction,
+} from './activation-order.helpers';
+import {
   OrderCommissionAttribution,
   OrderCommissionChainResolution,
   ResolvedChannelAttribution,
@@ -18,17 +24,13 @@ import {
   buildCommissionChainSnapshotItem,
   commissionBeneficiaryTypeForParticipant,
   commissionRateForDepth,
-  dbUserId,
   isAffiliateClickEventUsable,
   isAffiliateClickIdShape,
   latestManualRefundRequestAction,
-  manualRefundRequestActions,
-  manualRefundRequestApprovedAction,
-  manualRefundRequestOpenedAction,
   normalizeCode,
   parseCommissionAttributionSnapshot,
   parseCommissionChainSnapshot,
-} from './activation-order.helpers';
+} from './order-commission.helpers';
 
 /** Channel/affiliate attribution, commission chain snapshots and commission entries. */
 @Injectable()

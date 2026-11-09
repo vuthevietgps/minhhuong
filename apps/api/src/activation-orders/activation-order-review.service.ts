@@ -22,14 +22,16 @@ import {
 } from '../package-entitlement/package-entitlement-snapshot';
 import { RejectActivationOrderDto } from './dto/reject-activation-order.dto';
 import { RevokeActivationOrderDto } from './dto/revoke-activation-order.dto';
+import {
+  addDays,
+  assertCurrentPackageSingleChildAllocationForLegacyApproval,
+  fileIdempotencyMetadata,
+} from './activation-order-review.helpers';
 import { ActivationOrderSupportService } from './activation-order-support.service';
 import {
   MANUAL_PAID_PILOT_REFUND_WINDOW_DAYS,
-  addDays,
-  assertCurrentPackageSingleChildAllocationForLegacyApproval,
   assertManualPaidPilotSingleChildAllocation,
   dbUserId,
-  fileIdempotencyMetadata,
   invoiceUrl,
   manualPaidPilotPaymentProvider,
   manualPaidPilotPolicyMetadata,
