@@ -1,0 +1,293 @@
+/* AI Buddy animations and responsive rules. */
+
+@media (prefers-reduced-motion: no-preference) {
+  .ai-buddy-mascot .ai-buddy-eye {
+    animation: ai-buddy-blink 4.4s ease-in-out infinite;
+  }
+
+  .ai-buddy-mascot .ai-buddy-eye--right {
+    animation-delay: 0.04s;
+  }
+
+  .ai-buddy-mascot[data-speaking="true"] .ai-buddy-smile {
+    animation: ai-buddy-talk 0.28s ease-in-out infinite alternate;
+  }
+
+  .ai-buddy-mascot[data-pet="pipi"][data-speaking="true"] .ai-buddy-pet-beak {
+    animation: ai-buddy-beak-talk 0.28s ease-in-out infinite alternate;
+  }
+
+  .ai-buddy-mascot[data-pet="nova"] .ai-buddy-cape {
+    animation: ai-buddy-cape-wave 1.8s ease-in-out infinite alternate;
+  }
+
+  .ai-buddy-pet-option:hover .ai-buddy-pet-emoji {
+    animation: ai-buddy-pet-pop 0.55s ease-in-out;
+  }
+
+  .ai-buddy-stage--ready .ai-buddy-mascot {
+    animation: ai-buddy-float 3.2s ease-in-out infinite;
+  }
+
+  .ai-buddy-stage--listening .ai-buddy-hand--ear {
+    animation: ai-buddy-listen 1s ease-in-out infinite;
+  }
+
+  .ai-buddy-stage--listening .ai-buddy-sound-bars i {
+    animation: ai-buddy-listen-bars 0.75s ease-in-out infinite alternate;
+  }
+
+  .ai-buddy-stage--listening .ai-buddy-sound-bars i:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .ai-buddy-stage--listening .ai-buddy-sound-bars i:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
+  .ai-buddy-stage--thinking .ai-buddy-mascot {
+    animation: ai-buddy-nod 1.1s ease-in-out infinite;
+  }
+
+  .ai-buddy-stage--thinking .ai-buddy-drum i:first-child {
+    animation: ai-buddy-drum-left 0.55s ease-in-out infinite;
+  }
+
+  .ai-buddy-stage--thinking .ai-buddy-drum i:last-child {
+    animation: ai-buddy-drum-right 0.55s ease-in-out 0.27s infinite;
+  }
+
+  .ai-buddy-stage--thinking .ai-buddy-dots i {
+    animation: ai-buddy-dot 0.8s ease-in-out infinite alternate;
+  }
+
+  .ai-buddy-stage--thinking .ai-buddy-dots i:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .ai-buddy-stage--thinking .ai-buddy-dots i:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
+  .ai-buddy-stage--celebrating .ai-buddy-mascot {
+    animation: ai-buddy-celebrate 1.35s ease-in-out infinite;
+  }
+
+  .ai-buddy-stage--celebrating .ai-buddy-spark--one {
+    animation: ai-buddy-sparkle 1.15s ease-in-out infinite;
+  }
+
+  .ai-buddy-stage--celebrating .ai-buddy-spark--two {
+    animation: ai-buddy-sparkle 1.15s ease-in-out 0.38s infinite;
+  }
+}
+
+@keyframes ai-buddy-blink {
+  0%,
+  43%,
+  47%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  45% {
+    transform: scaleY(0.08);
+  }
+}
+
+@keyframes ai-buddy-talk {
+  to {
+    height: 0.88rem;
+    border: 0.16rem solid #2e1065;
+    border-top-width: 0.08rem;
+    border-radius: 45% 45% 55% 55%;
+    background: #fff;
+    transform: scaleX(0.78);
+  }
+}
+
+@keyframes ai-buddy-beak-talk {
+  to {
+    transform: scaleY(1.55) translateY(0.12rem);
+  }
+}
+
+@keyframes ai-buddy-cape-wave {
+  to {
+    transform: rotate(-6deg) skewY(-5deg);
+  }
+}
+
+@keyframes ai-buddy-pet-pop {
+  50% {
+    transform: translateY(-0.2rem) rotate(6deg) scale(1.08);
+  }
+}
+
+@keyframes ai-buddy-float {
+  50% {
+    transform: translateY(-0.22rem) rotate(-2deg);
+  }
+}
+
+@keyframes ai-buddy-listen {
+  50% {
+    transform: rotate(-30deg) translateY(-0.14rem);
+  }
+}
+
+@keyframes ai-buddy-listen-bars {
+  to {
+    transform: scaleY(1.35);
+  }
+}
+
+@keyframes ai-buddy-nod {
+  50% {
+    transform: translateY(0.18rem) rotate(2deg);
+  }
+}
+
+@keyframes ai-buddy-drum-left {
+  50% {
+    transform: rotate(5deg) translateY(0.35rem);
+  }
+}
+
+@keyframes ai-buddy-drum-right {
+  50% {
+    transform: rotate(-5deg) translateY(0.35rem);
+  }
+}
+
+@keyframes ai-buddy-dot {
+  to {
+    transform: translateY(-0.24rem);
+    opacity: 0.45;
+  }
+}
+
+@keyframes ai-buddy-celebrate {
+  50% {
+    transform: translateY(-0.25rem) rotate(4deg) scale(1.04);
+  }
+}
+
+@keyframes ai-buddy-sparkle {
+  50% {
+    transform: scale(1.45) rotate(25deg);
+    opacity: 0.35;
+  }
+}
+
+@media (max-width: 1023px) {
+  .kid-page {
+    padding-bottom: calc(8.5rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  .kid-sidebar {
+    box-shadow: 0 12px 30px rgba(67, 58, 142, 0.07);
+  }
+
+  .kid-hero::before {
+    right: -1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .kid-mobile-nav {
+    display: none;
+  }
+}
+
+@media (max-width: 639px) {
+  .ai-buddy-modal-backdrop {
+    padding: 0;
+  }
+
+  .ai-buddy-dialog {
+    width: 100vw;
+    height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .ai-buddy-dialog-header {
+    padding: calc(0.7rem + env(safe-area-inset-top)) 0.8rem 0.7rem;
+  }
+
+  .ai-buddy-dialog-title > span {
+    width: 2.45rem;
+    height: 2.45rem;
+    border-radius: 0.85rem;
+  }
+
+  .ai-buddy-dialog-title p {
+    display: none;
+  }
+
+  .ai-buddy-dialog-form {
+    padding: 0.85rem 0.8rem calc(1rem + env(safe-area-inset-bottom));
+  }
+
+  .ai-buddy-stage {
+    grid-template-columns: 6.1rem minmax(0, 1fr);
+  }
+
+  .kid-theme button {
+    min-height: 2.75rem;
+  }
+
+  .kid-stat-card {
+    min-height: 8rem;
+  }
+
+  .kid-hero {
+    border-radius: 1.5rem;
+  }
+
+  .kid-workspace-grid {
+    grid-auto-columns: 86%;
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    padding-bottom: 0.5rem;
+    scroll-snap-type: inline mandatory;
+  }
+
+  .kid-workspace-grid > * {
+    scroll-snap-align: start;
+  }
+
+  .pwa-install-backdrop {
+    padding: 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ai-buddy-modal-backdrop {
+    animation: ai-buddy-backdrop-enter 180ms ease-out;
+  }
+
+  .ai-buddy-dialog {
+    animation: ai-buddy-dialog-enter 260ms cubic-bezier(0.2, 0.85, 0.32, 1.08);
+  }
+
+  .kid-logo-mark {
+    animation: kid-float 5s ease-in-out infinite;
+  }
+}
+
+@keyframes ai-buddy-backdrop-enter {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes ai-buddy-dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(1.2rem) scale(0.97);
+  }
+}

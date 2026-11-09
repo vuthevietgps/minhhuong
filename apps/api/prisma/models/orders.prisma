@@ -1,0 +1,155 @@
+// Activation orders, packages, entitlements, idempotency and wallet ledger.
+
+model ActivationOrder {
+  id                               String                @id @default(cuid())
+  userId                           String
+  childProfileId                   String?
+  createdById                      String?
+  reviewedById                     String?
+  revokedById                      String?
+  channelParticipantId             String?
+  agencyId                         String?
+  referrerMemberId                 String?
+  status                           ActivationOrderStatus @default(PENDING_REVIEW)
+  source                           ActivationOrderSource @default(SALE_ASSISTED)
+  customerEmail                    String
+  amountCents                      Int
+  currency                         String                @default("VND")
+  packageCode                      String?
+  packageName                      String?
+  requestedDurationDays            Int?
+  durationDays                     Int?
+  entitlementSnapshotJson          Json?
+  affiliateAttributionSnapshotJson Json?
+  commissionChainSnapshotJson      Json?
+  bankName                         String?
+  bankAccountNumber                String?
+  bankAccountName                  String?
+  transferContent                  String?
+  saleInvoiceUrl                   String?
+  saleInvoiceStorageKey            String?
+  saleInvoiceMimeType              String?
+  saleInvoiceFileSizeBytes         Int?
+  operationInvoiceUrl              String?
+  operationInvoiceStorageKey       String?
+  operationInvoiceMimeType         String?
+  operationInvoiceFileSizeBytes    Int?
+  notes                            String?
+  customerPhone                    String?
+  reviewNotes                      String?
+  activatedAt                      DateTime?
+  trialEndsAt                      DateTime?
+  expiresAt                        DateTime?
+  revokedAt                        DateTime?
+  revokeReason                     String?
+  createdAt                        DateTime              @default(now())
+  updatedAt                        DateTime              @updatedAt
+  user                             User                  @relation("ActivationOrderUser", fields: [userId], references: [id], onDelete: Cascade)
+  childProfile                     ChildProfile?         @relation(fields: [childProfileId], references: [id], onDelete: SetNull)
+  createdBy                        User?                 @relation("ActivationOrderCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  reviewedBy                       User?                 @relation("ActivationOrderReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  revokedBy                        User?                 @relation("ActivationOrderRevoker", fields: [revokedById], references: [id], onDelete: SetNull)
+  channelParticipant               ChannelParticipant?   @relation(fields: [channelParticipantId], references: [id], onDelete: SetNull)
+  agency                           Agency?               @relation(fields: [agencyId], references: [id], onDelete: SetNull)
+  referrerMember                   AgencyMember?         @relation("ActivationOrderReferrerMember", fields: [referrerMemberId], references: [id], onDelete: SetNull)
+  commissionEarnings               CommissionEarning[]
+  subscriptions                    Subscription[]        @relation("SubscriptionSourceOrder")
+  statusHistory                    OrderStatusHistory[]
+
+  @@index([status, createdAt])
+  @@index([customerEmail])
+  @@index([userId])
+  @@index([childProfileId])
+  @@index([channelParticipantId])
+  @@index([agencyId])
+  @@index([referrerMemberId])
+  @@index([revokedById])
+  @@index([trialEndsAt])
+}
+
+model ActivationPackage {
+  id            String               @id @default(cuid())
+  code          String               @unique
+  name          String
+  description   String?
+  amountVnd     Int
+  durationDays  Int
+  version       Int                  @default(1)
+  isActive      Boolean              @default(true)
+  sortOrder     Int                  @default(0)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  subscriptions Subscription[]       @relation("SubscriptionActivationPackage")
+  entitlements  PackageEntitlement[]
+
+  @@index([isActive, sortOrder])
+}
+
+model PackageEntitlement {
+  id             String                   @id @default(cuid())
+  packageId      String
+  entitlementKey String
+  valueJson      Json
+  status         PackageEntitlementStatus @default(ACTIVE)
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+  package        ActivationPackage        @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@index([packageId])
+  @@index([entitlementKey, status])
+}
+
+model OrderStatusHistory {
+  id           String                 @id @default(cuid())
+  orderId      String
+  fromStatus   ActivationOrderStatus?
+  toStatus     ActivationOrderStatus
+  action       String
+  actorUserId  String?
+  reason       String?
+  metadataJson Json?
+  createdAt    DateTime               @default(now())
+  order        ActivationOrder        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  actor        User?                  @relation("OrderStatusHistoryActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([orderId, createdAt])
+  @@index([action, createdAt])
+  @@index([actorUserId, createdAt])
+}
+
+model IdempotencyRecord {
+  id           String                  @id @default(cuid())
+  scope        String
+  key          String
+  actorUserId  String?
+  resourceType String
+  resourceId   String?
+  requestHash  String
+  status       IdempotencyRecordStatus @default(IN_PROGRESS)
+  responseJson Json?
+  errorCode    String?
+  expiresAt    DateTime
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+  actor        User?                   @relation("IdempotencyRecordActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@unique([scope, key])
+  @@index([actorUserId, createdAt])
+  @@index([resourceType, resourceId])
+  @@index([status, expiresAt])
+}
+
+model WalletLedgerEntry {
+  id            String          @id @default(cuid())
+  userId        String
+  type          LedgerEntryType
+  amountCents   Int
+  currency      String          @default("VND")
+  reason        String
+  referenceType String?
+  referenceId   String?
+  createdAt     DateTime        @default(now())
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}

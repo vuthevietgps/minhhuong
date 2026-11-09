@@ -38,7 +38,7 @@ describe('Package entitlement migration deploy proof', () => {
         'migrate',
         'deploy',
         '--schema',
-        join(apiRoot, 'prisma/schema.prisma'),
+        join(apiRoot, 'prisma'),
       ],
       {
         cwd: apiRoot,

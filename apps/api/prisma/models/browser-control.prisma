@@ -1,0 +1,89 @@
+// Chrome extension browser control: policy, pairing, devices, usage.
+
+model BrowserPolicy {
+  childId   String       @id
+  child     ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+  config    Json
+  revision  Int          @default(1)
+  updatedAt DateTime     @updatedAt
+}
+
+model BrowserPreparation {
+  id          String       @id @default(uuid())
+  childId     String
+  child       ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+  sourceId    String?
+  source      AiContextSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  url         String
+  title       String
+  minutes     Int          @default(10)
+  status      String       @default("WAITING_CONTEXT")
+  result      Json?
+  error       String?
+  lease       String?
+  startedAt   DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  @@unique([childId, url])
+  @@index([status, startedAt])
+}
+
+model BrowserPairing {
+  id        String       @id @default(cuid())
+  childId   String
+  child     ChildProfile @relation(fields: [childId], references: [id], onDelete: Cascade)
+  codeHash  String       @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+}
+
+model BrowserDevice {
+  id          String         @id @default(cuid())
+  childId     String
+  child       ChildProfile   @relation(fields: [childId], references: [id], onDelete: Cascade)
+  name        String
+  tokenHash   String         @unique
+  revokedAt   DateTime?
+  lastSeenAt  DateTime?
+  aiNextAt    DateTime?
+  createdAt   DateTime       @default(now())
+  usage       BrowserUsage[]
+  events      BrowserEvent[]
+  messages    BrowserMessage[]
+  @@index([childId])
+}
+
+model BrowserUsage {
+  id        String        @id @default(cuid())
+  deviceId  String
+  device    BrowserDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  day       String
+  itemId    String
+  seconds   Int
+  @@unique([deviceId, day, itemId])
+}
+
+model BrowserEvent {
+  id         String        @id @default(cuid())
+  deviceId   String
+  device     BrowserDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  eventId    String
+  kind       String
+  itemId     String?
+  detail     Json?
+  occurredAt DateTime
+  receivedAt DateTime      @default(now())
+  @@unique([deviceId, eventId])
+  @@index([deviceId, occurredAt])
+}
+
+model BrowserMessage {
+  id        String        @id @default(cuid())
+  deviceId  String
+  device    BrowserDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  itemId    String
+  role      String
+  content   String
+  createdAt DateTime      @default(now())
+  @@index([deviceId, itemId, createdAt])
+}

@@ -169,7 +169,6 @@ export class ParentDailyPlanService {
 
     const byId = new Map(lessons.map((lesson) => [lesson.id, lesson]));
     const items = lessonIds.map((lessonId, index) => {
-      const lesson = byId.get(lessonId)!;
       return {
         sequence: index + 1,
         itemType: DailyLearningPlanItemType.VIDEO,

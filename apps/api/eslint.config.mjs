@@ -33,7 +33,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.spec.ts', 'test/**/*.ts'],
+    files: ['**/*.spec.ts', '**/*.spec-fixtures.ts', 'test/**/*.ts'],
     rules: {
       // Jest and Prisma mock objects intentionally expose partial, dynamic call
       // surfaces. Runtime assertions remain authoritative for these files while

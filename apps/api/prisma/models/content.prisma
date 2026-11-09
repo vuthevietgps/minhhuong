@@ -1,0 +1,176 @@
+// Course content: levels, courses, units, lessons, videos, activities, questions.
+
+model Level {
+  id            String         @id @default(cuid())
+  code          String         @unique
+  title         String
+  description   String?
+  sortOrder     Int            @default(0)
+  courses       Course[]
+  learningPaths LearningPath[]
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  levelId     String
+  slug        String   @unique
+  title       String
+  description String?
+  isPublished Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  level       Level    @relation(fields: [levelId], references: [id])
+  units       Unit[]
+
+  @@index([levelId, isPublished])
+}
+
+model Unit {
+  id          String   @id @default(cuid())
+  courseId    String
+  title       String
+  description String?
+  sortOrder   Int      @default(0)
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons     Lesson[]
+
+  @@index([courseId, sortOrder])
+}
+
+model Lesson {
+  id                String                  @id @default(cuid())
+  unitId            String
+  slug              String                  @unique
+  title             String
+  description       String?
+  type              LessonType              @default(MIXED)
+  status            ContentPublishStatus    @default(DRAFT)
+  durationSec       Int?
+  sortOrder         Int                     @default(0)
+  publishedAt       DateTime?
+  createdById       String?
+  updatedById       String?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @default(now()) @updatedAt
+  unit              Unit                    @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  videos            VideoAsset[]
+  activities        Activity[]
+  progress          LessonProgress[]
+  tags              LessonTag[]
+  learningPathItems LearningPathItem[]
+  dailyPlanItems    DailyLearningPlanItem[]
+  videoExposureLogs VideoExposureLog[]
+
+  @@index([unitId, status, sortOrder])
+}
+
+model ContentTag {
+  id          String         @id @default(cuid())
+  slug        String         @unique
+  name        String
+  kind        ContentTagKind @default(TOPIC)
+  description String?
+  color       String?
+  sortOrder   Int            @default(0)
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  lessons     LessonTag[]
+
+  @@index([kind, isActive, sortOrder])
+}
+
+model LessonTag {
+  lessonId   String
+  tagId      String
+  assignedAt DateTime   @default(now())
+  lesson     Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  tag        ContentTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([lessonId, tagId])
+  @@index([tagId])
+}
+
+model VideoAsset {
+  id               String                @id @default(cuid())
+  lessonId         String
+  title            String?
+  provider         VideoProvider
+  processingStatus VideoProcessingStatus @default(READY)
+  playbackId       String
+  sourceUrl        String?
+  embedUrl         String?
+  storageKey       String?
+  mimeType         String?
+  fileSizeBytes    Int?
+  durationSec      Int?
+  captionsUrl      String?
+  thumbnailUrl     String?
+  sortOrder        Int                   @default(0)
+  uploadedById     String?
+  errorMessage     String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @default(now()) @updatedAt
+  lesson           Lesson                @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  exposureLogs     VideoExposureLog[]
+
+  @@index([lessonId, provider, processingStatus])
+}
+
+model VideoExposureLog {
+  id                 String                 @id @default(cuid())
+  childProfileId     String
+  lessonId           String
+  videoAssetId       String?
+  eventType          VideoExposureEventType
+  positionSec        Int                    @default(0)
+  durationWatchedSec Int                    @default(0)
+  watchPercent       Int                    @default(0)
+  source             VideoExposureSource    @default(RUNTIME_WATCH_EVENT)
+  createdAt          DateTime               @default(now())
+  childProfile       ChildProfile           @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  lesson             Lesson                 @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  videoAsset         VideoAsset?            @relation(fields: [videoAssetId], references: [id], onDelete: SetNull)
+
+  @@index([childProfileId, lessonId, createdAt])
+  @@index([childProfileId, lessonId, watchPercent])
+  @@index([videoAssetId])
+  @@index([eventType, createdAt])
+}
+
+model Activity {
+  id             String                  @id @default(cuid())
+  lessonId       String
+  title          String
+  description    String?
+  type           ActivityType            @default(QUIZ)
+  sortOrder      Int                     @default(0)
+  lesson         Lesson                  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  questions      Question[]
+  attempts       ActivityAttempt[]
+  dailyPlanItems DailyLearningPlanItem[]
+}
+
+model Question {
+  id          String            @id @default(cuid())
+  activityId  String
+  type        QuestionType
+  prompt      String
+  explanation String?
+  points      Int               @default(1)
+  metadata    Json?
+  sortOrder   Int               @default(0)
+  activity    Activity          @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  answers     Answer[]
+  attempts    QuestionAttempt[]
+}
+
+model Answer {
+  id         String   @id @default(cuid())
+  questionId String
+  text       String
+  isCorrect  Boolean  @default(false)
+  sortOrder  Int      @default(0)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}

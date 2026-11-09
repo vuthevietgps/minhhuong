@@ -146,7 +146,7 @@ try {
 
   const sourceUrl = databaseUrlForDatabase(baseDatabaseUrl, databaseName);
   await runPrisma(
-    ['migrate', 'deploy', '--schema', 'prisma/schema.prisma'],
+    ['migrate', 'deploy', '--schema', 'prisma'],
     sourceUrl,
   );
   sourcePrisma = createPrisma(sourceUrl);

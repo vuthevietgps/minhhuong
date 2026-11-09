@@ -35,6 +35,7 @@ import {
 import { CreateActivityDto } from './dto/create-activity.dto';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { CreateLessonDto } from './dto/create-lesson.dto';
+import { ListLessonsQueryDto } from './dto/list-lessons-query.dto';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { CreateUnitDto } from './dto/create-unit.dto';
 import { CreateVideoLinkDto } from './dto/create-video-link.dto';
@@ -72,10 +73,10 @@ export class AdminContentController {
 
   @Get('lessons')
   @Roles(...contentViewRoles)
-  listLessons(@Query('cursor') cursor?: string, @Query('take') take?: string) {
+  listLessons(@Query() query: ListLessonsQueryDto) {
     return this.contentService.listLessons(
-      cursor,
-      take ? Math.min(Number(take), 100) : 50,
+      query.cursor,
+      query.take ? Math.min(query.take, 100) : 50,
     );
   }
 

@@ -1,0 +1,137 @@
+// Learning paths, content packages, assignments and daily learning plans.
+
+model LearningPath {
+  id          String              @id @default(cuid())
+  code        String              @unique
+  title       String
+  description String?
+  levelId     String?
+  ageBand     String?
+  status      LearningPathStatus  @default(DRAFT)
+  revision    Int                 @default(1)
+  createdById String?
+  updatedById String?
+  publishedAt DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  level       Level?              @relation(fields: [levelId], references: [id], onDelete: SetNull)
+  items       LearningPathItem[]
+  packages    ContentPackage[]
+  dailyPlans  DailyLearningPlan[]
+
+  @@index([status])
+  @@index([levelId, status])
+}
+
+model LearningPathItem {
+  id                 String                  @id @default(cuid())
+  learningPathId     String
+  sequence           Int
+  lessonId           String
+  required           Boolean                 @default(true)
+  minScore           Int?
+  minWatchPercent    Int?
+  prerequisiteItemId String?
+  reviewPolicyJson   Json?
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  learningPath       LearningPath            @relation(fields: [learningPathId], references: [id], onDelete: Cascade)
+  lesson             Lesson                  @relation(fields: [lessonId], references: [id], onDelete: Restrict)
+  prerequisiteItem   LearningPathItem?       @relation("LearningPathItemPrerequisite", fields: [prerequisiteItemId], references: [id], onDelete: SetNull)
+  dependentItems     LearningPathItem[]      @relation("LearningPathItemPrerequisite")
+  dailyPlanItems     DailyLearningPlanItem[]
+
+  @@unique([learningPathId, sequence])
+  @@unique([learningPathId, lessonId])
+  @@index([lessonId])
+  @@index([prerequisiteItemId])
+}
+
+model ContentPackage {
+  id             String                   @id @default(cuid())
+  code           String                   @unique
+  title          String
+  description    String?
+  learningPathId String
+  planId         String?
+  status         ContentPackageStatus     @default(DRAFT)
+  createdById    String?
+  publishedAt    DateTime?
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+  learningPath   LearningPath             @relation(fields: [learningPathId], references: [id], onDelete: Restrict)
+  plan           Plan?                    @relation(fields: [planId], references: [id], onDelete: SetNull)
+  assignments    ChildContentAssignment[]
+  dailyPlans     DailyLearningPlan[]
+
+  @@index([learningPathId, status])
+  @@index([planId, status])
+}
+
+model ChildContentAssignment {
+  id               String                       @id @default(cuid())
+  childProfileId   String
+  contentPackageId String
+  assignedById     String?
+  status           ChildContentAssignmentStatus @default(ACTIVE)
+  startedAt        DateTime                     @default(now())
+  endedAt          DateTime?
+  createdAt        DateTime                     @default(now())
+  updatedAt        DateTime                     @updatedAt
+  childProfile     ChildProfile                 @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  contentPackage   ContentPackage               @relation(fields: [contentPackageId], references: [id], onDelete: Restrict)
+
+  @@index([childProfileId, status])
+  @@index([contentPackageId, status])
+}
+
+model DailyLearningPlan {
+  id                String                             @id @default(cuid())
+  childProfileId    String
+  planDate          String
+  status            DailyLearningPlanStatus            @default(ACTIVE)
+  contentSourceMode DailyLearningPlanContentSourceMode
+  contentPackageId  String?
+  learningPathId    String?
+  targetMinutes     Int?
+  generatedBy       DailyLearningPlanGeneratedBy       @default(SYSTEM_RULE)
+  createdAt         DateTime                           @default(now())
+  updatedAt         DateTime                           @updatedAt
+  childProfile      ChildProfile                       @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  contentPackage    ContentPackage?                    @relation(fields: [contentPackageId], references: [id], onDelete: SetNull)
+  learningPath      LearningPath?                      @relation(fields: [learningPathId], references: [id], onDelete: SetNull)
+  items             DailyLearningPlanItem[]
+
+  @@unique([childProfileId, planDate])
+  @@index([childProfileId, status, planDate])
+  @@index([contentPackageId])
+  @@index([learningPathId])
+}
+
+model DailyLearningPlanItem {
+  id                 String                      @id @default(cuid())
+  planId             String
+  sequence           Int
+  itemType           DailyLearningPlanItemType
+  lessonId           String?
+  activityId         String?
+  learningPathItemId String?
+  required           Boolean                     @default(true)
+  status             DailyLearningPlanItemStatus @default(READY)
+  minWatchPercent    Int?
+  minScore           Int?
+  startedAt          DateTime?
+  completedAt        DateTime?
+  createdAt          DateTime                    @default(now())
+  updatedAt          DateTime                    @updatedAt
+  plan               DailyLearningPlan           @relation(fields: [planId], references: [id], onDelete: Cascade)
+  lesson             Lesson?                     @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  activity           Activity?                   @relation(fields: [activityId], references: [id], onDelete: SetNull)
+  learningPathItem   LearningPathItem?           @relation(fields: [learningPathItemId], references: [id], onDelete: SetNull)
+
+  @@unique([planId, sequence])
+  @@index([planId, status])
+  @@index([lessonId])
+  @@index([activityId])
+  @@index([learningPathItemId])
+}

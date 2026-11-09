@@ -1,0 +1,287 @@
+// Sales channel: agencies, participants, affiliate links, commissions, payouts.
+
+model Agency {
+  id                   String                  @id @default(cuid())
+  code                 String                  @unique
+  name                 String
+  status               AgencyStatus            @default(ACTIVE)
+  defaultRateBps       Int                     @default(0)
+  notes                String?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+  members              AgencyMember[]
+  channelParticipant   ChannelParticipant?
+  activationOrders     ActivationOrder[]
+  commissions          CommissionEarning[]
+  ledgerEntries        CommissionLedgerEntry[]
+  payoutRequests       PayoutRequest[]
+  affiliateLinks       AffiliateLink[]
+  affiliateClickEvents AffiliateClickEvent[]
+
+  @@index([status])
+}
+
+model AgencyApplication {
+  id            String                  @id @default(cuid())
+  email         String                  @unique
+  passwordHash  String?
+  agencyName    String
+  requestedCode String
+  contactPhone  String?
+  notes         String?
+  status        AgencyApplicationStatus @default(PENDING_REVIEW)
+  reviewNotes   String?
+  reviewedById  String?
+  agencyId      String?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+
+  @@index([status, createdAt])
+  @@index([requestedCode])
+}
+
+model AgencyMember {
+  id                       String                @id @default(cuid())
+  agencyId                 String
+  userId                   String
+  role                     AgencyMemberRole      @default(SALE)
+  title                    String?
+  rateBps                  Int?
+  referralCode             String?               @unique
+  isActive                 Boolean               @default(true)
+  createdAt                DateTime              @default(now())
+  agency                   Agency                @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  user                     User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referredActivationOrders ActivationOrder[]     @relation("ActivationOrderReferrerMember")
+  affiliateLinks           AffiliateLink[]
+  affiliateClickEvents     AffiliateClickEvent[]
+
+  @@unique([agencyId, userId])
+  @@index([userId, isActive])
+  @@index([agencyId, role, isActive])
+}
+
+model ChannelParticipant {
+  id                   String                   @id @default(cuid())
+  type                 ChannelParticipantType
+  code                 String                   @unique
+  displayName          String
+  status               ChannelParticipantStatus @default(ACTIVE)
+  userId               String?                  @unique
+  agencyId             String?                  @unique
+  parentParticipantId  String?
+  rootParticipantId    String?
+  lineage              String                   @default("")
+  depth                Int                      @default(0)
+  baseSalaryCents      Int                      @default(0)
+  commissionRateBps    Int?
+  kpiBonusConfig       Json?
+  penaltyConfig        Json?
+  notes                String?
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+  user                 User?                    @relation("ChannelParticipantUser", fields: [userId], references: [id], onDelete: SetNull)
+  agency               Agency?                  @relation(fields: [agencyId], references: [id], onDelete: SetNull)
+  parentParticipant    ChannelParticipant?      @relation("ChannelParticipantTree", fields: [parentParticipantId], references: [id], onDelete: SetNull)
+  childParticipants    ChannelParticipant[]     @relation("ChannelParticipantTree")
+  activationOrders     ActivationOrder[]
+  commissionEarnings   CommissionEarning[]
+  ledgerEntries        CommissionLedgerEntry[]
+  payoutRequests       PayoutRequest[]
+  affiliateLinks       AffiliateLink[]
+  affiliateClickEvents AffiliateClickEvent[]
+
+  @@index([type, status])
+  @@index([parentParticipantId])
+  @@index([rootParticipantId])
+  @@index([lineage])
+}
+
+model AffiliateLink {
+  id               String                @id @default(cuid())
+  participantId    String
+  agencyId         String?
+  agencyMemberId   String?
+  createdById      String
+  referralCode     String?
+  linkCode         String                @unique
+  name             String
+  campaign         String?
+  channel          String?
+  placement        String?
+  packageCode      String?
+  packageScopeJson Json?
+  status           AffiliateLinkStatus   @default(ACTIVE)
+  startsAt         DateTime?
+  expiresAt        DateTime?
+  metadataJson     Json?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  participant      ChannelParticipant    @relation(fields: [participantId], references: [id])
+  agency           Agency?               @relation(fields: [agencyId], references: [id], onDelete: SetNull)
+  agencyMember     AgencyMember?         @relation(fields: [agencyMemberId], references: [id], onDelete: SetNull)
+  createdBy        User                  @relation("AffiliateLinkCreator", fields: [createdById], references: [id])
+  qrAssets         AffiliateQrAsset[]
+  clickEvents      AffiliateClickEvent[]
+
+  @@index([participantId, status])
+  @@index([agencyId, status])
+  @@index([campaign])
+  @@index([createdAt])
+}
+
+model AffiliateQrAsset {
+  id              String                 @id @default(cuid())
+  affiliateLinkId String
+  createdById     String
+  label           String?
+  placement       String?
+  encodedUrl      String
+  qrImageUrl      String?
+  status          AffiliateQrAssetStatus @default(ACTIVE)
+  metadataJson    Json?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  affiliateLink   AffiliateLink          @relation(fields: [affiliateLinkId], references: [id], onDelete: Cascade)
+  createdBy       User                   @relation("AffiliateQrAssetCreator", fields: [createdById], references: [id])
+  clickEvents     AffiliateClickEvent[]
+
+  @@index([affiliateLinkId, status])
+  @@index([placement])
+  @@index([createdAt])
+}
+
+model AffiliateClickEvent {
+  id                 String             @id @default(cuid())
+  affiliateLinkId    String
+  affiliateQrAssetId String?
+  participantId      String
+  agencyId           String?
+  agencyMemberId     String?
+  referralCode       String?
+  clickId            String             @unique
+  dedupeKeyHash      String?            @unique
+  ipHash             String?
+  userAgentHash      String?
+  deviceHint         String?
+  redirectUrl        String
+  campaign           String?
+  channel            String?
+  placement          String?
+  packageCode        String?
+  metadataJson       Json?
+  createdAt          DateTime           @default(now())
+  affiliateLink      AffiliateLink      @relation(fields: [affiliateLinkId], references: [id])
+  affiliateQrAsset   AffiliateQrAsset?  @relation(fields: [affiliateQrAssetId], references: [id], onDelete: SetNull)
+  participant        ChannelParticipant @relation(fields: [participantId], references: [id])
+  agency             Agency?            @relation(fields: [agencyId], references: [id], onDelete: SetNull)
+  agencyMember       AgencyMember?      @relation(fields: [agencyMemberId], references: [id], onDelete: SetNull)
+
+  @@index([affiliateLinkId, createdAt])
+  @@index([affiliateQrAssetId, createdAt])
+  @@index([participantId, createdAt])
+  @@index([campaign, createdAt])
+}
+
+model CommissionPolicy {
+  id                 String                    @id @default(cuid())
+  code               String                    @unique
+  name               String
+  beneficiaryType    CommissionBeneficiaryType
+  rateBps            Int
+  baseSalaryCents    Int                       @default(0)
+  kpiBonusConfig     Json?
+  penaltyConfig      Json?
+  isDefaultForSale   Boolean                   @default(false)
+  isDefaultForAgency Boolean                   @default(false)
+  isActive           Boolean                   @default(true)
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  earnings           CommissionEarning[]
+
+  @@index([beneficiaryType, isActive])
+}
+
+model CommissionEarning {
+  id                      String                    @id @default(cuid())
+  activationOrderId       String
+  participantId           String?
+  beneficiaryType         CommissionBeneficiaryType
+  beneficiaryUserId       String?
+  beneficiaryAgencyId     String?
+  policyId                String?
+  baseAmountCents         Int
+  rateBps                 Int
+  amountCents             Int
+  currency                String                    @default("VND")
+  attributionSnapshotJson Json?
+  status                  CommissionStatus          @default(PENDING)
+  depth                   Int                       @default(0)
+  availableAt             DateTime?
+  releasedAt              DateTime?
+  createdAt               DateTime                  @default(now())
+  activationOrder         ActivationOrder           @relation(fields: [activationOrderId], references: [id], onDelete: Cascade)
+  participant             ChannelParticipant?       @relation(fields: [participantId], references: [id], onDelete: SetNull)
+  beneficiaryUser         User?                     @relation("CommissionBeneficiaryUser", fields: [beneficiaryUserId], references: [id], onDelete: SetNull)
+  beneficiaryAgency       Agency?                   @relation(fields: [beneficiaryAgencyId], references: [id], onDelete: SetNull)
+  policy                  CommissionPolicy?         @relation(fields: [policyId], references: [id], onDelete: SetNull)
+
+  @@index([activationOrderId])
+  @@index([participantId, status])
+  @@index([beneficiaryUserId, status])
+  @@index([beneficiaryAgencyId, status])
+  @@index([status, availableAt])
+}
+
+model CommissionLedgerEntry {
+  id                  String                    @id @default(cuid())
+  participantId       String?
+  beneficiaryUserId   String?
+  beneficiaryAgencyId String?
+  type                CommissionLedgerEntryType
+  amountCents         Int
+  currency            String                    @default("VND")
+  reason              String
+  referenceType       String?
+  referenceId         String?
+  createdAt           DateTime                  @default(now())
+  participant         ChannelParticipant?       @relation(fields: [participantId], references: [id], onDelete: SetNull)
+  beneficiaryUser     User?                     @relation(fields: [beneficiaryUserId], references: [id], onDelete: SetNull)
+  beneficiaryAgency   Agency?                   @relation(fields: [beneficiaryAgencyId], references: [id], onDelete: SetNull)
+
+  @@index([participantId, createdAt])
+  @@index([beneficiaryUserId, createdAt])
+  @@index([beneficiaryAgencyId, createdAt])
+}
+
+model PayoutRequest {
+  id                         String              @id @default(cuid())
+  participantId              String?
+  beneficiaryUserId          String?
+  beneficiaryAgencyId        String?
+  reviewedById               String?
+  status                     PayoutRequestStatus @default(PENDING_REVIEW)
+  amountCents                Int
+  currency                   String              @default("VND")
+  bankName                   String
+  bankAccountNumber          String
+  bankAccountName            String
+  requestNotes               String?
+  reviewNotes                String?
+  payoutInvoiceUrl           String?
+  payoutInvoiceStorageKey    String?
+  payoutInvoiceMimeType      String?
+  payoutInvoiceFileSizeBytes Int?
+  createdAt                  DateTime            @default(now())
+  updatedAt                  DateTime            @updatedAt
+  paidAt                     DateTime?
+  participant                ChannelParticipant? @relation(fields: [participantId], references: [id], onDelete: SetNull)
+  beneficiaryUser            User?               @relation("PayoutBeneficiaryUser", fields: [beneficiaryUserId], references: [id], onDelete: SetNull)
+  beneficiaryAgency          Agency?             @relation(fields: [beneficiaryAgencyId], references: [id], onDelete: SetNull)
+  reviewedBy                 User?               @relation("PayoutReviewerUser", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([participantId, status])
+  @@index([beneficiaryUserId, status])
+  @@index([beneficiaryAgencyId, status])
+  @@index([status, createdAt])
+}

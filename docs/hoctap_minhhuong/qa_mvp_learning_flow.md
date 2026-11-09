@@ -18,7 +18,7 @@ Seed duoc thiet ke idempotent. Khong drop database, khong reset schema, khong xo
 
 ```powershell
 npm --prefix apps/api run prisma:generate
-npx prisma migrate status --config apps/api/prisma.config.ts --schema apps/api/prisma/schema.prisma
+npx prisma migrate status --config apps/api/prisma.config.ts --schema apps/api/prisma
 npm --prefix apps/api run prisma:seed
 npm --prefix apps/api run build
 npm --prefix apps/web run build

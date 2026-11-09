@@ -160,7 +160,8 @@ export const learningProductionRuntimeGateRows: LearningProductionRuntimeGateRow
       currentEvidence:
         'Fixture permission/redaction and append-only audit expectations exist; approved retention, deletion, export, and incident access evidence does not.',
       evidencePaths: [
-        'apps/api/src/learning-local-demo/learning-local-demo.production-hardening.spec.ts',
+        'apps/api/src/learning-local-demo/learning-local-demo.production-hardening.gate-auth-session.spec.ts',
+        'apps/api/src/learning-local-demo/learning-local-demo.production-hardening.auth-store-evidence.spec.ts',
         'apps/api/src/learning-local-demo/auth-persistence-security-gate-matrix.ts',
       ],
       requiredNextEvidence: [

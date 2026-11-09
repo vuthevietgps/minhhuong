@@ -83,7 +83,7 @@ export class MeService {
         ? await this.saleDashboardFor(user)
         : primaryRole === 'PARENT'
           ? await this.parentDashboardFor(user)
-        : this.dashboardFor(primaryRole);
+          : this.dashboardFor(primaryRole);
 
     return {
       role: primaryRole,
@@ -154,9 +154,25 @@ export class MeService {
       title: 'Parent dashboard',
       metrics: [
         { label: 'Hồ sơ con', value: String(children.length), delta: 'đã tạo' },
-        { label: 'Gói học còn hiệu lực', value: String(children.filter((child) => child.subscriptions.length > 0).length), delta: 'hồ sơ con' },
-        { label: 'Đơn cần theo dõi', value: String(pendingOrders), delta: 'chờ thanh toán hoặc duyệt' },
-        { label: 'Giới hạn học đã bật', value: String(children.filter((child) => child.screenTime?.isEnabled).length), delta: 'hồ sơ con' },
+        {
+          label: 'Gói học còn hiệu lực',
+          value: String(
+            children.filter((child) => child.subscriptions.length > 0).length,
+          ),
+          delta: 'hồ sơ con',
+        },
+        {
+          label: 'Đơn cần theo dõi',
+          value: String(pendingOrders),
+          delta: 'chờ thanh toán hoặc duyệt',
+        },
+        {
+          label: 'Giới hạn học đã bật',
+          value: String(
+            children.filter((child) => child.screenTime?.isEnabled).length,
+          ),
+          delta: 'hồ sơ con',
+        },
       ],
       actions: [],
     };

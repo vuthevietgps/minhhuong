@@ -473,7 +473,8 @@ describe('Prisma AuthSessionStore disposable database contract', () => {
 });
 
 function migrationSchemaPath() {
-  return join(apiRoot, 'prisma', 'schema.prisma');
+  // Multi-file schema: the folder holds schema.prisma and models/*.prisma.
+  return join(apiRoot, 'prisma');
 }
 
 function runPrisma(args: string[], url: string) {

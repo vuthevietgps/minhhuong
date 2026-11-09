@@ -2,7 +2,7 @@
 
 import { Download, Plus, Share, X } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 const INSTALL_PROMPT_DISMISSED_AT = "minhhuong-pwa-install-dismissed-at";
 const DISMISS_DURATION_MS = 1000 * 60 * 60 * 24 * 14;
@@ -34,12 +34,41 @@ function isIOSSafari() {
   return iosDevice && !nonSafariBrowser;
 }
 
+function wasRecentlyDismissed() {
+  const dismissedAt = Number(
+    window.localStorage.getItem(INSTALL_PROMPT_DISMISSED_AT) ?? "0",
+  );
+  return Date.now() - dismissedAt < DISMISS_DURATION_MS;
+}
+
+// Read browser-only state with useSyncExternalStore so the server render
+// (no window) and the first client render agree.
+function subscribeNever() {
+  return () => {};
+}
+
 export function PwaInstallPrompt() {
   const pathname = usePathname();
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
-  const [showIosInstructions, setShowIosInstructions] = useState(false);
+  // Android/desktop: shown once the browser fires beforeinstallprompt.
   const [isVisible, setIsVisible] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
+  const showIosInstructions = useSyncExternalStore(
+    subscribeNever,
+    isIOSSafari,
+    () => false,
+  );
+  const canPrompt = useSyncExternalStore(
+    subscribeNever,
+    () => !isInstalled() && !wasRecentlyDismissed(),
+    () => false,
+  );
+  const isOpen =
+    pathname !== "/kid-learning" &&
+    canPrompt &&
+    !isDismissed &&
+    (showIosInstructions || isVisible);
 
   const dismiss = () => {
     window.localStorage.setItem(
@@ -47,22 +76,15 @@ export function PwaInstallPrompt() {
       String(Date.now()),
     );
     setIsVisible(false);
+    setIsDismissed(true);
   };
 
   useEffect(() => {
     if (pathname === "/kid-learning") return;
     if (isInstalled()) return;
-
-    const dismissedAt = Number(
-      window.localStorage.getItem(INSTALL_PROMPT_DISMISSED_AT) ?? "0",
-    );
-    if (Date.now() - dismissedAt < DISMISS_DURATION_MS) return;
-
-    if (isIOSSafari()) {
-      setShowIosInstructions(true);
-      setIsVisible(true);
-      return;
-    }
+    if (wasRecentlyDismissed()) return;
+    // iOS Safari has no install event; instructions are shown directly.
+    if (isIOSSafari()) return;
 
     const handleBeforeInstallPrompt = (event: Event) => {
       event.preventDefault();
@@ -93,12 +115,12 @@ export function PwaInstallPrompt() {
       if (event.key === "Escape") dismiss();
     };
 
-    if (isVisible) {
+    if (isOpen) {
       window.addEventListener("keydown", handleKeyDown);
     }
 
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isVisible]);
+  }, [isOpen]);
 
   const install = async () => {
     if (!deferredPrompt) return;
@@ -116,7 +138,7 @@ export function PwaInstallPrompt() {
     }
   };
 
-  if (pathname === "/kid-learning" || !isVisible || (!showIosInstructions && !deferredPrompt)) {
+  if (!isOpen || (!showIosInstructions && !deferredPrompt)) {
     return null;
   }
 

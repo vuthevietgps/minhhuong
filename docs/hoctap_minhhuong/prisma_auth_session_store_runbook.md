@@ -16,7 +16,7 @@ Scope: disposable local or explicitly approved staging databases only. This runb
 1. Create a uniquely named disposable PostgreSQL database on localhost or an approved staging cluster.
 2. Point `DATABASE_URL` only at that disposable database.
 3. Run `npm --prefix apps/api run prisma:generate`.
-4. Run `prisma migrate deploy --schema apps/api/prisma/schema.prisma` through the repository-local Prisma CLI.
+4. Run `prisma migrate deploy --schema apps/api/prisma` through the repository-local Prisma CLI.
 5. Verify `auth_sessions`, `auth_refresh_tokens`, and `auth_session_audit_events`, their foreign keys, expiry/state indexes, token-hash index, and validated `auth_refresh_tokens_token_hash_sha256_chk` constraint.
 6. Create only synthetic users/sessions. Verify that raw refresh tokens are never stored and both repository code and PostgreSQL reject values outside lowercase 64-character SHA-256 form.
 7. Use two independent Prisma clients: revoke through instance A, then prove instance B denies the session and refresh token. Race refresh rotation against revocation and verify every completed race leaves the session revoked and zero `ACTIVE` refresh tokens for that session.

@@ -1,0 +1,11 @@
+/* Shared kid UI animations. */
+
+@keyframes kid-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(1deg);
+  }
+}

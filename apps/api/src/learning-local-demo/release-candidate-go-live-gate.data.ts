@@ -209,7 +209,8 @@ export const learningReleaseCandidateSmokeRows: LearningReleaseCandidateSmokeRow
       status: 'PASS_LOCAL',
       commandOrEvidence: 'npm run test:learning-local',
       evidencePaths: [
-        'apps/api/src/learning-local-demo/learning-local-demo.production-hardening.spec.ts',
+        'apps/api/src/learning-local-demo/learning-local-demo.production-hardening.gate-auth-session.spec.ts',
+        'apps/api/src/learning-local-demo/learning-local-demo.production-hardening.auth-store-evidence.spec.ts',
         'exports/learning-local-demo-auth-session-smoke-matrix-report.json',
       ],
       expectedResult:
@@ -239,7 +240,8 @@ export const learningReleaseCandidateSmokeRows: LearningReleaseCandidateSmokeRow
       status: 'PASS_LOCAL',
       commandOrEvidence: 'npm run test:learning-local',
       evidencePaths: [
-        'apps/api/src/learning-local-demo/learning-local-demo.production-hardening.spec.ts',
+        'apps/api/src/learning-local-demo/learning-local-demo.production-hardening.gate-auth-session.spec.ts',
+        'apps/api/src/learning-local-demo/learning-local-demo.production-hardening.auth-store-evidence.spec.ts',
       ],
       expectedResult:
         'Every required role has a permission-negative fixture row.',
@@ -264,9 +266,13 @@ export const learningReleaseCandidateSmokeRows: LearningReleaseCandidateSmokeRow
       verificationLevel: 'AUTOMATED_UNIT',
       status: 'PASS_LOCAL',
       commandOrEvidence:
-        'npm --prefix apps/api run test -- activation-orders.service.spec.ts entitlement.service.spec.ts package-entitlement-order-flow.spec.ts package-entitlement-snapshot.spec.ts channel-finance.service.spec.ts --runInBand',
+        'npm --prefix apps/api run test -- activation-orders.service entitlement.service.spec.ts package-entitlement-order-flow.spec.ts package-entitlement-snapshot.spec.ts channel-finance.service.spec.ts --runInBand',
       evidencePaths: [
-        'apps/api/src/activation-orders/activation-orders.service.spec.ts',
+        'apps/api/src/activation-orders/activation-orders.service.affiliate-commission.spec.ts',
+        'apps/api/src/activation-orders/activation-orders.service.approval.spec.ts',
+        'apps/api/src/activation-orders/activation-orders.service.checkout.spec.ts',
+        'apps/api/src/activation-orders/activation-orders.service.refunds.spec.ts',
+        'apps/api/src/activation-orders/activation-orders.service.status-history.spec.ts',
         'apps/api/src/channel-finance/channel-finance.service.spec.ts',
       ],
       expectedResult:
