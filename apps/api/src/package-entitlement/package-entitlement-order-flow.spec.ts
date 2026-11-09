@@ -1,4 +1,5 @@
 import { ActivationOrdersService } from '../activation-orders/activation-orders.service';
+import { createActivationOrdersServiceForTest } from '../activation-orders/activation-orders.testing';
 
 const opsUser = {
   sub: 'ops-1',
@@ -367,7 +368,10 @@ function createService() {
   return {
     prisma,
     notifications,
-    service: new ActivationOrdersService(prisma as any, notifications as any),
+    service: createActivationOrdersServiceForTest(
+      prisma as any,
+      notifications as any,
+    ),
   };
 }
 
