@@ -120,7 +120,7 @@ try {
 
   const sourceUrl = databaseUrlForDatabase(baseDatabaseUrl, sourceDatabaseName);
   await runPrisma(
-    ['migrate', 'deploy', '--schema', 'prisma/schema.prisma'],
+    ['migrate', 'deploy', '--schema', 'prisma'],
     sourceUrl,
   );
   await seedSyntheticAdmin(sourceUrl);

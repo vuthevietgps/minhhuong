@@ -29,7 +29,7 @@ Chay tu root repo:
 
 ```powershell
 npm --prefix apps/api run prisma:generate
-npx prisma migrate status --config apps/api/prisma.config.ts --schema apps/api/prisma/schema.prisma
+npx prisma migrate status --config apps/api/prisma.config.ts --schema apps/api/prisma
 npm --prefix apps/api run build
 npm --prefix apps/api test -- --runInBand
 npm --prefix apps/api run test:e2e -- --runInBand

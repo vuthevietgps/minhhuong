@@ -56,7 +56,7 @@ describe('Commercial channel scope integration', () => {
         'migrate',
         'deploy',
         '--schema',
-        join(apiRoot, 'prisma/schema.prisma'),
+        join(apiRoot, 'prisma'),
       ],
       {
         cwd: apiRoot,

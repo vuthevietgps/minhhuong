@@ -18461,7 +18461,7 @@
         "status": "IMPLEMENTED",
         "evidencePaths": [
           "apps/api/src/auth/prisma-auth-session.store.ts",
-          "apps/api/prisma/schema.prisma"
+          "apps/api/prisma/models/auth-audit.prisma"
         ],
         "verification": "Sessions, refresh-token hashes, and append-only audit events persist behind the async AuthSessionStore seam.",
         "productionBlocker": false

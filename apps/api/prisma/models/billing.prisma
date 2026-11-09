@@ -1,0 +1,100 @@
+// Plans, subscriptions, trials and payments.
+
+model Plan {
+  id              String           @id @default(cuid())
+  code            String           @unique
+  name            String
+  description     String?
+  priceCents      Int
+  currency        String           @default("VND")
+  billingCycle    BillingCycle
+  isActive        Boolean          @default(true)
+  subscriptions   Subscription[]
+  contentPackages ContentPackage[]
+}
+
+model Subscription {
+  id                      String                @id @default(cuid())
+  childProfileId          String
+  planId                  String
+  sourceOrderId           String?
+  activationPackageId     String?
+  entitlementSnapshotJson Json?
+  status                  SubscriptionStatus    @default(TRIALING)
+  currentPeriodStart      DateTime
+  currentPeriodEnd        DateTime
+  cancelAtPeriodEnd       Boolean               @default(false)
+  providerRef             String?
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+  childProfile            ChildProfile          @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  plan                    Plan                  @relation(fields: [planId], references: [id])
+  sourceOrder             ActivationOrder?      @relation("SubscriptionSourceOrder", fields: [sourceOrderId], references: [id], onDelete: SetNull)
+  activationPackage       ActivationPackage?    @relation("SubscriptionActivationPackage", fields: [activationPackageId], references: [id], onDelete: SetNull)
+  payments                Payment[]
+  trialExtensions         TrialExtensionAudit[]
+
+  @@index([childProfileId, status])
+  @@index([sourceOrderId])
+  @@index([activationPackageId])
+}
+
+model TrialAccess {
+  id                     String        @id @default(cuid())
+  childProfileId         String        @unique
+  initialAssessmentCount Int           @default(0)
+  lessonCount            Int           @default(0)
+  aiResponseCount        Int           @default(0)
+  reportAvailableAt      DateTime
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+  childProfile           ChildProfile  @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  lessons                TrialLesson[]
+
+  @@index([reportAvailableAt])
+}
+
+model TrialLesson {
+  id             String      @id @default(cuid())
+  childProfileId String
+  lessonId       String
+  createdAt      DateTime    @default(now())
+  trialAccess    TrialAccess @relation(fields: [childProfileId], references: [childProfileId], onDelete: Cascade)
+
+  @@unique([childProfileId, lessonId])
+  @@index([lessonId])
+}
+
+model TrialExtensionAudit {
+  id                String       @id @default(cuid())
+  subscriptionId    String
+  childProfileId    String
+  actorUserId       String?
+  previousPeriodEnd DateTime
+  nextPeriodEnd     DateTime
+  requestedDays     Int
+  note              String?
+  createdAt         DateTime     @default(now())
+  subscription      Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  childProfile      ChildProfile @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  actor             User?        @relation("TrialExtensionGrantedBy", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([subscriptionId, createdAt])
+  @@index([childProfileId, createdAt])
+  @@index([actorUserId, createdAt])
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  userId         String
+  subscriptionId String?
+  amountCents    Int
+  currency       String        @default("VND")
+  status         PaymentStatus @default(PENDING)
+  provider       String
+  providerRef    String?
+  metadata       Json?
+  createdAt      DateTime      @default(now())
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+}

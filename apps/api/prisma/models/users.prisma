@@ -1,0 +1,100 @@
+// Accounts, child profiles and roles.
+
+model User {
+  id                       String                  @id @default(cuid())
+  email                    String                  @unique
+  passwordHash             String
+  status                   UserStatus              @default(ACTIVE)
+  suspendReason            String?
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+  profile                  Profile?
+  roles                    UserRole[]
+  childProfiles            ChildProfile[]
+  payments                 Payment[]
+  walletEntries            WalletLedgerEntry[]
+  auditLogs                AuditLog[]
+  activationOrders         ActivationOrder[]       @relation("ActivationOrderUser")
+  createdActivationOrders  ActivationOrder[]       @relation("ActivationOrderCreator")
+  reviewedActivationOrders ActivationOrder[]       @relation("ActivationOrderReviewer")
+  agencyMemberships        AgencyMember[]
+  channelParticipant       ChannelParticipant?     @relation("ChannelParticipantUser")
+  commissionEarnings       CommissionEarning[]     @relation("CommissionBeneficiaryUser")
+  commissionLedgerEntries  CommissionLedgerEntry[]
+  payoutRequests           PayoutRequest[]         @relation("PayoutBeneficiaryUser")
+  reviewedPayoutRequests   PayoutRequest[]         @relation("PayoutReviewerUser")
+  grantedDeviceTime        DeviceTimeGrant[]       @relation("DeviceTimeGrantedBy")
+  revokedActivationOrders  ActivationOrder[]       @relation("ActivationOrderRevoker")
+  orderStatusHistories     OrderStatusHistory[]    @relation("OrderStatusHistoryActor")
+  idempotencyRecords       IdempotencyRecord[]     @relation("IdempotencyRecordActor")
+  createdAffiliateLinks    AffiliateLink[]         @relation("AffiliateLinkCreator")
+  createdAffiliateQrAssets AffiliateQrAsset[]      @relation("AffiliateQrAssetCreator")
+  passwordResetTokens      PasswordResetToken[]
+  authSessions             AuthSession[]
+  authRefreshTokens        AuthRefreshToken[]
+  grantedTrialExtensions   TrialExtensionAudit[]   @relation("TrialExtensionGrantedBy")
+  createdAiContextSources  AiContextSource[]       @relation("AiContextSourceCreator")
+
+  @@index([status])
+  @@index([createdAt, id])
+  @@index([status, createdAt])
+}
+
+model ChildProfile {
+  id                 String                   @id @default(cuid())
+  parentId           String
+  displayName        String
+  avatarUrl          String?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  parent             User                     @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  subscriptions      Subscription[]
+  lessonProgress     LessonProgress[]
+  activityAttempts   ActivityAttempt[]
+  learningUsageDays  LearningUsageDay[]
+  aiSessions         AiChatSession[]
+  activationOrders   ActivationOrder[]
+  screenTime         ChildScreenTimeSetting?
+  deviceTimeGrants   DeviceTimeGrant[]
+  contentAssignments ChildContentAssignment[]
+  dailyLearningPlans DailyLearningPlan[]
+  videoExposureLogs  VideoExposureLog[]
+  trialAccess        TrialAccess?
+  trialExtensions    TrialExtensionAudit[]
+  appUsageSessions   LearningAppSession[]
+  browserPolicy      BrowserPolicy?
+  browserDevices     BrowserDevice[]
+  browserPairings    BrowserPairing[]
+  browserPreparations BrowserPreparation[]
+
+  @@index([parentId])
+}
+
+model Profile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  displayName String?
+  avatarUrl   String?
+  locale      String   @default("vi-VN")
+  timezone    String   @default("Asia/Bangkok")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Role {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  description String?
+  users       UserRole[]
+}
+
+model UserRole {
+  userId     String
+  roleId     String
+  assignedAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+}

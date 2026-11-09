@@ -1,0 +1,54 @@
+// Lesson progress and activity/question attempts.
+
+model LessonProgress {
+  id              String         @id @default(cuid())
+  childProfileId  String
+  lessonId        String
+  status          ProgressStatus @default(NOT_STARTED)
+  score           Int?
+  completedAt     DateTime?
+  lastPositionSec Int            @default(0)
+  watchCount      Int            @default(0)
+  lastWatchedAt   DateTime?
+  isFavorite      Boolean        @default(false)
+  updatedAt       DateTime       @updatedAt
+  childProfile    ChildProfile   @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  lesson          Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([childProfileId, lessonId])
+  @@index([childProfileId, isFavorite])
+  @@index([childProfileId, lastWatchedAt])
+}
+
+model ActivityAttempt {
+  id             String            @id @default(cuid())
+  childProfileId String
+  activityId     String
+  status         AttemptStatus     @default(SUBMITTED)
+  score          Int               @default(0)
+  maxScore       Int               @default(0)
+  startedAt      DateTime          @default(now())
+  submittedAt    DateTime?
+  childProfile   ChildProfile      @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  activity       Activity          @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  responses      QuestionAttempt[]
+
+  @@index([childProfileId, activityId, submittedAt])
+}
+
+model QuestionAttempt {
+  id                String          @id @default(cuid())
+  attemptId         String
+  questionId        String
+  selectedAnswerIds Json?
+  textAnswer        String?
+  orderedAnswer     Json?
+  isCorrect         Boolean         @default(false)
+  score             Int             @default(0)
+  feedback          String?
+  createdAt         DateTime        @default(now())
+  attempt           ActivityAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question          Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+}

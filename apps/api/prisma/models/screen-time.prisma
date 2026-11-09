@@ -1,0 +1,58 @@
+// Screen time settings, learning app sessions and time grants.
+
+model ChildScreenTimeSetting {
+  id                  String       @id @default(cuid())
+  childProfileId      String       @unique
+  isEnabled           Boolean      @default(false)
+  dailyLimitMinutes   Int          @default(45)
+  sessionLimitMinutes Int          @default(30)
+  breakMinutes        Int          @default(10)
+  updatedAt           DateTime     @updatedAt
+  childProfile        ChildProfile @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+}
+
+model LearningAppSession {
+  id              String                   @id @default(cuid())
+  childProfileId  String
+  deviceKey       String
+  status          LearningAppSessionStatus @default(ACTIVE)
+  activeSeconds   Int                      @default(0)
+  startedAt       DateTime                 @default(now())
+  lastHeartbeatAt DateTime                 @default(now())
+  breakUntil      DateTime?
+  endedAt         DateTime?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  childProfile    ChildProfile             @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+
+  @@index([childProfileId, status, lastHeartbeatAt])
+  @@index([childProfileId, deviceKey, createdAt])
+}
+
+model LearningUsageDay {
+  id             String             @id @default(cuid())
+  childProfileId String
+  usageDate      String
+  deviceType     LearningDeviceType @default(UNKNOWN)
+  usedSeconds    Int                @default(0)
+  lastRecordedAt DateTime           @default(now())
+  childProfile   ChildProfile       @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([childProfileId, usageDate, deviceType])
+  @@index([childProfileId, usageDate])
+}
+
+model DeviceTimeGrant {
+  id             String       @id @default(cuid())
+  childProfileId String
+  grantedById    String
+  usageDate      String
+  extraMinutes   Int
+  note           String?
+  createdAt      DateTime     @default(now())
+  childProfile   ChildProfile @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  grantedBy      User         @relation("DeviceTimeGrantedBy", fields: [grantedById], references: [id], onDelete: Cascade)
+
+  @@index([childProfileId, usageDate])
+  @@index([grantedById, createdAt])
+}

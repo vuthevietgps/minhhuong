@@ -60,7 +60,7 @@ describe('Channel affiliate migration and scope foundation', () => {
         'migrate',
         'deploy',
         '--schema',
-        join(apiRoot, 'prisma/schema.prisma'),
+        join(apiRoot, 'prisma'),
       ],
       {
         cwd: apiRoot,

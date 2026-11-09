@@ -1,0 +1,96 @@
+// AI chat sessions and AI context sources/documents.
+
+model AiChatSession {
+  id             String          @id @default(cuid())
+  childProfileId String
+  title          String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  childProfile   ChildProfile    @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  messages       AiChatMessage[]
+}
+
+model AiContextSource {
+  id                String                    @id @default(cuid())
+  kind              AiContextSourceKind
+  canonicalKey      String                    @unique
+  youtubeVideoId    String?
+  sourceUrl         String?
+  title             String
+  language          String                    @default("vi")
+  /// Temporary uploaded script while queued; cleared when processing starts or ends.
+  rawTranscript     String
+  transcriptHash    String?
+  /// Legacy captions; no longer written. Cleared by the context-only migration.
+  transcriptSegments Json?
+  processingLease   String?
+  processingStartedAt DateTime?
+  structuredContent String?
+  processingStatus  AiContextProcessingStatus @default(PROCESSING)
+  processingVersion String                    @default("context-v1")
+  errorMessage      String?
+  rightsBasis       String
+  rightsConfirmedAt DateTime
+  createdById       String
+  processedAt       DateTime?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  createdBy         User                      @relation("AiContextSourceCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  audiences         AiContextAudience[]
+  documents         AiContextDocumentSource[]
+  browserPreparations BrowserPreparation[]
+
+  @@index([processingStatus, createdAt])
+  @@index([youtubeVideoId])
+  @@index([transcriptHash])
+  @@index([processingStatus, processingStartedAt])
+}
+
+model AiContextDocument {
+  id                  String                    @id @default(cuid())
+  cacheKey            String                    @unique
+  kind                String
+  title               String
+  topic               String                    @default("")
+  content             String?
+  processingStatus    AiContextProcessingStatus @default(PROCESSING)
+  processingLease     String?
+  processingStartedAt DateTime?
+  errorMessage        String?
+  createdById         String
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+  sources             AiContextDocumentSource[]
+
+  @@index([processingStatus, processingStartedAt])
+}
+
+model AiContextDocumentSource {
+  documentId String
+  sourceId   String
+  document   AiContextDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  source     AiContextSource   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@id([documentId, sourceId])
+  @@index([sourceId])
+}
+
+model AiContextAudience {
+  sourceId    String
+  accountRole String
+  createdAt   DateTime        @default(now())
+  source      AiContextSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@id([sourceId, accountRole])
+  @@index([accountRole, sourceId])
+}
+
+model AiChatMessage {
+  id        String        @id @default(cuid())
+  sessionId String
+  role      AiMessageRole
+  content   String
+  metadata  Json?
+  createdAt DateTime      @default(now())
+  session   AiChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}

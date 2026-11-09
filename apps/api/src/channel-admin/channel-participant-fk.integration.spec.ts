@@ -38,7 +38,7 @@ describe('ChannelParticipant parent FK deploy safety', () => {
         'migrate',
         'deploy',
         '--schema',
-        join(apiRoot, 'prisma/schema.prisma'),
+        join(apiRoot, 'prisma'),
       ],
       {
         cwd: apiRoot,

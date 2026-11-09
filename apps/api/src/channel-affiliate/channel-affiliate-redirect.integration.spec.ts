@@ -46,7 +46,7 @@ describe('Channel affiliate public redirect click foundation', () => {
         'migrate',
         'deploy',
         '--schema',
-        join(apiRoot, 'prisma/schema.prisma'),
+        join(apiRoot, 'prisma'),
       ],
       {
         cwd: apiRoot,
