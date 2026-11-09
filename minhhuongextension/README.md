@@ -21,7 +21,14 @@ Mỗi máy chỉ cần làm một lần.
 4. Ngay khi cài, tiện ích chặn các trang chưa được phụ huynh chọn. Mở biểu tượng Minh Hương, nhập địa chỉ máy chủ do người triển khai cung cấp, tên máy và mã kết nối tạo tại website. Mã hết hạn sau 10 phút và chỉ dùng một lần.
 5. Mở **Góc học của con** trong popup để chọn nội dung. Hết hạn mức sẽ chuyển cùng tab sang AI/bài tập tương ứng.
 
-Không đăng nhập tài khoản phụ huynh vào profile của trẻ. Địa chỉ API được giữ cố định sau ghép. Thiết bị được thu hồi trên website; extension đã thu hồi tiếp tục khóa truy cập. Để sử dụng lại cần phụ huynh cài lại và ghép mới.
+Không đăng nhập tài khoản phụ huynh vào profile của trẻ. Địa chỉ API được giữ cố định sau ghép. Thiết bị được thu hồi trên website; extension đã thu hồi tiếp tục khóa truy cập. Để sử dụng lại, phụ huynh tạo mã mới trên website rồi nhập vào popup (mục **Kết nối lại máy của con**); không cần cài lại. Lần ghép lại vẫn dùng đúng địa chỉ máy chủ ban đầu.
+
+## Hỗ trợ khách hàng
+
+- Popup hiện **phiên bản** tiện ích và nút **Sao chép thông tin hỗ trợ**. Nội dung gồm trạng thái, tên máy, hồ sơ con, chế độ, máy chủ, lần kiểm tra gần nhất, lỗi gần nhất, số sự kiện chờ gửi, giờ trên máy và trình duyệt. Không chứa token thiết bị hay mật khẩu.
+- Trang chặn báo riêng ba trường hợp: máy đã bị ngắt kết nối, ngày giờ trên máy chưa đúng, phụ huynh đang tạm dừng.
+- Lỗi “Không kết nối được tới (địa chỉ máy chủ)” khi máy vẫn có mạng thường là gói cài trỏ sai địa chỉ máy chủ; kiểm tra lại tham số `-ApiUrl` khi đóng gói.
+- Trên website, sau khi tạo mã, trang tự cập nhật khi máy của con kết nối xong và đếm ngược thời hạn mã.
 
 ## Cách tính giờ
 

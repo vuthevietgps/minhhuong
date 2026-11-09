@@ -112,3 +112,26 @@ body.popup {
 small {
   color: #67776e;
 }
+button.secondary {
+  background: #e7f1ec;
+  color: #176b51;
+}
+.support {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #dbe7df;
+}
+.support small {
+  display: block;
+}
+.support textarea {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid #abc7b7;
+  border-radius: 10px;
+  font: 12px/1.5 ui-monospace, monospace;
+}
+.version {
+  margin-top: 8px;
+}
