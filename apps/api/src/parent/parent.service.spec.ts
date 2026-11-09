@@ -1,5 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ParentService } from './parent.service';
+import { createParentServiceForTest } from './parent.testing';
 
 describe('ParentService', () => {
   const prisma = {
@@ -38,7 +39,7 @@ describe('ParentService', () => {
   const childAccess = {
     assertCanAccessChild: jest.fn(),
   };
-  const service = new ParentService(prisma as any, childAccess as any);
+  const service = createParentServiceForTest(prisma as any, childAccess as any);
   const parent = {
     sub: 'parent-1',
     email: 'parent@example.com',

@@ -1,5 +1,6 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { LearningService } from './learning.service';
+import { createLearningServiceForTest } from './learning.testing';
 
 describe('LearningService', () => {
   const prisma = {
@@ -57,7 +58,7 @@ describe('LearningService', () => {
     heartbeat: jest.fn(),
     assertNotOnBreak: jest.fn(),
   };
-  const service = new LearningService(
+  const service = createLearningServiceForTest(
     prisma as any,
     childAccess as any,
     entitlement as any,

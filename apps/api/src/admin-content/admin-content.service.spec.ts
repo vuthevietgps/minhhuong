@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { AdminContentService } from './admin-content.service';
+import { createAdminContentServiceForTest } from './admin-content.testing';
 
 describe('AdminContentService', () => {
   const prisma = {
@@ -25,7 +26,7 @@ describe('AdminContentService', () => {
       create: jest.fn(),
     },
   };
-  const service = new AdminContentService(prisma as any);
+  const service = createAdminContentServiceForTest(prisma as any);
   const admin = {
     sub: 'admin-1',
     email: 'admin@example.com',

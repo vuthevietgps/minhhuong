@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException } from '@nestjs/common';
 
 import { ChannelFinanceService } from './channel-finance.service';
+import { createChannelFinanceServiceForTest } from './channel-finance.testing';
 
 const opsUser = {
   sub: 'ops-1',
@@ -135,7 +136,7 @@ function createPrismaMock() {
 function createService(prisma = createPrismaMock()) {
   return {
     prisma,
-    service: new ChannelFinanceService(prisma as any),
+    service: createChannelFinanceServiceForTest(prisma as any),
   };
 }
 

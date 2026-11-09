@@ -10,6 +10,7 @@ import type { AuthenticatedUser } from '../auth/auth.types';
 import { ActivationOrdersService } from '../activation-orders/activation-orders.service';
 import { createActivationOrdersServiceForTest } from '../activation-orders/activation-orders.testing';
 import { ChannelFinanceService } from './channel-finance.service';
+import { createChannelFinanceServiceForTest } from './channel-finance.testing';
 
 const apiRoot = process.cwd().endsWith(`${join('apps', 'api')}`)
   ? process.cwd()
@@ -83,7 +84,7 @@ describe('Commercial channel scope integration', () => {
         sendOrderRevoked: jest.fn(),
       } as any,
     );
-    channelFinance = new ChannelFinanceService(prisma as any);
+    channelFinance = createChannelFinanceServiceForTest(prisma as any);
     fixture = await seedScopeFixture(prisma);
   });
 

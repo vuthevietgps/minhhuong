@@ -1,4 +1,5 @@
 import { ChannelAdminService } from './channel-admin.service';
+import { createChannelAdminServiceForTest } from './channel-admin.testing';
 
 describe('ChannelAdminService', () => {
   const tx = {
@@ -30,7 +31,7 @@ describe('ChannelAdminService', () => {
     ),
     __tx: tx,
   };
-  const service = new ChannelAdminService(prisma as any);
+  const service = createChannelAdminServiceForTest(prisma as any);
   const admin = {
     sub: 'admin-1',
     email: 'admin@example.com',
