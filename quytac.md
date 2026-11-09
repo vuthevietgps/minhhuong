@@ -47,7 +47,9 @@ Cach tach chuan:
 - **Service NestJS lon:** giu class cu lam facade (giu nguyen method public, chi goi tiep), tach nghiep vu thanh cac service con `@Injectable` dang ky trong cung module; ham thuan (khong dung `this`) dua ra `<ten>.helpers.ts`. Controller va noi goi khong phai sua.
 - **Type/DTO lon:** tach theo nhom nghiep vu vao thu muc `types/` hoac `dto/`, file goc thanh barrel `export * from ...` de duong dan import cu van dung duoc.
 - **Trang/component React lon:** state va handler dua vao custom hook `use-<ten>-state.ts`; tung khoi giao dien thanh component trong `_components/<ten>-section.tsx`; ham phu va hang so dung chung vao `_components/shared.tsx`.
-- **Spec lon:** tach theo nhom hanh vi (`<ten>.<nhom>.spec.ts`), fixture/factory dung chung vao `<module>.testing.ts`.
+- **Spec lon:** tach theo nhom hanh vi (`<ten>.<nhom>.spec.ts`). Factory tao service dung chung ca module vao `<module>.testing.ts`; fixture/mock rieng cua mot bo spec vao `<ten>.spec-fixtures.ts` (file nay khong vao ban build va dung luat lint cua test). Moi file spec phai tu chay doc lap, khong dua vao du lieu do test o file khac tao ra.
+- **Schema Prisma:** `prisma/schema.prisma` chi chua `generator`, `datasource` va enum; model dat trong `prisma/models/<nghiep-vu>.prisma`. Lenh Prisma dung `--schema apps/api/prisma` (thu muc).
+- **CSS toan cuc:** `globals.css` chi `@import` cac file trong `src/app/styles/` theo dung thu tu cascade.
 - Tach file la refactor: **khong doi hanh vi** trong cung PR, va phai chung minh bang kiem thu (muc 12).
 
 ## 3. Cau truc monorepo
@@ -113,6 +115,7 @@ Quy uoc dat ten va DI:
 ## 6. Prisma va PostgreSQL
 
 - Moi thay doi schema phai tao migration.
+- Model moi dat vao file `prisma/models/<nghiep-vu>.prisma` dung mang nghiep vu; enum dat trong `prisma/schema.prisma`.
 - Khong sua database bang tay roi quen migration.
 - Quan he tai chinh, subscription, commission, payout phai co index phu hop.
 - Cac bang tien te phai luu `currency`.
