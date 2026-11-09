@@ -262,7 +262,8 @@ export default function UsersPage() {
         `/channel-admin/users/${resetUser.id}/reset-password`,
         {
           method: "POST",
-          body: JSON.stringify({ newPassword }),
+          // ResetUserPasswordDto expects `password`; extra fields are rejected.
+          body: JSON.stringify({ password: newPassword }),
         },
       );
       if (!res.ok)
