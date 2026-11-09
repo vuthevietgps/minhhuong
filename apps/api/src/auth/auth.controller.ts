@@ -3,6 +3,11 @@ import { CurrentUser } from './current-user.decorator';
 import { AuthService } from './auth.service';
 import type { AuthenticatedUser } from './auth.types';
 import { LoginDto } from './dto/login.dto';
+import {
+  ForgotPasswordDto,
+  RefreshTokenDto,
+  ResetPasswordDto,
+} from './dto/password-reset.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
@@ -21,7 +26,7 @@ export class AuthController {
   }
 
   @Post('refresh')
-  refresh(@Body() dto: { refreshToken: string }) {
+  refresh(@Body() dto: RefreshTokenDto) {
     return this.authService.refresh(dto.refreshToken);
   }
 
@@ -32,12 +37,12 @@ export class AuthController {
   }
 
   @Post('forgot-password')
-  forgotPassword(@Body() dto: { email: string }) {
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto.email);
   }
 
   @Post('reset-password')
-  resetPassword(@Body() dto: { token: string; newPassword: string }) {
+  resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto.token, dto.newPassword);
   }
 }
