@@ -22,6 +22,8 @@ jobs:
           cache-dependency-path: |
             apps/api/package-lock.json
             apps/web/package-lock.json
+      - run: npm run test:scripts
+      - run: npm run check:file-length
       - run: npm ci --prefix apps/api
       - run: npm ci --prefix apps/web
       - run: npm run prisma:generate

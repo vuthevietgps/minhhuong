@@ -14,6 +14,8 @@
     "lint:api": "npm --prefix apps/api run lint",
     "lint:fix:api": "npm --prefix apps/api run lint:fix",
     "lint:web": "npm --prefix apps/web run lint",
+    "check:file-length": "node scripts/check-file-length.mjs",
+    "test:scripts": "node --test scripts/check-file-length.test.mjs",
     "test": "npm --prefix apps/api run test",
     "test:extension": "npm --prefix minhhuongextension test",
     "test:browser-control": "npm --prefix apps/api run test:browser-control",
