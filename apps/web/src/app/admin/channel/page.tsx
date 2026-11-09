@@ -103,9 +103,11 @@ type ChannelUser = {
     commissionRateBps?: number | null;
     baseSalaryCents?: number | null;
   } | null;
-  subscriptions: Array<{
-    status: string;
-    currentPeriodEnd?: string;
+  childProfiles: Array<{
+    subscriptions: Array<{
+      status: string;
+      currentPeriodEnd?: string;
+    }>;
   }>;
 };
 
@@ -122,6 +124,16 @@ type EditableAgencyMember = AgencyAdmin["members"][number] & {
   agencyCode: string;
   agencyName: string;
 };
+
+// The API returns each child profile's latest ACTIVE/TRIALING subscription;
+// show the one that ends last across all of the user's child profiles.
+function latestChildSubscription(user: ChannelUser) {
+  return (user.childProfiles ?? [])
+    .flatMap((child) => child.subscriptions ?? [])
+    .sort((a, b) =>
+      (b.currentPeriodEnd ?? "").localeCompare(a.currentPeriodEnd ?? ""),
+    )[0];
+}
 
 function randomIndex(max: number) {
   if (max <= 0) {
@@ -1449,7 +1461,7 @@ export default function ChannelPage() {
 
         <div className="mt-4 space-y-3">
           {users.map((user) => {
-            const latestSubscription = user.subscriptions[0];
+            const latestSubscription = latestChildSubscription(user);
             const canManageThisUser =
               canManageGlobal ||
               (canManageScopedMembers &&
