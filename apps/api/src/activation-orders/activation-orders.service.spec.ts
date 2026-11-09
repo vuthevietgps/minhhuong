@@ -5,10 +5,19 @@ import {
 } from '@nestjs/common';
 import { randomUUID, scryptSync } from 'node:crypto';
 
-import {
-  ActivationOrdersService,
-  MANUAL_PAID_PILOT_REFUND_WINDOW_DAYS,
-} from './activation-orders.service';
+import { MANUAL_PAID_PILOT_REFUND_WINDOW_DAYS } from './activation-orders.service';
+import { createActivationOrdersServiceForTestParts } from './activation-orders.testing';
+
+function activationOrdersParts(prisma: any, notifications: any) {
+  const parts = createActivationOrdersServiceForTestParts(
+    prisma,
+    notifications,
+  );
+  return {
+    service: parts.service,
+    support: parts.activationOrderSupportService,
+  };
+}
 
 const opsUser = {
   sub: 'ops-1',
@@ -356,7 +365,7 @@ function createService(prisma = createPrismaMock()) {
   return {
     prisma,
     notifications,
-    service: new ActivationOrdersService(prisma as any, notifications as any),
+    ...activationOrdersParts(prisma, notifications),
   };
 }
 
@@ -401,14 +410,18 @@ describe('ActivationOrdersService P0 commercial flows', () => {
   it('rejects buying a package for another parent child profile', async () => {
     const { prisma, service } = createService();
     prisma.user.findUnique.mockResolvedValue({
-      id: 'parent-1', email: 'parent@example.com', status: 'ACTIVE',
+      id: 'parent-1',
+      email: 'parent@example.com',
+      status: 'ACTIVE',
     });
     prisma.childProfile.findFirst.mockResolvedValue(null);
 
-    await expect(service.createParentSelfServiceOrder(
-      { sub: 'parent-1', email: 'parent@example.com', roles: ['PARENT'] },
-      { childProfileId: 'someone-elses-child', packageCode: 'basic-30' },
-    )).rejects.toBeInstanceOf(NotFoundException);
+    await expect(
+      service.createParentSelfServiceOrder(
+        { sub: 'parent-1', email: 'parent@example.com', roles: ['PARENT'] },
+        { childProfileId: 'someone-elses-child', packageCode: 'basic-30' },
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
     expect(prisma.childProfile.findFirst).toHaveBeenCalledWith({
       where: { id: 'someone-elses-child', parentId: 'parent-1' },
       select: { id: true },
@@ -417,26 +430,34 @@ describe('ActivationOrdersService P0 commercial flows', () => {
   });
 
   it('requires the existing parent password on the public checkout', async () => {
-    const { prisma, service } = createService();
+    const { prisma, support } = createService();
     const salt = randomUUID();
     prisma.user.findUnique.mockResolvedValue({
-      id: 'parent-1', email: 'parent@example.com', status: 'ACTIVE',
+      id: 'parent-1',
+      email: 'parent@example.com',
+      status: 'ACTIVE',
       passwordHash: `${salt}:${scryptSync('correct-password', salt, 64).toString('hex')}`,
       roles: [{ role: { name: 'PARENT' } }],
     });
-    await expect((service as any).upsertParentAccount(
-      { password: 'wrong-password' }, 'parent@example.com',
-    )).rejects.toBeInstanceOf(BadRequestException);
+    await expect(
+      support.upsertParentAccount(
+        { password: 'wrong-password' },
+        'parent@example.com',
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
     expect(prisma.userRole.upsert).not.toHaveBeenCalled();
   });
 
   it('rejects payment proof for an order outside the parent account', async () => {
     const { prisma, service } = createService();
     prisma.activationOrder.findFirst.mockResolvedValue(null);
-    await expect(service.uploadParentPaymentProof(
-      { sub: 'parent-1', email: 'parent@example.com', roles: ['PARENT'] },
-      'other-order', proofFile(),
-    )).rejects.toBeInstanceOf(NotFoundException);
+    await expect(
+      service.uploadParentPaymentProof(
+        { sub: 'parent-1', email: 'parent@example.com', roles: ['PARENT'] },
+        'other-order',
+        proofFile(),
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
     expect(prisma.activationOrder.findFirst).toHaveBeenCalledWith({
       where: { id: 'other-order', userId: 'parent-1', source: 'SELF_SERVICE' },
       select: { customerEmail: true },
@@ -446,13 +467,16 @@ describe('ActivationOrdersService P0 commercial flows', () => {
   it('creates a parent order for the selected child without creating another profile', async () => {
     const { prisma, service } = createService();
     prisma.user.findUnique.mockResolvedValue({
-      id: 'parent-1', email: 'parent@example.com', status: 'ACTIVE',
+      id: 'parent-1',
+      email: 'parent@example.com',
+      status: 'ACTIVE',
     });
     prisma.childProfile.findFirst.mockResolvedValue({ id: 'child-2' });
     prisma.activationPackage.findMany.mockResolvedValue([packageFixture]);
     prisma.activationOrder.findFirst.mockResolvedValue(null);
-    prisma.activationOrder.create.mockImplementation(({ data }: { data: Record<string, any> }) =>
-      Promise.resolve({ id: 'order-2', ...data, commissionEarnings: [] }),
+    prisma.activationOrder.create.mockImplementation(
+      ({ data }: { data: Record<string, any> }) =>
+        Promise.resolve({ id: 'order-2', ...data, commissionEarnings: [] }),
     );
 
     const created = await service.createParentSelfServiceOrder(
@@ -461,9 +485,14 @@ describe('ActivationOrdersService P0 commercial flows', () => {
     );
     expect(created.order.childProfileId).toBe('child-2');
     expect(prisma.childProfile.upsert).not.toHaveBeenCalled();
-    expect(prisma.activationOrder.create).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({ userId: 'parent-1', childProfileId: 'child-2' }),
-    }));
+    expect(prisma.activationOrder.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId: 'parent-1',
+          childProfileId: 'child-2',
+        }),
+      }),
+    );
   });
 
   it('reads status history in chronological order with safe metadata', async () => {

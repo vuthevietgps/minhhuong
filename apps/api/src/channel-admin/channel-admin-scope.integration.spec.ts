@@ -8,6 +8,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { ChannelAdminService } from './channel-admin.service';
+import { createChannelAdminServiceForTest } from './channel-admin.testing';
 
 const apiRoot = process.cwd().endsWith(`${join('apps', 'api')}`)
   ? process.cwd()
@@ -66,7 +67,7 @@ describe('Channel admin scope integration', () => {
     >('select current_database()');
     expect(currentDatabase[0]?.current_database).toBe(databaseName);
 
-    service = new ChannelAdminService(prisma as any);
+    service = createChannelAdminServiceForTest(prisma as any);
     fixture = await seedChannelAdminScopeFixture(prisma);
   });
 

@@ -255,7 +255,11 @@ export class SelfServiceActivationOrdersController {
     @Param('orderId') orderId: string,
     @UploadedFile() paymentProof: Express.Multer.File | undefined,
   ) {
-    return this.ordersService.uploadParentPaymentProof(user, orderId, paymentProof);
+    return this.ordersService.uploadParentPaymentProof(
+      user,
+      orderId,
+      paymentProof,
+    );
   }
 
   @Post('trial')

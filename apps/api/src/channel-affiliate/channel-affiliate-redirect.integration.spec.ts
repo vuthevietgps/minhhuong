@@ -6,6 +6,7 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { ChannelAffiliatePublicController } from './channel-affiliate.controller';
 import { ChannelAffiliateService } from './channel-affiliate.service';
+import { createChannelAffiliateServiceForTest } from './channel-affiliate.testing';
 
 const apiRoot = process.cwd().endsWith(`${join('apps', 'api')}`)
   ? process.cwd()
@@ -63,7 +64,7 @@ describe('Channel affiliate public redirect click foundation', () => {
     >('select current_database()');
     expect(currentDatabase[0]?.current_database).toBe(databaseName);
 
-    service = new ChannelAffiliateService(
+    service = createChannelAffiliateServiceForTest(
       prisma as any,
       {
         get: (key: string) =>
