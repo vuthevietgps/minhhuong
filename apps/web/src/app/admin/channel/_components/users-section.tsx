@@ -2,6 +2,7 @@
 
 import { KeyRound, Search } from "lucide-react";
 import { formatDate, formatMoney, formatRoleVi, formatStatusVi } from "../../_lib/admin-client";
+import { latestChildSubscription } from "./shared";
 import type { ChannelPageState } from "./use-channel-page-state";
 
 /** Channel users with filters and actions. */
@@ -85,7 +86,7 @@ export function UsersSection(state: ChannelPageState) {
 
       <div className="mt-4 space-y-3">
         {users.map((user) => {
-          const latestSubscription = user.subscriptions[0];
+          const latestSubscription = latestChildSubscription(user);
           const canManageThisUser =
             canManageGlobal ||
             (canManageScopedMembers &&

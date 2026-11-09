@@ -82,9 +82,11 @@ export type ChannelUser = {
     commissionRateBps?: number | null;
     baseSalaryCents?: number | null;
   } | null;
-  subscriptions: Array<{
-    status: string;
-    currentPeriodEnd?: string;
+  childProfiles: Array<{
+    subscriptions: Array<{
+      status: string;
+      currentPeriodEnd?: string;
+    }>;
   }>;
 };
 
@@ -103,6 +105,16 @@ export type EditableAgencyMember = AgencyAdmin["members"][number] & {
   agencyCode: string;
   agencyName: string;
 };
+
+// The API returns each child profile's latest ACTIVE/TRIALING subscription;
+// show the one that ends last across all of the user's child profiles.
+export function latestChildSubscription(user: ChannelUser) {
+  return (user.childProfiles ?? [])
+    .flatMap((child) => child.subscriptions ?? [])
+    .sort((a, b) =>
+      (b.currentPeriodEnd ?? "").localeCompare(a.currentPeriodEnd ?? ""),
+    )[0];
+}
 
 export function randomIndex(max: number) {
   if (max <= 0) {
