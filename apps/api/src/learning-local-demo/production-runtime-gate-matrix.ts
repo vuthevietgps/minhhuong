@@ -101,10 +101,12 @@ export const learningProductionRuntimeGateRows: LearningProductionRuntimeGateRow
       area: 'MIGRATION_ROLLBACK',
       decision: 'BLOCKED_PENDING_STAGING',
       currentEvidence:
-        'Prisma migrations and local recovery evidence exist, but there is no current staging migrate/rollback rehearsal for this release candidate.',
+        'Prisma migrations and rollback/forward-repair runbooks exist, but there is no current staging migrate/rollback rehearsal for this release candidate.',
       evidencePaths: [
         'apps/api/prisma/migrations',
-        'audit-output/promt_hoctap_minhhuong_4B_db_migration_recovery/promt_hoctap_minhhuong_4B_db_recovery_report.md',
+        // Evidence must be tracked in git: audit-output/ is ignored, so CI
+        // checkouts cannot verify reports stored there.
+        'apps/api/prisma/runbooks',
       ],
       requiredNextEvidence: [
         'Disposable staging migration dry-run with schema diff approval.',

@@ -1435,7 +1435,7 @@
       "productionBlocker": true,
       "evidencePaths": [
         "apps/api/prisma/migrations",
-        "audit-output/promt_hoctap_minhhuong_4B_db_migration_recovery/promt_hoctap_minhhuong_4B_db_recovery_report.md"
+        "apps/api/prisma/runbooks"
       ],
       "requiredNextEvidence": [
         "Disposable staging migration dry-run with schema diff approval.",

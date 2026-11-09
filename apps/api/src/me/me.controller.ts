@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import type { AuthenticatedUser } from '../auth/auth.types';
+import { ChangePasswordDto, UpdateProfileDto } from './dto/me.dto';
 import { MeService } from './me.service';
 
 @Controller('me')
@@ -46,7 +47,7 @@ export class MeController {
   @Patch('profile')
   updateProfile(
     @CurrentUser() user: AuthenticatedUser,
-    @Body() dto: { displayName?: string; locale?: string; timezone?: string },
+    @Body() dto: UpdateProfileDto,
   ) {
     return this.meService.updateProfile(user, dto);
   }
@@ -54,7 +55,7 @@ export class MeController {
   @Post('change-password')
   changePassword(
     @CurrentUser() user: AuthenticatedUser,
-    @Body() dto: { currentPassword: string; newPassword: string },
+    @Body() dto: ChangePasswordDto,
   ) {
     return this.meService.changePassword(user, dto);
   }

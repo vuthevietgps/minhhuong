@@ -6,7 +6,7 @@ import {
   DailyLearningPlanItemType,
   DailyLearningPlanStatus,
 } from '@prisma/client';
-import { DailyPlanService } from './daily-plan.service';
+import { createDailyPlanServiceForTest } from './daily-plan.testing';
 
 describe('DailyPlanService', () => {
   const prisma = {
@@ -44,7 +44,7 @@ describe('DailyPlanService', () => {
     assertActiveSubscription: jest.fn(),
     assertCapability: jest.fn(),
   };
-  const service = new DailyPlanService(
+  const service = createDailyPlanServiceForTest(
     prisma as any,
     childAccess as any,
     entitlement as any,

@@ -38,6 +38,12 @@ import { CreateLessonDto } from './dto/create-lesson.dto';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { CreateUnitDto } from './dto/create-unit.dto';
 import { CreateVideoLinkDto } from './dto/create-video-link.dto';
+import {
+  UpdateActivityDto,
+  UpdateLessonDto,
+  UpdateQuestionDto,
+  UpdateUnitDto,
+} from './dto/update-content.dto';
 import { UploadVideoDto } from './dto/upload-video.dto';
 
 const allowedVideoMimeTypes = new Set([
@@ -215,7 +221,7 @@ export class AdminContentController {
   @Roles(...contentManageRoles)
   updateActivity(
     @Param('activityId') activityId: string,
-    @Body() dto: { title?: string; sortOrder?: number },
+    @Body() dto: UpdateActivityDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.contentService.updateActivity(activityId, dto, user);
@@ -225,13 +231,7 @@ export class AdminContentController {
   @Roles(...contentManageRoles)
   updateQuestion(
     @Param('questionId') questionId: string,
-    @Body()
-    dto: {
-      prompt?: string;
-      explanation?: string | null;
-      points?: number;
-      answers?: Array<{ text: string; isCorrect: boolean; sortOrder?: number }>;
-    },
+    @Body() dto: UpdateQuestionDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.contentService.updateQuestion(questionId, dto, user);
@@ -241,7 +241,7 @@ export class AdminContentController {
   @Roles(...contentManageRoles)
   updateUnit(
     @Param('unitId') unitId: string,
-    @Body() dto: { title?: string; description?: string; sortOrder?: number },
+    @Body() dto: UpdateUnitDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.contentService.updateUnit(unitId, dto, user);
@@ -251,14 +251,7 @@ export class AdminContentController {
   @Roles(...contentManageRoles)
   updateLesson(
     @Param('lessonId') lessonId: string,
-    @Body()
-    dto: {
-      title?: string;
-      description?: string;
-      type?: string;
-      durationSec?: number;
-      sortOrder?: number;
-    },
+    @Body() dto: UpdateLessonDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.contentService.updateLesson(lessonId, dto, user);

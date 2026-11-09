@@ -23,6 +23,7 @@ import {
   ApplyForAgencyDto,
   ReviewAgencyApplicationDto,
 } from './dto/agency-application.dto';
+import { SetUserPlatformRoleDto } from './dto/user-role.dto';
 import {
   AddAgencyMemberDto,
   CreateActivationPackageDto,
@@ -171,7 +172,7 @@ export class ChannelAdminController {
   @Roles('ADMIN')
   setUserPlatformRole(
     @Param('userId') userId: string,
-    @Body() dto: { role: string; action: 'add' | 'remove' },
+    @Body() dto: SetUserPlatformRoleDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.channelAdminService.setUserPlatformRole(userId, dto, user);
