@@ -29,6 +29,7 @@ import {
 } from './teacher-content.service';
 import { CreateActivityDto } from '../admin-content/dto/create-activity.dto';
 import { CreateLessonDto } from '../admin-content/dto/create-lesson.dto';
+import { ListLessonsQueryDto } from '../admin-content/dto/list-lessons-query.dto';
 import { CreateQuestionDto } from '../admin-content/dto/create-question.dto';
 import { CreateVideoLinkDto } from '../admin-content/dto/create-video-link.dto';
 import { UploadVideoDto } from '../admin-content/dto/upload-video.dto';
@@ -68,13 +69,12 @@ export class TeacherContentController {
   @Roles(...teacherContentViewRoles)
   listMyLessons(
     @CurrentUser() user: AuthenticatedUser,
-    @Query('cursor') cursor?: string,
-    @Query('take') take?: string,
+    @Query() query: ListLessonsQueryDto,
   ) {
     return this.contentService.listMyLessons(
       user,
-      cursor,
-      take ? Math.min(Number(take), 100) : 50,
+      query.cursor,
+      query.take ? Math.min(query.take, 100) : 50,
     );
   }
 

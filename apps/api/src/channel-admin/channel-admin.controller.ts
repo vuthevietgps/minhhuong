@@ -23,6 +23,7 @@ import {
   ApplyForAgencyDto,
   ReviewAgencyApplicationDto,
 } from './dto/agency-application.dto';
+import { ListAuditLogsQueryDto } from './dto/audit-log-query.dto';
 import { SetUserPlatformRoleDto } from './dto/user-role.dto';
 import {
   AddAgencyMemberDto,
@@ -132,20 +133,10 @@ export class ChannelAdminController {
   @Get('audit-logs')
   @Roles('ADMIN', 'DIRECTOR', 'OPERATIONS')
   listAuditLogs(
-    @Query()
-    query: {
-      action?: string;
-      userEmail?: string;
-      entityType?: string;
-      cursor?: string;
-      limit?: string;
-    },
+    @Query() query: ListAuditLogsQueryDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.channelAdminService.listAuditLogs(
-      { ...query, limit: query.limit ? Number(query.limit) : undefined },
-      user,
-    );
+    return this.channelAdminService.listAuditLogs(query, user);
   }
 
   @Patch('users/:userId/status')
