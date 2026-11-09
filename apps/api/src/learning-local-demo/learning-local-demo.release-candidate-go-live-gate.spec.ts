@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { LearningLocalDemoService } from './learning-local-demo.service';
 import { evaluateLearningReleaseCandidateFixtureAccess } from './release-candidate-go-live-gate-matrix';
 
@@ -295,5 +297,22 @@ describe('LearningLocalDemoReleaseCandidateGoLiveGate', () => {
     expect(markdown).toContain('## Immutable Test Standard');
     expect(markdown).toContain('## Evidence Integrity');
     expect(markdown).toContain('production_ready=false');
+  });
+
+  it('points every tracked source evidence path at a file that exists in the repo', () => {
+    const report = service.buildReleaseCandidateGoLiveGateReport(generatedAt);
+    const repoRoot = resolve(__dirname, '../../../..');
+    const sourceEvidencePaths = [
+      ...report.roleJourneyRows.flatMap((row) => row.evidencePaths),
+      ...report.smokeRows.flatMap((row) => row.evidencePaths),
+      ...report.deployReadinessRows.flatMap((row) => row.evidencePaths),
+    ].filter((path) => !path.startsWith('exports/'));
+
+    expect(sourceEvidencePaths.length).toBeGreaterThan(0);
+    expect(
+      sourceEvidencePaths.filter(
+        (path) => !existsSync(resolve(repoRoot, path)),
+      ),
+    ).toEqual([]);
   });
 });

@@ -7,7 +7,7 @@
   "sourceGatePath": "exports/learning-local-demo-release-candidate-go-live-gate-report.json",
   "status": "PASS_LOCAL",
   "gateContractStatus": "PASS",
-  "overallSha256": "11bd607f66ab32eed87fde4fea23e86a8faf082ccd7c18a0a2eb1a4f0278711a",
+  "overallSha256": "2f81c1ed436a82231981342ff7b604a80ce225fbf58aee0cf5276fcbdd3dc81f",
   "entries": [
     {
       "path": "apps/api/prisma/migrations",
@@ -34,14 +34,62 @@
       "failureReason": null
     },
     {
-      "path": "apps/api/src/activation-orders/activation-orders.service.spec.ts",
+      "path": "apps/api/src/activation-orders/activation-orders.service.affiliate-commission.spec.ts",
       "referencedBy": [
         "smoke:rc-smoke-refund-commission-payout-safety"
       ],
       "status": "VERIFIED",
       "kind": "FILE",
-      "sha256": "007f5d5b8007fd1c5940235ac1bba3a410a416e29268fd6f43595556814fed7b",
-      "byteCount": 122952,
+      "sha256": "c4df52c39d5dee6071001ff12d7cdbdb5f43c8bcb9e31da704f7d37d91fa7e14",
+      "byteCount": 20204,
+      "fileCount": 1,
+      "failureReason": null
+    },
+    {
+      "path": "apps/api/src/activation-orders/activation-orders.service.approval.spec.ts",
+      "referencedBy": [
+        "smoke:rc-smoke-refund-commission-payout-safety"
+      ],
+      "status": "VERIFIED",
+      "kind": "FILE",
+      "sha256": "f863bd4811bab1bc5ffbb52144a03a69800ebe34b34d83020881affbce9a6812",
+      "byteCount": 18422,
+      "fileCount": 1,
+      "failureReason": null
+    },
+    {
+      "path": "apps/api/src/activation-orders/activation-orders.service.checkout.spec.ts",
+      "referencedBy": [
+        "smoke:rc-smoke-refund-commission-payout-safety"
+      ],
+      "status": "VERIFIED",
+      "kind": "FILE",
+      "sha256": "e126a166b635eb17c1c13ef0ead849bf2f19f51e0aa9afeb98622ea6eb69f5b0",
+      "byteCount": 20932,
+      "fileCount": 1,
+      "failureReason": null
+    },
+    {
+      "path": "apps/api/src/activation-orders/activation-orders.service.refunds.spec.ts",
+      "referencedBy": [
+        "smoke:rc-smoke-refund-commission-payout-safety"
+      ],
+      "status": "VERIFIED",
+      "kind": "FILE",
+      "sha256": "288d00c7a5ba7e384c7abd4f511d61540688b7100d9bdf4d754de3b33eaa5999",
+      "byteCount": 30499,
+      "fileCount": 1,
+      "failureReason": null
+    },
+    {
+      "path": "apps/api/src/activation-orders/activation-orders.service.status-history.spec.ts",
+      "referencedBy": [
+        "smoke:rc-smoke-refund-commission-payout-safety"
+      ],
+      "status": "VERIFIED",
+      "kind": "FILE",
+      "sha256": "b685bc7df69ddf48d1e6adc00e1514b1f31fafb1687689d3d90d209ecd87ac0f",
+      "byteCount": 24161,
       "fileCount": 1,
       "failureReason": null
     },
@@ -88,8 +136,8 @@
       ],
       "status": "VERIFIED",
       "kind": "FILE",
-      "sha256": "428098222cb20a04eb3c7e571c5c52d60c0b04d2f329b974d7f560a39a8b91cf",
-      "byteCount": 16653,
+      "sha256": "63725972c24cdceaf950b8b75f06b0b4b8b5a631ffe5ff10891766fbc655d345",
+      "byteCount": 17163,
       "fileCount": 1,
       "failureReason": null
     },
@@ -218,7 +266,7 @@
       "failureReason": null
     },
     {
-      "path": "apps/api/src/learning-local-demo/learning-local-demo.production-hardening.spec.ts",
+      "path": "apps/api/src/learning-local-demo/learning-local-demo.production-hardening.auth-store-evidence.spec.ts",
       "referencedBy": [
         "deploy_gate:privacy-audit-and-retention",
         "smoke:rc-smoke-auth-session-negative-matrix",
@@ -226,8 +274,22 @@
       ],
       "status": "VERIFIED",
       "kind": "FILE",
-      "sha256": "a84af2d5d7c225ef8617ce7bcc14f28f0cb9a50926fd5f717bbc402617a1d989",
-      "byteCount": 38658,
+      "sha256": "6c615cb8a5262a67d5786781cb4dbcee45a52c7ba541d2cd6086b59ef9bd075f",
+      "byteCount": 21389,
+      "fileCount": 1,
+      "failureReason": null
+    },
+    {
+      "path": "apps/api/src/learning-local-demo/learning-local-demo.production-hardening.gate-auth-session.spec.ts",
+      "referencedBy": [
+        "deploy_gate:privacy-audit-and-retention",
+        "smoke:rc-smoke-auth-session-negative-matrix",
+        "smoke:rc-smoke-role-permission-negative-paths"
+      ],
+      "status": "VERIFIED",
+      "kind": "FILE",
+      "sha256": "df050fec0308ec3b100ae373c4326d220018955e244fe97dccb05686a31fe14e",
+      "byteCount": 16923,
       "fileCount": 1,
       "failureReason": null
     },
@@ -329,8 +391,8 @@
       ],
       "status": "VERIFIED",
       "kind": "FILE",
-      "sha256": "960435b704eeee49c4fb01e44c0a1028198925b4fa3f7c3a867723faf4abd652",
-      "byteCount": 20529,
+      "sha256": "93cb028b56e0519fa7af0a329589e8a576fa5d6f5d143171d8f8757664816461",
+      "byteCount": 20723,
       "fileCount": 1,
       "failureReason": null
     },
@@ -453,8 +515,8 @@
       ],
       "status": "VERIFIED",
       "kind": "FILE",
-      "sha256": "bc262cb3d702d244cd330fb53c3a022ba84b9a2fcde55287b37998269f379d36",
-      "byteCount": 9173,
+      "sha256": "2399aa5c915019997afabc2b1f88ad565fb86d1500fc64e1a3cd212de9aafa53",
+      "byteCount": 9304,
       "fileCount": 1,
       "failureReason": null
     },
@@ -566,14 +628,14 @@
     }
   ],
   "totals": {
-    "referenceCount": 104,
-    "uniqueEvidencePathCount": 41,
-    "verifiedEvidencePathCount": 41,
+    "referenceCount": 111,
+    "uniqueEvidencePathCount": 46,
+    "verifiedEvidencePathCount": 46,
     "failedEvidencePathCount": 0,
-    "fileEvidencePathCount": 39,
+    "fileEvidencePathCount": 44,
     "directoryEvidencePathCount": 2,
-    "hashedFileCount": 89,
-    "hashedByteCount": 871612
+    "hashedFileCount": 94,
+    "hashedByteCount": 863367
   },
   "safety": {
     "productionReady": false,

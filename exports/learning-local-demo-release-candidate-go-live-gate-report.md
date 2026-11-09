@@ -34,7 +34,7 @@ Generated: 2026-07-10T10:00:00.000Z
 - Approved staging-scope approvals: 6
 - Staging approval blockers: 0
 - Evidence integrity: PASS_LOCAL
-- Unique repo-relative evidence paths: 40
+- Unique repo-relative evidence paths: 45
 - Unsafe evidence paths: 0
 
 ## Demo Role Scenario Fixtures
@@ -119,7 +119,7 @@ Generated: 2026-07-10T10:00:00.000Z
 | rc-smoke-parent-child-learning-flow | FIXTURE_REPORT | PASS_LOCAL | parent -> owned child -> active entitlement -> daily plan -> video -> practice -> approved report | npm run seed:demo && npm run report:demo | The preserved fixture journey is complete and parent-owned. |
 | rc-smoke-role-permission-negative-paths | AUTOMATED_UNIT | PASS_LOCAL | non-owning parent + unassigned teacher + learner wrong role + support mutation denial | npm run test:learning-local | Every required role has a permission-negative fixture row. |
 | rc-smoke-entitlement-lifecycle | AUTOMATED_UNIT | PASS_LOCAL | active + pending payment + refunded + expired + revoked | npm run test:learning-local | Only active entitlement unlocks the learning fixture. |
-| rc-smoke-refund-commission-payout-safety | AUTOMATED_UNIT | PASS_LOCAL | fixture payment -> 10-day refund window -> commission hold/release -> refund clawback -> payout guards | npm --prefix apps/api run test -- activation-orders.service.spec.ts entitlement.service.spec.ts package-entitlement-order-flow.spec.ts package-entitlement-snapshot.spec.ts channel-finance.service.spec.ts --runInBand | Fixture-only money policy remains preserved with no provider call. |
+| rc-smoke-refund-commission-payout-safety | AUTOMATED_UNIT | PASS_LOCAL | fixture payment -> 10-day refund window -> commission hold/release -> refund clawback -> payout guards | npm --prefix apps/api run test -- activation-orders.service entitlement.service.spec.ts package-entitlement-order-flow.spec.ts package-entitlement-snapshot.spec.ts channel-finance.service.spec.ts --runInBand | Fixture-only money policy remains preserved with no provider call. |
 | rc-smoke-local-demo-production-containment | AUTOMATED_UNIT | PASS_LOCAL | production environment -> local-demo route -> not found | npm run test:learning-local | Fixture routes cannot be exposed in production mode. |
 | rc-smoke-staging-release-rehearsal | STAGING_REQUIRED | PASS_ISOLATED_STAGING | backup -> migrate -> smoke -> rollback/forward repair -> restore verify | npm --prefix apps/api run rehearse:staging | Named owners approve RPO/RTO, rollback, and restore evidence. |
 | rc-smoke-observability-incident-drill | STAGING_REQUIRED | PASS_ISOLATED_STAGING | health/error/latency alert -> correlation -> owner ack -> containment | npm --prefix apps/api run rehearse:staging | Dashboards, routing, thresholds, and incident drill are accepted. |
@@ -169,7 +169,7 @@ Generated: 2026-07-10T10:00:00.000Z
 - unique_scenario_fixture_count=32
 - resolved_journey_fixture_count=32
 - role_mismatch_count=0
-- unique_evidence_path_count=40
+- unique_evidence_path_count=45
 - unsafe_evidence_path_count=0
 
 ## Safety
