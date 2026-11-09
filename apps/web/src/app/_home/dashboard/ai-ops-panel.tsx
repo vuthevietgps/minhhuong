@@ -15,6 +15,7 @@ import {
   useEffect,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import { createPortal } from "react-dom";
 import { apiBaseUrl } from "../lib/api";
@@ -53,6 +54,35 @@ const buddyPets: Array<{
   { id: "kiki", name: "Kiki", animal: "Mèo lanh lợi", emoji: "🐱" },
   { id: "nova", name: "Nova", animal: "Siêu nhân nhí", emoji: "🦸" },
 ];
+
+// Browser capabilities and saved choices are read with useSyncExternalStore so
+// the server render (no window) and the first client render agree.
+function subscribeNever() {
+  return () => {};
+}
+
+function readVoiceSupported() {
+  const browserWindow = window as typeof window & {
+    SpeechRecognition?: VoiceRecognitionConstructor;
+    webkitSpeechRecognition?: VoiceRecognitionConstructor;
+  };
+  return Boolean(
+    browserWindow.SpeechRecognition ?? browserWindow.webkitSpeechRecognition,
+  );
+}
+
+function buddyPetStorageKey(childProfileId: string) {
+  return `minhhuong:ai-buddy-pet:${childProfileId}`;
+}
+
+function readSavedBuddyPet(childProfileId: string): BuddyPet | null {
+  const savedPet = window.localStorage.getItem(
+    buddyPetStorageKey(childProfileId),
+  );
+  return buddyPets.some((pet) => pet.id === savedPet)
+    ? (savedPet as BuddyPet)
+    : null;
+}
 
 export function AiOrOpsPanel({
   childProfileId,
@@ -108,10 +138,28 @@ export function AiOrOpsPanel({
   const [chatStatus, setChatStatus] = useState("");
   const [chatMode, setChatMode] = useState<"LIVE" | "MOCK_DEV_ONLY" | "">("");
   const [chatBusy, setChatBusy] = useState(false);
-  const [voiceSupported, setVoiceSupported] = useState(false);
+  const voiceSupported = useSyncExternalStore(
+    subscribeNever,
+    readVoiceSupported,
+    () => false,
+  );
   const [isListening, setIsListening] = useState(false);
   const [isBuddySpeaking, setIsBuddySpeaking] = useState(false);
-  const [buddyPet, setBuddyPet] = useState<BuddyPet>("mimi");
+  const [chosenBuddyPet, setChosenBuddyPet] = useState<{
+    childProfileId: string;
+    pet: BuddyPet;
+  } | null>(null);
+  const savedBuddyPet = useSyncExternalStore(
+    subscribeNever,
+    () => readSavedBuddyPet(childProfileId),
+    () => null,
+  );
+  const buddyPet: BuddyPet =
+    (chosenBuddyPet?.childProfileId === childProfileId
+      ? chosenBuddyPet.pet
+      : null) ??
+    savedBuddyPet ??
+    "mimi";
   const recognitionRef = useRef<VoiceRecognition | null>(null);
   const voiceTranscriptRef = useRef("");
   const voiceHadErrorRef = useRef(false);
@@ -132,40 +180,17 @@ export function AiOrOpsPanel({
       }[buddyMood];
 
   useEffect(() => {
-    const browserWindow = window as typeof window & {
-      SpeechRecognition?: VoiceRecognitionConstructor;
-      webkitSpeechRecognition?: VoiceRecognitionConstructor;
-    };
-    setVoiceSupported(
-      Boolean(
-        browserWindow.SpeechRecognition ??
-        browserWindow.webkitSpeechRecognition,
-      ),
-    );
-
     return () => {
       voiceHadErrorRef.current = true;
       recognitionRef.current?.abort();
     };
   }, []);
 
-  useEffect(() => {
-    const savedPet = window.localStorage.getItem(
-      `minhhuong:ai-buddy-pet:${childProfileId}`,
-    );
-    if (buddyPets.some((pet) => pet.id === savedPet)) {
-      setBuddyPet(savedPet as BuddyPet);
-    }
-  }, [childProfileId]);
-
   function chooseBuddyPet(pet: BuddyPet) {
     window.speechSynthesis?.cancel();
     setIsBuddySpeaking(false);
-    setBuddyPet(pet);
-    window.localStorage.setItem(
-      `minhhuong:ai-buddy-pet:${childProfileId}`,
-      pet,
-    );
+    setChosenBuddyPet({ childProfileId, pet });
+    window.localStorage.setItem(buddyPetStorageKey(childProfileId), pet);
   }
 
   function closeBuddyDialog() {
