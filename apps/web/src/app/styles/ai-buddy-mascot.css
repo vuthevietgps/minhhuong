@@ -1,0 +1,527 @@
+/* AI Buddy stage and mascot (face, ears, per-pet looks). */
+
+.ai-buddy-stage {
+  display: grid;
+  grid-template-columns: 6.6rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 8.2rem;
+  overflow: hidden;
+  padding: 0.75rem;
+  border: 2px solid rgba(196, 181, 253, 0.7);
+  border-radius: 1.5rem;
+  background:
+    radial-gradient(
+      circle at 14% 18%,
+      rgba(255, 255, 255, 0.95) 0 0.2rem,
+      transparent 0.25rem
+    ),
+    radial-gradient(
+      circle at 86% 80%,
+      rgba(255, 255, 255, 0.75) 0 0.18rem,
+      transparent 0.24rem
+    ),
+    linear-gradient(135deg, #faf5ff 0%, #eef2ff 58%, #e0f2fe 100%);
+  box-shadow:
+    inset 0 0 0 0.25rem rgba(255, 255, 255, 0.45),
+    0 0.55rem 1.4rem rgba(79, 70, 229, 0.12);
+}
+
+.ai-buddy-mascot {
+  position: relative;
+  width: 6rem;
+  height: 6.45rem;
+  margin: 0 auto;
+}
+
+.ai-buddy-face {
+  position: absolute;
+  z-index: 2;
+  top: 1rem;
+  left: 0.55rem;
+  width: 4.9rem;
+  height: 4.7rem;
+  border: 0.2rem solid #4c3ba7;
+  border-radius: 48% 48% 45% 45% / 44% 44% 52% 52%;
+  background: linear-gradient(145deg, #a78bfa, #7c5cf2);
+  box-shadow:
+    inset 0.35rem 0.35rem rgba(255, 255, 255, 0.32),
+    inset -0.2rem -0.25rem rgba(46, 16, 101, 0.08),
+    0 0.45rem 0 rgba(124, 92, 242, 0.14),
+    0 0.7rem 1.2rem rgba(76, 29, 149, 0.18);
+}
+
+.ai-buddy-ear {
+  position: absolute;
+  z-index: 1;
+  top: 1.55rem;
+  width: 1.45rem;
+  height: 1.9rem;
+  border: 0.2rem solid #4c3ba7;
+  border-radius: 0.9rem;
+  background: #d8b4fe;
+}
+
+.ai-buddy-ear--left {
+  left: -0.02rem;
+  transform: rotate(-24deg);
+}
+
+.ai-buddy-ear--right {
+  right: -0.02rem;
+  transform: rotate(24deg);
+}
+
+.ai-buddy-eye {
+  position: absolute;
+  z-index: 3;
+  top: 1.7rem;
+  width: 0.58rem;
+  height: 0.76rem;
+  border-radius: 50%;
+  background: #2e1065;
+  box-shadow: inset 0.14rem 0.08rem #fff;
+  transform-origin: center;
+}
+
+.ai-buddy-eye--left {
+  left: 1.15rem;
+}
+
+.ai-buddy-eye--right {
+  right: 1.15rem;
+}
+
+.ai-buddy-cheek {
+  position: absolute;
+  z-index: 2;
+  top: 2.55rem;
+  width: 0.72rem;
+  height: 0.38rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.ai-buddy-cheek--left {
+  left: 0.62rem;
+}
+
+.ai-buddy-cheek--right {
+  right: 0.62rem;
+}
+
+.ai-buddy-nose {
+  position: absolute;
+  z-index: 3;
+  top: 2.45rem;
+  left: 2.15rem;
+  width: 0.42rem;
+  height: 0.3rem;
+  border-radius: 50% 50% 60% 60%;
+  background: #4c1d95;
+}
+
+.ai-buddy-smile {
+  position: absolute;
+  z-index: 3;
+  bottom: 0.72rem;
+  left: 1.72rem;
+  width: 1.25rem;
+  height: 0.6rem;
+  border-bottom: 0.18rem solid #2e1065;
+  border-radius: 0 0 1rem 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  transform-origin: center top;
+}
+
+.ai-buddy-cape,
+.ai-buddy-hero-emblem,
+.ai-buddy-hero-mask {
+  position: absolute;
+  opacity: 0;
+}
+
+.ai-buddy-pet-beak,
+.ai-buddy-pet-belly,
+.ai-buddy-pet-tail {
+  position: absolute;
+  opacity: 0;
+}
+
+.ai-buddy-mascot[data-pet="mimi"] .ai-buddy-face {
+  background: linear-gradient(145deg, #fff7fb 0%, #fbcfe8 58%, #f9a8d4 100%);
+  border-color: #be185d;
+}
+
+.ai-buddy-mascot[data-pet="mimi"] .ai-buddy-ear {
+  top: -0.22rem;
+  width: 1.15rem;
+  height: 2.85rem;
+  border-color: #be185d;
+  background: linear-gradient(90deg, #fdf2f8, #f9a8d4);
+}
+
+.ai-buddy-mascot[data-pet="mimi"] .ai-buddy-ear--left {
+  left: 0.8rem;
+  transform: rotate(-13deg);
+}
+
+.ai-buddy-mascot[data-pet="mimi"] .ai-buddy-ear--right {
+  right: 0.8rem;
+  transform: rotate(13deg);
+}
+
+.ai-buddy-mascot[data-pet="mimi"] .ai-buddy-hand {
+  border-color: #be185d;
+  background: #fce7f3;
+}
+
+.ai-buddy-mascot[data-pet="mimi"] .ai-buddy-nose {
+  background: #ec4899;
+}
+
+.ai-buddy-mascot[data-pet="bo"] .ai-buddy-face {
+  background: linear-gradient(145deg, #fde68a 0%, #f59e0b 72%, #d97706 100%);
+  border-color: #92400e;
+}
+
+.ai-buddy-mascot[data-pet="bo"] .ai-buddy-ear {
+  top: 0.45rem;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-color: #92400e;
+  border-radius: 50%;
+  background: #fcd34d;
+}
+
+.ai-buddy-mascot[data-pet="bo"] .ai-buddy-hand {
+  border-color: #92400e;
+  background: #fde68a;
+}
+
+.ai-buddy-mascot[data-pet="bo"] .ai-buddy-nose {
+  width: 0.6rem;
+  height: 0.42rem;
+  left: 2.05rem;
+  background: #78350f;
+}
+
+.ai-buddy-mascot[data-pet="pipi"] .ai-buddy-face {
+  background: linear-gradient(145deg, #64748b 0%, #1e293b 68%, #0f172a 100%);
+  border-color: #0f172a;
+}
+
+.ai-buddy-mascot[data-pet="pipi"] .ai-buddy-ear {
+  display: none;
+}
+
+.ai-buddy-mascot[data-pet="pipi"] .ai-buddy-eye {
+  background: #0f172a;
+  box-shadow:
+    0 0 0 0.22rem #fff,
+    inset 0.12rem 0.07rem #fff;
+}
+
+.ai-buddy-mascot[data-pet="pipi"] .ai-buddy-smile {
+  display: none;
+}
+
+.ai-buddy-mascot[data-pet="pipi"] .ai-buddy-pet-beak {
+  z-index: 4;
+  top: 3.05rem;
+  left: 2.53rem;
+  width: 0;
+  height: 0;
+  border-top: 0.38rem solid #fb923c;
+  border-right: 0.42rem solid transparent;
+  border-left: 0.42rem solid transparent;
+  opacity: 1;
+}
+
+.ai-buddy-mascot[data-pet="pipi"] .ai-buddy-pet-belly {
+  z-index: 3;
+  bottom: 0.65rem;
+  left: 1.48rem;
+  width: 3.05rem;
+  height: 1.65rem;
+  border-radius: 50% 50% 40% 40%;
+  background: #f8fafc;
+  opacity: 1;
+}
+
+.ai-buddy-mascot[data-pet="pipi"] .ai-buddy-hand {
+  border-color: #0f172a;
+  background: #94a3b8;
+}
+
+.ai-buddy-mascot[data-pet="pipi"] .ai-buddy-nose,
+.ai-buddy-mascot[data-pet="pipi"] .ai-buddy-cheek {
+  display: none;
+}
+
+.ai-buddy-mascot[data-pet="kiki"] .ai-buddy-face {
+  background: linear-gradient(145deg, #ffedd5 0%, #fb923c 68%, #f97316 100%);
+  border-color: #9a3412;
+}
+
+.ai-buddy-mascot[data-pet="kiki"] .ai-buddy-ear {
+  top: 0.18rem;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-color: #9a3412;
+  border-radius: 0.3rem;
+  background: #fed7aa;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.ai-buddy-mascot[data-pet="kiki"] .ai-buddy-ear--left {
+  left: 0.48rem;
+  transform: rotate(-12deg);
+}
+
+.ai-buddy-mascot[data-pet="kiki"] .ai-buddy-ear--right {
+  right: 0.48rem;
+  transform: rotate(12deg);
+}
+
+.ai-buddy-mascot[data-pet="kiki"] .ai-buddy-pet-tail {
+  z-index: 1;
+  right: -0.15rem;
+  bottom: 0.55rem;
+  width: 1.45rem;
+  height: 0.9rem;
+  border: 0.2rem solid #9a3412;
+  border-bottom: 0;
+  border-left: 0;
+  border-radius: 0 1rem 0 0;
+  opacity: 1;
+  transform: rotate(22deg);
+}
+
+.ai-buddy-mascot[data-pet="kiki"] .ai-buddy-hand {
+  border-color: #9a3412;
+  background: #ffedd5;
+}
+
+.ai-buddy-mascot[data-pet="kiki"] .ai-buddy-nose {
+  background: #9a3412;
+}
+
+.ai-buddy-mascot[data-pet="nova"] .ai-buddy-face {
+  border-color: #1e3a8a;
+  background: linear-gradient(145deg, #93c5fd 0%, #3b82f6 62%, #6366f1 100%);
+}
+
+.ai-buddy-mascot[data-pet="nova"] .ai-buddy-ear {
+  display: none;
+}
+
+.ai-buddy-mascot[data-pet="nova"] .ai-buddy-hero-mask {
+  z-index: 2;
+  top: 1.28rem;
+  left: 0.65rem;
+  width: 3.25rem;
+  height: 1.25rem;
+  border-radius: 48% 48% 42% 42%;
+  background: #312e81;
+  clip-path: polygon(0 15%, 50% 0, 100% 15%, 90% 100%, 52% 70%, 10% 100%);
+  opacity: 1;
+}
+
+.ai-buddy-mascot[data-pet="nova"] .ai-buddy-eye {
+  background: #fff;
+  box-shadow: none;
+}
+
+.ai-buddy-mascot[data-pet="nova"] .ai-buddy-nose {
+  background: #1e3a8a;
+}
+
+.ai-buddy-mascot[data-pet="nova"] .ai-buddy-cape {
+  z-index: 0;
+  top: 1.6rem;
+  right: -0.2rem;
+  width: 2.15rem;
+  height: 3.95rem;
+  border-radius: 0 1.3rem 1.8rem 0.4rem;
+  background: linear-gradient(145deg, #fb7185, #dc2626);
+  opacity: 1;
+  transform: rotate(-13deg);
+}
+
+.ai-buddy-mascot[data-pet="nova"] .ai-buddy-hero-emblem {
+  z-index: 5;
+  bottom: 0.28rem;
+  left: 2.25rem;
+  display: grid;
+  width: 1.45rem;
+  height: 1.45rem;
+  place-items: center;
+  border: 0.14rem solid #fff;
+  border-radius: 50%;
+  background: #facc15;
+  color: #dc2626;
+  font-size: 0.78rem;
+  font-style: normal;
+  opacity: 1;
+  box-shadow: 0 0.15rem 0.45rem rgba(30, 58, 138, 0.35);
+}
+
+.ai-buddy-mascot[data-pet="nova"] .ai-buddy-hand {
+  border-color: #1e3a8a;
+  background: #bfdbfe;
+}
+
+.ai-buddy-hand {
+  position: absolute;
+  z-index: 3;
+  width: 0.95rem;
+  height: 2rem;
+  border: 0.18rem solid #4c3ba7;
+  border-radius: 1rem;
+  background: #f5d0fe;
+  transform-origin: 50% 100%;
+}
+
+.ai-buddy-hand--ear {
+  top: 2rem;
+  right: -0.05rem;
+  transform: rotate(-42deg);
+}
+
+.ai-buddy-hand--drum {
+  right: 0.62rem;
+  bottom: 0.08rem;
+  opacity: 0;
+  transform: rotate(54deg);
+}
+
+.ai-buddy-drum {
+  position: absolute;
+  z-index: 1;
+  right: -0.1rem;
+  bottom: 0.02rem;
+  width: 2.55rem;
+  height: 1.1rem;
+  border: 0.18rem solid #9a3412;
+  border-radius: 50%;
+  background: #fb923c;
+  opacity: 0;
+}
+
+.ai-buddy-drum::after {
+  position: absolute;
+  inset: 0.2rem 0.3rem;
+  border-radius: inherit;
+  background: #fed7aa;
+  content: "";
+}
+
+.ai-buddy-drum i {
+  position: absolute;
+  z-index: 2;
+  top: -0.9rem;
+  width: 0.13rem;
+  height: 1.3rem;
+  border-radius: 999px;
+  background: #7c2d12;
+  transform-origin: bottom;
+}
+
+.ai-buddy-drum i:first-child {
+  left: 0.65rem;
+  transform: rotate(30deg);
+}
+
+.ai-buddy-drum i:last-child {
+  right: 0.65rem;
+  transform: rotate(-30deg);
+}
+
+.ai-buddy-spark {
+  position: absolute;
+  z-index: 4;
+  color: #fbbf24;
+  font-size: 1rem;
+  font-style: normal;
+  opacity: 0;
+}
+
+.ai-buddy-spark--one {
+  top: 0;
+  left: 0.15rem;
+}
+
+.ai-buddy-spark--two {
+  right: 0;
+  bottom: 0.2rem;
+}
+
+.ai-buddy-speech {
+  min-width: 0;
+}
+
+.ai-buddy-name {
+  display: block;
+  margin-bottom: 0.15rem;
+  color: #6d28d9;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ai-buddy-speech p {
+  margin: 0;
+  color: #312e81;
+  font-size: 0.875rem;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.ai-buddy-dots,
+.ai-buddy-sound-bars {
+  display: inline-flex;
+  align-items: end;
+  height: 0.9rem;
+  margin-top: 0.2rem;
+  gap: 0.22rem;
+}
+
+.ai-buddy-dots i {
+  width: 0.32rem;
+  height: 0.32rem;
+  border-radius: 50%;
+  background: #7c3aed;
+}
+
+.ai-buddy-sound-bars i {
+  width: 0.18rem;
+  border-radius: 999px;
+  background: #7c3aed;
+}
+
+.ai-buddy-sound-bars i:nth-child(1) {
+  height: 0.45rem;
+}
+
+.ai-buddy-sound-bars i:nth-child(2) {
+  height: 0.82rem;
+}
+
+.ai-buddy-sound-bars i:nth-child(3) {
+  height: 0.58rem;
+}
+
+.ai-buddy-stage--thinking .ai-buddy-hand--ear {
+  opacity: 0;
+}
+
+.ai-buddy-stage--thinking .ai-buddy-hand--drum,
+.ai-buddy-stage--thinking .ai-buddy-drum {
+  opacity: 1;
+}
+
+.ai-buddy-stage--celebrating .ai-buddy-spark {
+  opacity: 1;
+}

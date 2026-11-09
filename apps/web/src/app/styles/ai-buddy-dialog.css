@@ -1,0 +1,218 @@
+/* AI Buddy dialog, header and pet picker. */
+
+.ai-buddy-modal-backdrop {
+  position: fixed;
+  z-index: 120;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 3vh 3vw;
+  background: rgba(30, 27, 75, 0.72);
+  backdrop-filter: blur(0.65rem);
+}
+
+.ai-buddy-dialog {
+  display: flex;
+  width: min(72rem, 94vw);
+  height: min(54rem, 94dvh);
+  flex-direction: column;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.82);
+  border-radius: 2rem;
+  background:
+    radial-gradient(
+      circle at 8% 8%,
+      rgba(251, 207, 232, 0.72),
+      transparent 22%
+    ),
+    radial-gradient(
+      circle at 92% 12%,
+      rgba(186, 230, 253, 0.7),
+      transparent 24%
+    ),
+    #fff;
+  box-shadow: 0 1.75rem 5rem rgba(15, 23, 42, 0.4);
+}
+
+.ai-buddy-dialog-header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(196, 181, 253, 0.58);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(0.75rem);
+}
+
+.ai-buddy-dialog-title {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ai-buddy-dialog-title > span {
+  display: grid;
+  width: 2.8rem;
+  height: 2.8rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  box-shadow: 0 0.45rem 1rem rgba(79, 70, 229, 0.25);
+  font-size: 1.35rem;
+}
+
+.ai-buddy-dialog-title h2 {
+  margin: 0;
+  color: #312e81;
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  font-weight: 900;
+}
+
+.ai-buddy-dialog-title p {
+  margin: 0.12rem 0 0;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.ai-buddy-dialog-close {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #ddd6fe;
+  border-radius: 50%;
+  background: #fff;
+  color: #5b21b6;
+  box-shadow: 0 0.25rem 0.75rem rgba(91, 33, 182, 0.12);
+}
+
+.ai-buddy-dialog-close:hover,
+.ai-buddy-dialog-close:focus-visible {
+  border-color: #8b5cf6;
+  outline: none;
+  background: #f5f3ff;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+.ai-buddy-dialog-form {
+  width: min(58rem, 100%);
+  margin: 0 auto;
+  padding: 1.15rem 1.25rem calc(1.35rem + env(safe-area-inset-bottom));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.ai-buddy-pet-picker {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.ai-buddy-pet-picker legend {
+  margin-bottom: 0.45rem;
+  color: #4c1d95;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.ai-buddy-pet-options {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(4.25rem, 1fr));
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.15rem 0.1rem 0.55rem;
+  scroll-snap-type: inline mandatory;
+}
+
+.ai-buddy-pet-option {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.5rem 0.35rem;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 1.1rem;
+  background: linear-gradient(145deg, #fff, #f5f3ff);
+  color: #312e81;
+  text-align: center;
+  scroll-snap-align: start;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.ai-buddy-pet-option:hover,
+.ai-buddy-pet-option:focus-visible {
+  border-color: #a78bfa;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+}
+
+.ai-buddy-pet-option.is-selected {
+  border-color: #7c3aed;
+  background: linear-gradient(145deg, #faf5ff, #ede9fe);
+  box-shadow:
+    0 0 0 2px rgba(124, 58, 237, 0.1),
+    0 0.45rem 1rem rgba(124, 58, 237, 0.2);
+  transform: translateY(-0.12rem);
+}
+
+.ai-buddy-pet-emoji {
+  display: grid;
+  width: 2.7rem;
+  height: 2.7rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ede9fe, #fef3c7);
+  box-shadow:
+    inset 0.15rem 0.15rem rgba(255, 255, 255, 0.7),
+    0 0.2rem 0.5rem rgba(76, 29, 149, 0.14);
+  font-size: 1.65rem;
+}
+
+.ai-buddy-pet-option:nth-child(2) .ai-buddy-pet-emoji {
+  background: linear-gradient(135deg, #fef3c7, #fed7aa);
+}
+
+.ai-buddy-pet-option:nth-child(3) .ai-buddy-pet-emoji {
+  background: linear-gradient(135deg, #dbeafe, #bae6fd);
+}
+
+.ai-buddy-pet-option:nth-child(4) .ai-buddy-pet-emoji {
+  background: linear-gradient(135deg, #ffedd5, #fecdd3);
+}
+
+.ai-buddy-pet-option:nth-child(5) .ai-buddy-pet-emoji {
+  background: linear-gradient(135deg, #bfdbfe, #ddd6fe);
+}
+
+.ai-buddy-pet-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.05rem;
+}
+
+.ai-buddy-pet-copy strong {
+  font-size: 0.8rem;
+  font-weight: 850;
+}
+
+.ai-buddy-pet-copy small {
+  overflow: hidden;
+  color: #64748b;
+  font-size: 0.65rem;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,0 +1,285 @@
+/* Kid app shell, navigation, hero, cards and buttons. */
+
+.kid-app-shell {
+  position: relative;
+  overflow-anchor: none;
+  background:
+    radial-gradient(
+      circle at 92% 3%,
+      rgba(255, 189, 102, 0.14),
+      transparent 18rem
+    ),
+    radial-gradient(
+      circle at 35% 100%,
+      rgba(104, 185, 255, 0.1),
+      transparent 22rem
+    );
+}
+
+.kid-sidebar {
+  z-index: 20;
+  border-color: rgba(231, 229, 244, 0.9) !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+  box-shadow: 12px 0 40px rgba(67, 58, 142, 0.06);
+  backdrop-filter: blur(22px);
+}
+
+.kid-logo-mark {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.1rem !important;
+  background: linear-gradient(145deg, #6558f5, #8d72ff) !important;
+  box-shadow: 0 10px 22px rgba(101, 88, 245, 0.28);
+}
+
+.kid-logo-mark::after {
+  position: absolute;
+  top: -0.25rem;
+  right: -0.2rem;
+  width: 0.8rem;
+  height: 0.8rem;
+  content: "";
+  border-radius: 999px;
+  background: #ffd784;
+}
+
+.kid-nav-active {
+  color: white !important;
+  background: linear-gradient(135deg, #6558f5, #7e6af8) !important;
+  box-shadow: 0 9px 22px rgba(101, 88, 245, 0.24);
+}
+
+.kid-nav-link:hover {
+  color: #4f43c7 !important;
+  background: #f0eeff !important;
+}
+
+.kid-workspace-card {
+  box-shadow: 0 12px 30px rgba(67, 58, 142, 0.06);
+}
+
+.kid-workspace-card:hover {
+  border-color: #cfc8ff;
+  transform: translateY(-3px);
+  box-shadow: 0 20px 42px rgba(67, 58, 142, 0.12);
+}
+
+.kid-learning-tab {
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  color: #5e6880;
+  font-size: 0.875rem;
+  font-weight: 800;
+  border-radius: 0.9rem;
+}
+
+.kid-learning-tab:hover {
+  color: #5043dc;
+  background: #f2f0ff;
+}
+
+.kid-learning-tab-active {
+  color: white !important;
+  background: linear-gradient(135deg, #6558f5, #7e6af8) !important;
+  box-shadow: 0 10px 24px rgba(101, 88, 245, 0.22);
+}
+
+.kid-summary-tab {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  color: #667087;
+  font-size: 0.75rem;
+  font-weight: 800;
+  border-radius: 0.9rem;
+}
+
+.kid-summary-tab-active {
+  color: #5043dc;
+  background: #efedff;
+}
+
+.kid-mobile-nav {
+  position: fixed;
+  right: 0.75rem;
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  left: 0.75rem;
+  z-index: 45;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.25rem;
+  padding: 0.45rem;
+  border: 1px solid rgba(218, 214, 245, 0.95);
+  border-radius: 1.4rem;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 20px 50px rgba(44, 36, 105, 0.2);
+  backdrop-filter: blur(24px);
+}
+
+.kid-mobile-nav-item {
+  display: flex;
+  min-width: 0;
+  min-height: 3.5rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding-inline: 0.15rem;
+  color: #647089;
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  border-radius: 1rem;
+}
+
+.kid-mobile-nav-item span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kid-mobile-nav-item-active {
+  color: #5043dc;
+  background: #efedff;
+}
+
+.kid-tab-rail {
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: inline proximity;
+}
+
+.kid-tab-rail > * {
+  scroll-snap-align: start;
+}
+
+.kid-page {
+  position: relative;
+  width: 100%;
+  max-width: 96rem;
+  margin-inline: auto;
+}
+
+.kid-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(218, 214, 245, 0.9);
+  border-radius: 2rem;
+  background:
+    radial-gradient(
+      circle at 88% 12%,
+      rgba(255, 216, 138, 0.72),
+      transparent 9rem
+    ),
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.98),
+      rgba(242, 239, 255, 0.95)
+    );
+  box-shadow: 0 24px 60px rgba(67, 58, 142, 0.1);
+}
+
+.kid-hero::before,
+.kid-hero::after {
+  position: absolute;
+  content: "";
+  pointer-events: none;
+  border-radius: 999px;
+}
+
+.kid-hero::before {
+  top: -2.5rem;
+  right: 5.5rem;
+  width: 6.5rem;
+  height: 6.5rem;
+  border: 18px solid rgba(101, 88, 245, 0.08);
+}
+
+.kid-hero::after {
+  right: 2rem;
+  bottom: -2.6rem;
+  width: 8rem;
+  height: 8rem;
+  background: rgba(40, 184, 168, 0.09);
+}
+
+.kid-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.75rem;
+  color: #5346cb;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid #ddd8ff;
+  border-radius: 999px;
+  background: rgba(239, 236, 255, 0.9);
+}
+
+.kid-primary-button {
+  min-height: 2.75rem;
+  color: white !important;
+  font-weight: 800 !important;
+  white-space: nowrap;
+  background: linear-gradient(135deg, #6558f5, #826cfb) !important;
+  box-shadow: 0 12px 25px rgba(101, 88, 245, 0.27);
+}
+
+.kid-primary-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px rgba(101, 88, 245, 0.31);
+}
+
+.kid-icon-button {
+  display: grid;
+  width: 2.75rem;
+  min-width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 1px solid var(--kid-line);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 8px 18px rgba(67, 58, 142, 0.07);
+}
+
+.kid-stat-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 9.5rem;
+  border: 1px solid rgba(231, 229, 244, 0.92) !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+  box-shadow: 0 18px 40px rgba(67, 58, 142, 0.07);
+}
+
+.kid-stat-card::after {
+  position: absolute;
+  right: -1.4rem;
+  bottom: -1.7rem;
+  width: 5rem;
+  height: 5rem;
+  content: "";
+  border-radius: 999px;
+  background: var(--stat-tint, rgba(101, 88, 245, 0.1));
+}
+
+.kid-empty-state {
+  position: relative;
+  border: 1px dashed #cfcaf2 !important;
+  background:
+    radial-gradient(circle, rgba(101, 88, 245, 0.08) 1.5px, transparent 1.5px) 0
+      0 / 18px 18px,
+    rgba(255, 255, 255, 0.68);
+}
+
+.kid-modal-card {
+  border: 1px solid rgba(226, 223, 245, 0.9);
+  box-shadow: 0 30px 80px rgba(53, 45, 118, 0.22) !important;
+}
