@@ -1,5 +1,4 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
-import { LearningService } from './learning.service';
 import { createLearningServiceForTest } from './learning.testing';
 
 describe('LearningService', () => {

@@ -1,5 +1,4 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { ParentService } from './parent.service';
 import { createParentServiceForTest } from './parent.testing';
 
 describe('ParentService', () => {

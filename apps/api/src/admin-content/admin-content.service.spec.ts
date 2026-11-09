@@ -1,5 +1,4 @@
 import { BadRequestException } from '@nestjs/common';
-import { AdminContentService } from './admin-content.service';
 import { createAdminContentServiceForTest } from './admin-content.testing';
 
 describe('AdminContentService', () => {

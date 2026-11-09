@@ -1,4 +1,3 @@
-import { ChannelAdminService } from './channel-admin.service';
 import { createChannelAdminServiceForTest } from './channel-admin.testing';
 
 describe('ChannelAdminService', () => {

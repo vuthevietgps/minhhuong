@@ -6,7 +6,6 @@ import {
   DailyLearningPlanItemType,
   DailyLearningPlanStatus,
 } from '@prisma/client';
-import { DailyPlanService } from './daily-plan.service';
 import { createDailyPlanServiceForTest } from './daily-plan.testing';
 
 describe('DailyPlanService', () => {

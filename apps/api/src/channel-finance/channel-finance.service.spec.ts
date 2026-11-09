@@ -1,6 +1,5 @@
 import { BadRequestException, ConflictException } from '@nestjs/common';
 
-import { ChannelFinanceService } from './channel-finance.service';
 import { createChannelFinanceServiceForTest } from './channel-finance.testing';
 
 const opsUser = {
